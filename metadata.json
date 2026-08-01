@@ -1,6 +1,7 @@
 {
-  "name": "VitalStrength",
-  "description": "Personalized strength coach for women's health, bone density, functional longevity, and progressive overload tracking.",
+  "name": "Women's Strength",
+  "description": "Women's Strength & Longevity - Age Powerfully & Recover strength programming designed for bone mineral density, joint health, and progressive overload.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+

@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
 import com.example.ui.components.WorkoutCalendarSummaryCard
+import com.example.ui.components.WomensStrengthHeaderLogo
+import com.example.ui.components.WomensStrengthLogoIcon
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.UserProfileEntity
 import com.example.data.WorkoutRoutineEntity
@@ -117,20 +119,7 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                        }
+                        WomensStrengthLogoIcon(size = 48.dp)
 
                         OutlinedButton(
                             onClick = onNavigateToAssessment,
@@ -153,11 +142,22 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Vital Strength & Longevity",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "WOMEN'S STRENGTH & LONGEVITY",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.sp
                     )
+
+                    Text(
+                        text = "AGE POWERFULLY & RECOVER",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary,
+                        letterSpacing = 1.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = "Empowered strength programming designed for bone mineral density, joint health, and muscle preservation.",

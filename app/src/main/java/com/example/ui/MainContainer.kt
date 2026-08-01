@@ -45,7 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.data.WorkoutRoutineEntity
+import com.example.ui.components.WomensStrengthLogoIcon
 import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
 import com.example.ui.screens.HomeScreen
@@ -97,18 +99,25 @@ fun MainContainer(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = when (currentDestination) {
-                            NavDestination.HOME -> "VitalStrength • Longevity Coach"
-                            NavDestination.TABLE -> "Longevity Workout Layout"
-                            NavDestination.LOGGER -> "Live Workout Logger"
-                            NavDestination.PROGRESS -> "Progressive Overload & History"
-                            NavDestination.GUIDE -> "Longevity & Health Science"
-                            NavDestination.ASSESSMENT -> "Strength & Health Assessment"
-                        },
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    androidx.compose.foundation.layout.Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        WomensStrengthLogoIcon(size = 28.dp)
+                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 10.dp))
+                        Text(
+                            text = when (currentDestination) {
+                                NavDestination.HOME -> "Women's Strength & Longevity"
+                                NavDestination.TABLE -> "Longevity Workout Layout"
+                                NavDestination.LOGGER -> "Live Workout Logger"
+                                NavDestination.PROGRESS -> "Progressive Overload & History"
+                                NavDestination.GUIDE -> "Longevity & Health Science"
+                                NavDestination.ASSESSMENT -> "Strength & Health Assessment"
+                            },
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 },
                 actions = {
                     Box {
