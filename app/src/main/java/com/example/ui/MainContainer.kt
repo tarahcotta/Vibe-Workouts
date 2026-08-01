@@ -261,6 +261,12 @@ fun MainContainer(
                         sessions = sessions,
                         onDeleteSession = { sessionId ->
                             viewModel.deleteSession(sessionId)
+                        },
+                        onStartWorkout = { routine ->
+                            if (routine != null) {
+                                viewModel.selectRoutine(routine)
+                            }
+                            currentDestination = NavDestination.LOGGER
                         }
                     )
                 }

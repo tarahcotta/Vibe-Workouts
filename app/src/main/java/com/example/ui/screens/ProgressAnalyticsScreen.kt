@@ -67,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ProgressiveOverloadHighlightCard
+import com.example.ui.components.WorkoutCalendarSummaryCard
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.ui.VitalViewModel
@@ -79,12 +80,14 @@ fun ProgressAnalyticsScreen(
     viewModel: VitalViewModel,
     sessions: List<LoggedWorkoutSessionEntity>,
     onDeleteSession: (Long) -> Unit,
+    onStartWorkout: (com.example.data.WorkoutRoutineEntity?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
     val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
 
     val overloadList by viewModel.progressiveOverloadList.collectAsState()
+    val routines by viewModel.activeRoutines.collectAsState()
 
     val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
     val totalWorkouts = sessions.size
@@ -191,6 +194,15 @@ fun ProgressAnalyticsScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         LoadBearingVolumeChart(sessions = sessions)
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Calendar-Based Summary & History Consistency
+        WorkoutCalendarSummaryCard(
+            sessions = sessions,
+            routines = routines,
+            onStartWorkout = onStartWorkout
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 

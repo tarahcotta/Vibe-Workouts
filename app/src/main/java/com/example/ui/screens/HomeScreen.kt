@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
+import com.example.ui.components.WorkoutCalendarSummaryCard
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.UserProfileEntity
 import com.example.data.WorkoutRoutineEntity
@@ -230,6 +231,22 @@ fun HomeScreen(
             overloadList = overloadList,
             onStartWorkout = {
                 if (routines.isNotEmpty()) {
+                    onSelectRoutine(routines.first())
+                }
+                onNavigateToLogger()
+            }
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Calendar Summary & History Visualization Card
+        WorkoutCalendarSummaryCard(
+            sessions = sessions,
+            routines = routines,
+            onStartWorkout = { routine ->
+                if (routine != null) {
+                    onSelectRoutine(routine)
+                } else if (routines.isNotEmpty()) {
                     onSelectRoutine(routines.first())
                 }
                 onNavigateToLogger()
