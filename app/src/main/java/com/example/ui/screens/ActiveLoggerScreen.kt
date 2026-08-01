@@ -1,6 +1,12 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.Intent
 import android.os.CountDownTimer
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,6 +34,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Shield
@@ -60,13 +67,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.runtime.mutableFloatStateOf
 import com.example.ui.components.ExerciseFormIllustrationBox
@@ -81,7 +87,8 @@ data class ExerciseLogState(
     val exerciseName: String,
     val primaryGoal: String,
     val coachingCues: String,
-    val sets: MutableList<SetLogInput> = mutableStateListOf()
+    val sets: MutableList<SetLogInput> = mutableStateListOf(),
+    var formNotes: String = ""
 )
 
 data class SetLogInput(
@@ -103,6 +110,22 @@ fun ActiveLoggerScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    var activeDictationCallback by remember { mutableStateOf<((String) -> Unit)?>(null) }
+
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenText = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spokenText.isNullOrBlank()) {
+                activeDictationCallback?.invoke(spokenText)
+            }
+        }
+    }
 
     // PR Notification State
     var prNotificationExercise by remember { mutableStateOf<String?>(null) }
@@ -515,24 +538,69 @@ fun ActiveLoggerScreen(
                             }
                         }
 
-                        // Add Set button
-                        TextButton(
-                            onClick = {
-                                logState.sets.add(
-                                    SetLogInput(
-                                        setNumber = logState.sets.size + 1,
-                                        weightText = logState.sets.lastOrNull()?.weightText ?: "25",
-                                        repsText = logState.sets.lastOrNull()?.repsText ?: "8",
-                                        rpe = 8
-                                    )
-                                )
-                            },
-                            modifier = Modifier.align(Alignment.End)
+                        // Add Set button & Per-Exercise Voice Form Notes
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add Set", style = MaterialTheme.typography.labelSmall)
+                            TextButton(
+                                onClick = {
+                                    logState.sets.add(
+                                        SetLogInput(
+                                            setNumber = logState.sets.size + 1,
+                                            weightText = logState.sets.lastOrNull()?.weightText ?: "25",
+                                            repsText = logState.sets.lastOrNull()?.repsText ?: "8",
+                                            rpe = 8
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            ) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Add Set", style = MaterialTheme.typography.labelSmall)
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Per-Exercise Voice-to-Text Form Observations Field
+                        OutlinedTextField(
+                            value = logState.formNotes,
+                            onValueChange = { logState.formNotes = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("exercise_form_notes_$exIndex"),
+                            label = { Text("${logState.exerciseName} Post-Set Form Notes") },
+                            placeholder = { Text("Tap mic to dictate form feedback or observations...") },
+                            textStyle = MaterialTheme.typography.bodySmall,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Dictate form notes for ${logState.exerciseName}")
+                                        }
+                                        activeDictationCallback = { text ->
+                                            logState.formNotes = if (logState.formNotes.isNotBlank()) "${logState.formNotes} $text" else text
+                                        }
+                                        try {
+                                            speechLauncher.launch(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Voice dictation not supported on this device", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.testTag("dictate_exercise_notes_$exIndex")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Mic,
+                                        contentDescription = "Dictate Form Notes",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -576,7 +644,32 @@ fun ActiveLoggerScreen(
                             .fillMaxWidth()
                             .testTag("session_notes_input"),
                         label = { Text("Coaching Notes / Joint Observations") },
-                        placeholder = { Text("e.g. Felt great on Goblet Squats, increased weight +5 lbs") }
+                        placeholder = { Text("e.g. Felt great on Goblet Squats, increased weight +5 lbs") },
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Dictate workout session coaching notes")
+                                    }
+                                    activeDictationCallback = { text ->
+                                        notesText = if (notesText.isNotBlank()) "$notesText $text" else text
+                                    }
+                                    try {
+                                        speechLauncher.launch(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Voice dictation not supported on this device", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.testTag("dictate_session_notes_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = "Dictate Notes",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     )
                 }
             }
@@ -602,7 +695,19 @@ fun ActiveLoggerScreen(
                             )
                         }
                     }
-                    onSaveSession(routineTitle, allLoggedSets, overallFeel, notesText)
+
+                    val combinedNotes = buildString {
+                        exerciseLogs.forEach { log ->
+                            if (log.formNotes.isNotBlank()) {
+                                append("[${log.exerciseName}]: ${log.formNotes}\n")
+                            }
+                        }
+                        if (notesText.isNotBlank()) {
+                            append(notesText)
+                        }
+                    }.trim()
+
+                    onSaveSession(routineTitle, allLoggedSets, overallFeel, combinedNotes)
                     showCompletionDialog = true
                 },
                 modifier = Modifier
