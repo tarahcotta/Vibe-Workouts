@@ -1,0 +1,1 @@
+An interactive workout generator and progress tracker built with Google AI Studio. Designed specifically for women to build strength, protect bone health, and support healthy aging through progressive overload.
