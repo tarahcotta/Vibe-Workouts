@@ -3,6 +3,8 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import com.example.ui.theme.ThemeMode
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.UserProfileEntity
@@ -23,6 +25,17 @@ import kotlinx.coroutines.launch
 class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: VitalRepository
+
+    private val sharedPrefs = application.getSharedPreferences("vital_strength_prefs", Context.MODE_PRIVATE)
+
+    private val _themeMode = MutableStateFlow(
+        when (sharedPrefs.getString("theme_mode", "SYSTEM")) {
+            "LIGHT" -> ThemeMode.LIGHT
+            "DARK" -> ThemeMode.DARK
+            else -> ThemeMode.SYSTEM
+        }
+    )
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     val userProfile: StateFlow<UserProfileEntity?>
     val activeRoutines: StateFlow<List<WorkoutRoutineEntity>>
@@ -119,4 +132,18 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getSetsForSession(sessionId: Long) = repository.getSetsForSession(sessionId)
     fun getMaxWeightForExercise(exerciseName: String) = repository.getMaxWeightForExercise(exerciseName)
+
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+        sharedPrefs.edit().putString("theme_mode", mode.name).apply()
+    }
+
+    fun toggleThemeMode() {
+        val nextMode = when (_themeMode.value) {
+            ThemeMode.LIGHT -> ThemeMode.DARK
+            ThemeMode.DARK -> ThemeMode.SYSTEM
+            ThemeMode.SYSTEM -> ThemeMode.LIGHT
+        }
+        setThemeMode(nextMode)
+    }
 }

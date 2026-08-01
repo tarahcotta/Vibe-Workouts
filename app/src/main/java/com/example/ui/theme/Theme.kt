@@ -10,6 +10,12 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+enum class ThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK
+}
+
 private val DarkColorScheme = darkColorScheme(
     primary = GeoPrimaryDark,
     onPrimary = GeoOnPrimaryDark,
@@ -56,7 +62,12 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun VitalStrengthTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    darkTheme: Boolean = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    },
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -78,11 +89,16 @@ fun VitalStrengthTheme(
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    darkTheme: Boolean = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    },
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    VitalStrengthTheme(darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
+    VitalStrengthTheme(themeMode = themeMode, darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
 }
 
 

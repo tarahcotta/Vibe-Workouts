@@ -53,12 +53,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.SettingsBrightness
 import com.example.data.UserProfileEntity
+import com.example.ui.theme.ThemeMode
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AssessmentScreen(
     currentProfile: UserProfileEntity?,
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    onThemeModeChange: (ThemeMode) -> Unit = {},
     onSaveProfile: (UserProfileEntity) -> Unit,
     onNavigateToRoutines: () -> Unit,
     modifier: Modifier = Modifier
@@ -134,6 +140,64 @@ fun AssessmentScreen(
                         text = "Customize your program for maximum bone density, joint safety & functional strength.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // App Appearance & Theme Selection Card
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("app_theme_selection_card"),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                AssessmentSectionHeader(
+                    title = "App Appearance & Theme",
+                    subtitle = "Switch between Light, Dark, or System mode while maintaining Geometric Balance contrast"
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = themeMode == ThemeMode.LIGHT,
+                        onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+                        label = { Text("Light") },
+                        leadingIcon = { Icon(Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.weight(1f).testTag("theme_chip_light")
+                    )
+
+                    FilterChip(
+                        selected = themeMode == ThemeMode.DARK,
+                        onClick = { onThemeModeChange(ThemeMode.DARK) },
+                        label = { Text("Dark") },
+                        leadingIcon = { Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.weight(1f).testTag("theme_chip_dark")
+                    )
+
+                    FilterChip(
+                        selected = themeMode == ThemeMode.SYSTEM,
+                        onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+                        label = { Text("System") },
+                        leadingIcon = { Icon(Icons.Default.SettingsBrightness, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.weight(1f).testTag("theme_chip_system")
                     )
                 }
             }

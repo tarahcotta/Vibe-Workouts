@@ -20,8 +20,14 @@ import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import com.example.ui.theme.ThemeMode
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,7 +74,9 @@ fun MainContainer(
     modifier: Modifier = Modifier
 ) {
     var currentDestination by remember { mutableStateOf(NavDestination.HOME) }
+    var showThemeMenu by remember { mutableStateOf(false) }
 
+    val themeMode by viewModel.themeMode.collectAsState()
     val profile by viewModel.userProfile.collectAsState()
     val routines by viewModel.activeRoutines.collectAsState()
     val sessions by viewModel.allSessions.collectAsState()
@@ -98,6 +107,62 @@ fun MainContainer(
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
+                },
+                actions = {
+                    Box {
+                        IconButton(
+                            onClick = { showThemeMenu = true },
+                            modifier = Modifier.testTag("theme_toggle_button")
+                        ) {
+                            Icon(
+                                imageVector = when (themeMode) {
+                                    ThemeMode.LIGHT -> Icons.Default.LightMode
+                                    ThemeMode.DARK -> Icons.Default.DarkMode
+                                    ThemeMode.SYSTEM -> Icons.Default.SettingsBrightness
+                                },
+                                contentDescription = "Toggle Theme Mode"
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showThemeMenu,
+                            onDismissRequest = { showThemeMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Light Mode") },
+                                onClick = {
+                                    viewModel.setThemeMode(ThemeMode.LIGHT)
+                                    showThemeMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.LightMode, contentDescription = null)
+                                },
+                                modifier = Modifier.testTag("theme_option_light")
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Dark Mode") },
+                                onClick = {
+                                    viewModel.setThemeMode(ThemeMode.DARK)
+                                    showThemeMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.DarkMode, contentDescription = null)
+                                },
+                                modifier = Modifier.testTag("theme_option_dark")
+                            )
+                            DropdownMenuItem(
+                                text = { Text("System Default") },
+                                onClick = {
+                                    viewModel.setThemeMode(ThemeMode.SYSTEM)
+                                    showThemeMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.SettingsBrightness, contentDescription = null)
+                                },
+                                modifier = Modifier.testTag("theme_option_system")
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -202,6 +267,8 @@ fun MainContainer(
                 NavDestination.ASSESSMENT -> {
                     AssessmentScreen(
                         currentProfile = profile,
+                        themeMode = themeMode,
+                        onThemeModeChange = { viewModel.setThemeMode(it) },
                         onSaveProfile = { newProfile ->
                             viewModel.saveUserProfile(newProfile)
                         },
