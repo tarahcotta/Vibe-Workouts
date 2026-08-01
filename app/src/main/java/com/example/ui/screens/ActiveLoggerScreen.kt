@@ -68,8 +68,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.SlowMotionVideo
+import androidx.compose.runtime.mutableFloatStateOf
 import com.example.ui.components.ExerciseFormIllustrationBox
+import com.example.ui.components.PersonalBestNotificationBanner
 import com.example.ui.components.PreWorkoutMobilityCard
+import com.example.ui.components.ProgressiveOverloadTag
 import com.example.data.LoggedSetEntity
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
@@ -94,11 +97,18 @@ data class SetLogInput(
 fun ActiveLoggerScreen(
     routine: WorkoutRoutineEntity?,
     exercises: List<WorkoutExerciseEntity>,
+    personalBests: Map<String, Float> = emptyMap(),
     onSaveSession: (routineTitle: String, sets: List<LoggedSetEntity>, feel: String, notes: String) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+
+    // PR Notification State
+    var prNotificationExercise by remember { mutableStateOf<String?>(null) }
+    var prNotificationNewWeight by remember { mutableFloatStateOf(0f) }
+    var prNotificationOldMax by remember { mutableFloatStateOf(0f) }
+    var showPrBanner by remember { mutableStateOf(false) }
 
     // Routine Title
     val routineTitle = routine?.dayName ?: "Live Longevity Workout"
@@ -253,6 +263,15 @@ fun ActiveLoggerScreen(
                 .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
+            // Live Personal Best Notification Banner
+            PersonalBestNotificationBanner(
+                exerciseName = prNotificationExercise ?: "",
+                newWeightLbs = prNotificationNewWeight,
+                previousMaxLbs = prNotificationOldMax,
+                isVisible = showPrBanner,
+                onDismiss = { showPrBanner = false }
+            )
+
             // 5-Minute Pre-Workout Dynamic Mobility Routine
             PreWorkoutMobilityCard(
                 exercises = exercises,
@@ -312,6 +331,13 @@ fun ActiveLoggerScreen(
                                 }
 
                                 GoalBadge(goal = logState.primaryGoal)
+
+                                val currentPr = personalBests[logState.exerciseName] ?: 0f
+                                ProgressiveOverloadTag(
+                                    currentPrLbs = currentPr,
+                                    isReadyForIncrement = currentPr > 0f && logState.sets.all { it.isCompleted && it.rpe <= 8 },
+                                    modifier = Modifier.padding(start = 6.dp)
+                                )
                             }
                         }
 
@@ -466,6 +492,14 @@ fun ActiveLoggerScreen(
                                         setInput.isCompleted = !setInput.isCompleted
                                         if (setInput.isCompleted) {
                                             startRestTimer(90)
+                                            val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                                            val previousMax = personalBests[logState.exerciseName] ?: 0f
+                                            if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
+                                                prNotificationExercise = logState.exerciseName
+                                                prNotificationNewWeight = currentWeight
+                                                prNotificationOldMax = previousMax
+                                                showPrBanner = true
+                                            }
                                         }
                                     },
                                     modifier = Modifier

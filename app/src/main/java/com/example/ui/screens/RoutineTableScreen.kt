@@ -67,6 +67,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.example.ui.components.ExerciseFormIllustrationBox
 import com.example.ui.components.FloatingRestTimerBar
 import com.example.ui.components.PreWorkoutMobilityCard
+import com.example.ui.components.ProgressiveOverloadTag
 import com.example.ui.components.parseRestPeriodToSeconds
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
@@ -80,6 +81,7 @@ fun RoutineTableScreen(
     routines: List<WorkoutRoutineEntity>,
     selectedRoutine: WorkoutRoutineEntity?,
     exercises: List<WorkoutExerciseEntity>,
+    personalBests: Map<String, Float> = emptyMap(),
     onSelectRoutine: (WorkoutRoutineEntity) -> Unit,
     onStartLogging: (WorkoutRoutineEntity) -> Unit,
     onRegenerateProgram: () -> Unit,
@@ -302,12 +304,22 @@ fun RoutineTableScreen(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
-                                        Text(
-                                            text = ex.rpe,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = ex.rpe,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            val prWeight = personalBests[ex.exerciseName] ?: 0f
+                                            if (prWeight > 0f) {
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                ProgressiveOverloadTag(
+                                                    currentPrLbs = prWeight,
+                                                    isReadyForIncrement = true
+                                                )
+                                            }
+                                        }
                                     }
 
                                     // Column 2: Primary Goal Badge

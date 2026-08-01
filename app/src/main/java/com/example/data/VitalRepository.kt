@@ -8,6 +8,7 @@ class VitalRepository(private val dao: VitalDao) {
     val userProfile: Flow<UserProfileEntity?> = dao.getUserProfile()
     val activeRoutines: Flow<List<WorkoutRoutineEntity>> = dao.getActiveRoutines()
     val allSessions: Flow<List<LoggedWorkoutSessionEntity>> = dao.getAllSessions()
+    val allLoggedSets: Flow<List<LoggedSetEntity>> = dao.getAllLoggedSets()
 
     fun getExercisesForRoutine(routineId: Long): Flow<List<WorkoutExerciseEntity>> {
         return dao.getExercisesForRoutine(routineId)

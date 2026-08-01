@@ -66,6 +66,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.ui.VitalViewModel
@@ -82,6 +83,8 @@ fun ProgressAnalyticsScreen(
 ) {
     val scrollState = rememberScrollState()
     val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
+
+    val overloadList by viewModel.progressiveOverloadList.collectAsState()
 
     val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
     val totalWorkouts = sessions.size
@@ -133,7 +136,15 @@ fun ProgressAnalyticsScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Compound Lift Personal Best & Progressive Overload Readiness
+        ProgressiveOverloadHighlightCard(
+            overloadList = overloadList,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
 
         // Analytics Overview Cards
         Row(

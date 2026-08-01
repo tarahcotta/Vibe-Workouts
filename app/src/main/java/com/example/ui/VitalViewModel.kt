@@ -12,6 +12,7 @@ import com.example.data.VitalDatabase
 import com.example.data.VitalRepository
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
+import com.example.ui.components.ProgressiveOverloadInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -40,6 +42,9 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     val userProfile: StateFlow<UserProfileEntity?>
     val activeRoutines: StateFlow<List<WorkoutRoutineEntity>>
     val allSessions: StateFlow<List<LoggedWorkoutSessionEntity>>
+    val allLoggedSets: StateFlow<List<LoggedSetEntity>>
+    val personalBests: StateFlow<Map<String, Float>>
+    val progressiveOverloadList: StateFlow<List<ProgressiveOverloadInfo>>
 
     private val _selectedRoutine = MutableStateFlow<WorkoutRoutineEntity?>(null)
     val selectedRoutine: StateFlow<WorkoutRoutineEntity?> = _selectedRoutine.asStateFlow()
@@ -64,6 +69,70 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         allSessions = repository.allSessions.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        allLoggedSets = repository.allLoggedSets.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        personalBests = repository.allLoggedSets.map { sets ->
+            sets.groupBy { it.exerciseName }
+                .mapValues { entry -> entry.value.maxOfOrNull { it.weightLbs } ?: 0f }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyMap()
+        )
+
+        progressiveOverloadList = repository.allLoggedSets.map { sets: List<LoggedSetEntity> ->
+            val resultList = mutableListOf<ProgressiveOverloadInfo>()
+            val groupedByExercise: Map<String, List<LoggedSetEntity>> = sets.groupBy { it.exerciseName }
+            for ((exerciseName, setList) in groupedByExercise) {
+                var maxWeight = 0f
+                var totalRpe = 0
+                val recentSets = setList.take(5)
+                for (set in setList) {
+                    if (set.weightLbs > maxWeight) {
+                        maxWeight = set.weightLbs
+                    }
+                }
+                for (set in recentSets) {
+                    totalRpe += set.rpeActual
+                }
+                val avgRpe = if (recentSets.isNotEmpty()) totalRpe / recentSets.size else 8
+                val jointFeel = recentSets.firstOrNull()?.jointFeel ?: "Comfortable"
+                val lowerName = exerciseName.lowercase()
+                val isCompound = lowerName.contains("squat") || lowerName.contains("deadlift") ||
+                        lowerName.contains("bench") || lowerName.contains("press") ||
+                        lowerName.contains("row") || lowerName.contains("hip thrust") ||
+                        lowerName.contains("lunge") || lowerName.contains("clean") ||
+                        lowerName.contains("carry") || lowerName.contains("pull")
+
+                val isReady = isCompound && avgRpe <= 8 && jointFeel != "Joint Strain"
+                val reasoning = if (isReady) "RPE $avgRpe & $jointFeel joint feedback: primed for +5 lbs increment"
+                else if (avgRpe >= 9) "High RPE ($avgRpe) - maintain weight to solidify motor patterns"
+                else "Joint response: $jointFeel - preserve current load"
+
+                resultList.add(
+                    ProgressiveOverloadInfo(
+                        exerciseName = exerciseName,
+                        isCompoundLift = isCompound,
+                        currentPrLbs = maxWeight,
+                        recommendedNextWeightLbs = if (isReady) maxWeight + 5f else maxWeight,
+                        lastRpe = avgRpe,
+                        lastJointFeel = jointFeel,
+                        isReadyToIncrement = isReady,
+                        reasoning = reasoning
+                    )
+                )
+            }
+            resultList.sortedByDescending { it.isReadyToIncrement }
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()

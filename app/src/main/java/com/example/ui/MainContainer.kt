@@ -82,6 +82,8 @@ fun MainContainer(
     val sessions by viewModel.allSessions.collectAsState()
     val selectedRoutine by viewModel.selectedRoutine.collectAsState()
     val exercises by viewModel.selectedRoutineExercises.collectAsState()
+    val personalBests by viewModel.personalBests.collectAsState()
+    val overloadList by viewModel.progressiveOverloadList.collectAsState()
 
     val navItems = listOf(
         NavDestination.HOME,
@@ -213,6 +215,7 @@ fun MainContainer(
                         profile = profile,
                         routines = routines,
                         sessions = sessions,
+                        overloadList = overloadList,
                         onSelectRoutine = { routine ->
                             viewModel.selectRoutine(routine)
                             currentDestination = NavDestination.TABLE
@@ -228,6 +231,7 @@ fun MainContainer(
                         routines = routines,
                         selectedRoutine = selectedRoutine ?: routines.firstOrNull(),
                         exercises = exercises,
+                        personalBests = personalBests,
                         onSelectRoutine = { viewModel.selectRoutine(it) },
                         onStartLogging = { routine ->
                             viewModel.selectRoutine(routine)
@@ -243,6 +247,7 @@ fun MainContainer(
                     ActiveLoggerScreen(
                         routine = selectedRoutine ?: routines.firstOrNull(),
                         exercises = exercises,
+                        personalBests = personalBests,
                         onSaveSession = { title, loggedSets, feel, notes ->
                             viewModel.logWorkoutSession(title, loggedSets, feel, notes)
                         },

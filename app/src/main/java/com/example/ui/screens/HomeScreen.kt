@@ -51,6 +51,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.ProgressiveOverloadHighlightCard
+import com.example.ui.components.ProgressiveOverloadInfo
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.UserProfileEntity
 import com.example.data.WorkoutRoutineEntity
@@ -66,6 +68,7 @@ fun HomeScreen(
     profile: UserProfileEntity?,
     routines: List<WorkoutRoutineEntity>,
     sessions: List<LoggedWorkoutSessionEntity>,
+    overloadList: List<ProgressiveOverloadInfo> = emptyList(),
     onSelectRoutine: (WorkoutRoutineEntity) -> Unit,
     onNavigateToAssessment: () -> Unit,
     onNavigateToLogger: () -> Unit,
@@ -219,6 +222,19 @@ fun HomeScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Progressive Overload & Personal Best Readiness Card
+        ProgressiveOverloadHighlightCard(
+            overloadList = overloadList,
+            onStartWorkout = {
+                if (routines.isNotEmpty()) {
+                    onSelectRoutine(routines.first())
+                }
+                onNavigateToLogger()
+            }
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
