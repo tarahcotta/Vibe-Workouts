@@ -62,9 +62,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.SlowMotionVideo
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.mutableStateOf
 import com.example.ui.components.ExerciseFormIllustrationBox
+import com.example.ui.components.FloatingRestTimerBar
 import com.example.ui.components.PreWorkoutMobilityCard
+import com.example.ui.components.parseRestPeriodToSeconds
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.theme.BoneDensityGold
@@ -88,6 +91,9 @@ fun RoutineTableScreen(
     }
 
     var activeFormDemoExercise by remember { mutableStateOf<String?>(null) }
+    var activeTimerExerciseName by remember { mutableStateOf<String?>(null) }
+    var activeTimerInitialSeconds by remember { mutableIntStateOf(90) }
+    var isTimerActive by remember { mutableStateOf(false) }
 
     val activeRoutine = if (routines.isNotEmpty() && selectedTabIndex < routines.size) {
         routines[selectedTabIndex]
@@ -96,11 +102,12 @@ fun RoutineTableScreen(
     val verticalScrollState = rememberScrollState()
     val tableHorizontalScrollState = rememberScrollState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    // Box wrapper to anchor floating rest timer overlay
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Main Screen Content
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Top Day Selector Header
         if (routines.isNotEmpty()) {
             ScrollableTabRow(
@@ -256,7 +263,7 @@ fun RoutineTableScreen(
                             TableHeaderCell("Primary Goal", 140.dp)
                             TableHeaderCell("Sets", 60.dp, TextAlign.Center)
                             TableHeaderCell("Reps", 100.dp, TextAlign.Center)
-                            TableHeaderCell("Rest", 70.dp, TextAlign.Center)
+                            TableHeaderCell("Rest", 80.dp, TextAlign.Center)
                             TableHeaderCell("Focus / Form Cues", 200.dp)
                             TableHeaderCell("Form Demo", 100.dp, TextAlign.Center)
                         }
@@ -327,14 +334,40 @@ fun RoutineTableScreen(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
 
-                                    // Column 5: Rest
-                                    Text(
-                                        text = ex.restPeriod,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.width(70.dp),
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    // Column 5: Rest Interval (Interactive Timer Launcher)
+                                    Box(
+                                        modifier = Modifier.width(80.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
+                                            modifier = Modifier.clickable {
+                                                activeTimerExerciseName = ex.exerciseName
+                                                activeTimerInitialSeconds = parseRestPeriodToSeconds(ex.restPeriod)
+                                                isTimerActive = true
+                                            }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Timer,
+                                                    contentDescription = "Start Rest Timer",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = ex.restPeriod,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                )
+                                            }
+                                        }
+                                    }
 
                                     // Column 6: Focus / Cues
                                     Text(
@@ -461,6 +494,16 @@ fun RoutineTableScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+
+    // Floating Interactive Rest Timer Bar
+    FloatingRestTimerBar(
+        exerciseName = activeTimerExerciseName ?: "Rest Interval",
+        initialSeconds = activeTimerInitialSeconds,
+        isActive = isTimerActive,
+        onDismiss = { isTimerActive = false },
+        modifier = Modifier.align(Alignment.BottomCenter)
+    )
+}
 
     // Popup Form Illustration Dialog
     if (activeFormDemoExercise != null) {
