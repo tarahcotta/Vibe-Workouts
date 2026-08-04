@@ -51,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -367,25 +368,31 @@ fun ActiveLoggerScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Set", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(36.dp))
-                            Text("Lbs", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(70.dp))
-                            Text("Reps", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(70.dp))
-                            Text("RPE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(60.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Lbs", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Reps", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text("Joint Feel", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text("Done", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(44.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Done", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(36.dp))
                         }
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                         // Set Rows
                         logState.sets.forEachIndexed { setIndex, setInput ->
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(vertical = 8.dp)
                             ) {
-                                // Set #
-                                Box(
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Set #
+                                    Box(
                                     modifier = Modifier
                                         .width(36.dp)
                                         .height(36.dp)
@@ -431,30 +438,6 @@ fun ActiveLoggerScreen(
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     textStyle = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
                                 )
-
-                                Spacer(modifier = Modifier.width(6.dp))
-
-                                // RPE Button
-                                Surface(
-                                    modifier = Modifier
-                                        .width(52.dp)
-                                        .height(38.dp)
-                                        .clickable {
-                                            val nextRpe = if (setInput.rpe >= 10) 6 else setInput.rpe + 1
-                                            setInput.rpe = nextRpe
-                                        },
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text(
-                                            text = "@${setInput.rpe}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                    }
-                                }
 
                                 Spacer(modifier = Modifier.width(6.dp))
 
@@ -518,6 +501,32 @@ fun ActiveLoggerScreen(
                                         imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.PlayArrow,
                                         contentDescription = "Complete Set",
                                         tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                    )
+                                }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                
+                                // RPE Slider
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 42.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "RPE: ${setInput.rpe}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.width(60.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Slider(
+                                        value = setInput.rpe.toFloat(),
+                                        onValueChange = { setInput.rpe = it.toInt() },
+                                        valueRange = 1f..10f,
+                                        steps = 8,
+                                        modifier = Modifier.weight(1f)
                                     )
                                 }
                             }
