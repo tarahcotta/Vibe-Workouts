@@ -85,6 +85,139 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import androidx.compose.runtime.LaunchedEffect
 
+import java.util.Calendar
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MonitorWeight
+
+@Composable
+fun WeeklyWorkoutStatsCard(sessions: List<LoggedWorkoutSessionEntity>) {
+    val currentWeekCal = remember { Calendar.getInstance() }
+    
+    val weeklyData = remember(sessions) {
+        val grouped = sessions.groupBy { session ->
+            val cal = Calendar.getInstance().apply { timeInMillis = session.dateTimestamp }
+            "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.WEEK_OF_YEAR)}"
+        }
+        
+        var currentStreak = 0
+        var streakCal = Calendar.getInstance()
+        
+        // Check if there's a workout this week. If not, check if there was one last week to continue streak.
+        val thisWeekKey = "${streakCal.get(Calendar.YEAR)}-${streakCal.get(Calendar.WEEK_OF_YEAR)}"
+        if (!grouped.containsKey(thisWeekKey)) {
+            streakCal.add(Calendar.WEEK_OF_YEAR, -1)
+            val lastWeekKey = "${streakCal.get(Calendar.YEAR)}-${streakCal.get(Calendar.WEEK_OF_YEAR)}"
+            if (!grouped.containsKey(lastWeekKey)) {
+                // No streak if both this week and last week have no workouts.
+            } else {
+                streakCal.add(Calendar.WEEK_OF_YEAR, 1) // Reset back to start counting from last week? No, let the loop handle it
+            }
+        } else {
+            // we have a workout this week, start counting from this week.
+        }
+
+        streakCal = Calendar.getInstance() // reset
+        
+        // Simple streak counting back from current week.
+        while (true) {
+            val key = "${streakCal.get(Calendar.YEAR)}-${streakCal.get(Calendar.WEEK_OF_YEAR)}"
+            if (grouped.containsKey(key)) {
+                currentStreak++
+                streakCal.add(Calendar.WEEK_OF_YEAR, -1)
+            } else {
+                // If this is the very first check (current week) and it's 0, it doesn't break the streak if last week had one
+                val currentWeekKey = "${Calendar.getInstance().get(Calendar.YEAR)}-${Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)}"
+                if (key == currentWeekKey) {
+                    streakCal.add(Calendar.WEEK_OF_YEAR, -1)
+                    val lastWeekKey = "${streakCal.get(Calendar.YEAR)}-${streakCal.get(Calendar.WEEK_OF_YEAR)}"
+                    if (grouped.containsKey(lastWeekKey)) {
+                        continue
+                    }
+                }
+                break
+            }
+        }
+
+        val thisWeekSessions = grouped[thisWeekKey] ?: emptyList()
+        val thisWeekVolume = thisWeekSessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
+        val thisWeekCount = thisWeekSessions.size
+        
+        Triple(currentStreak, thisWeekVolume, thisWeekCount)
+    }
+    
+    val (streak, weeklyVolume, weeklyCount) = weeklyData
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Weekly Consistency",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Your progress this week",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Streak
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(48.dp)) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.LocalFireDepartment, contentDescription = "Current streak", tint = Color(0xFFE65100))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("$streak Wks", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                    Text("Streak", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+                // Count
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(48.dp)) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.FitnessCenter, contentDescription = "Weekly workout count", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("$weeklyCount", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                    Text("Workouts", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+                // Volume
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(48.dp)) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.MonitorWeight, contentDescription = "Weekly volume", tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("$weeklyVolume", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                    Text("Lbs Vol", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun ProgressAnalyticsScreen(
     viewModel: VitalViewModel,
@@ -148,6 +281,10 @@ fun ProgressAnalyticsScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        WeeklyWorkoutStatsCard(sessions = sessions)
 
         Spacer(modifier = Modifier.height(18.dp))
 
