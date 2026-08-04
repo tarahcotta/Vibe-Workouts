@@ -392,23 +392,6 @@ fun SessionHistoryExpandableItem(
     }
 }
 
-@Composable
-fun VicoLineChart() {
-    val modelProducer = remember { CartesianChartModelProducer() }
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            lineSeries { series(1, 2, 3, 2, 1) }
-        }
-    }
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberLineCartesianLayer(),
-            startAxis = VerticalAxis.rememberStart(),
-            bottomAxis = HorizontalAxis.rememberBottom(),
-        ),
-        modelProducer = modelProducer,
-    )
-}
 
 @Composable
 fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
@@ -501,125 +484,29 @@ fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
                     (chartData.maxOfOrNull { it.totalVolumeLbs } ?: 4000f).coerceAtLeast(4000f)
                 }
 
-                // Interactive Custom Canvas Chart
+                val modelProducer = remember { CartesianChartModelProducer() }
+                LaunchedEffect(chartData) {
+                    modelProducer.runTransaction {
+                        lineSeries {
+                            series(chartData.map { it.totalVolumeLbs })
+                        }
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
+                        .padding(vertical = 8.dp)
                 ) {
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(chartData) {
-                                detectTapGestures { offset ->
-                                    val pointWidth = size.width / chartData.size
-                                    val index = (offset.x / pointWidth)
-                                        .toInt()
-                                        .coerceIn(0, chartData.lastIndex)
-                                    selectedPointIndex = index
-                                }
-                            }
-                    ) {
-                        val width = size.width
-                        val height = size.height
-                        val bottomPadding = 40f
-                        val topPadding = 20f
-                        val availableHeight = height - bottomPadding - topPadding
-                        val stepX = width / (chartData.size.coerceAtLeast(1))
-
-                        // Target Threshold Line (3000 lbs)
-                        val thresholdY = height - bottomPadding - ((3000f / maxVolume) * availableHeight)
-                        drawLine(
-                            color = secondaryColor.copy(alpha = 0.6f),
-                            start = Offset(0f, thresholdY),
-                            end = Offset(width, thresholdY),
-                            strokeWidth = 3f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
-                        )
-
-                        // Path for Area and Line chart
-                        val strokePath = Path()
-                        val fillPath = Path()
-
-                        val points = chartData.mapIndexed { i, session ->
-                            val x = i * stepX + (stepX / 2)
-                            val y = height - bottomPadding - ((session.totalVolumeLbs / maxVolume) * availableHeight)
-                            Offset(x, y)
-                        }
-
-                        if (points.isNotEmpty()) {
-                            strokePath.moveTo(points.first().x, points.first().y)
-                            fillPath.moveTo(points.first().x, height - bottomPadding)
-                            fillPath.lineTo(points.first().x, points.first().y)
-
-                            for (i in 0 until points.size - 1) {
-                                val p1 = points[i]
-                                val p2 = points[i + 1]
-                                val controlPoint1 = Offset(p1.x + (p2.x - p1.x) / 2, p1.y)
-                                val controlPoint2 = Offset(p1.x + (p2.x - p1.x) / 2, p2.y)
-                                strokePath.cubicTo(
-                                    controlPoint1.x, controlPoint1.y,
-                                    controlPoint2.x, controlPoint2.y,
-                                    p2.x, p2.y
-                                )
-                                fillPath.cubicTo(
-                                    controlPoint1.x, controlPoint1.y,
-                                    controlPoint2.x, controlPoint2.y,
-                                    p2.x, p2.y
-                                )
-                            }
-
-                            fillPath.lineTo(points.last().x, height - bottomPadding)
-                            fillPath.close()
-
-                            // Draw Area Gradient Fill
-                            drawPath(
-                                path = fillPath,
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        primaryColor.copy(alpha = 0.35f),
-                                        primaryColor.copy(alpha = 0.02f)
-                                    )
-                                )
-                            )
-
-                            // Draw Line Stroke
-                            drawPath(
-                                path = strokePath,
-                                color = primaryColor,
-                                style = Stroke(width = 6f)
-                            )
-
-                            // Draw Data Nodes and Column Bars
-                            points.forEachIndexed { idx, point ->
-                                val session = chartData[idx]
-                                val barWidth = (stepX * 0.35f).coerceAtMost(28f)
-                                val barHeight = height - bottomPadding - point.y
-
-                                // Subtle bar background
-                                drawRoundRect(
-                                    color = if (idx == selectedPointIndex) primaryColor.copy(alpha = 0.25f) else outlineColor.copy(alpha = 0.2f),
-                                    topLeft = Offset(point.x - (barWidth / 2), point.y),
-                                    size = Size(barWidth, barHeight),
-                                    cornerRadius = CornerRadius(8f, 8f)
-                                )
-
-                                // Node Circle
-                                val isSelected = idx == selectedPointIndex
-                                drawCircle(
-                                    color = if (isSelected) primaryColor else Color.White,
-                                    radius = if (isSelected) 10f else 6f,
-                                    center = point
-                                )
-                                drawCircle(
-                                    color = primaryColor,
-                                    radius = if (isSelected) 10f else 6f,
-                                    center = point,
-                                    style = Stroke(width = 4f)
-                                )
-                            }
-                        }
-                    }
+                    CartesianChartHost(
+                        chart = rememberCartesianChart(
+                            rememberLineCartesianLayer(),
+                            startAxis = VerticalAxis.rememberStart(),
+                            bottomAxis = HorizontalAxis.rememberBottom(),
+                        ),
+                        modelProducer = modelProducer,
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

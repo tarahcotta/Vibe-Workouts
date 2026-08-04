@@ -281,41 +281,43 @@ fun BuiltInIntervalTimerCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            Row(
+            androidx.compose.foundation.lazy.LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                mapOf(
-                    45 to "45s • Hypertrophy",
-                    60 to "60s • Endurance",
-                    90 to "90s • Bone Density",
-                    120 to "120s • Strength",
-                    180 to "180s • Heavy Lift"
-                ).forEach { (seconds, label) ->
+                val presets = mapOf(
+                    45 to "Hypertrophy",
+                    60 to "Endurance",
+                    90 to "Bone Density",
+                    120 to "Strength",
+                    180 to "Heavy Lift"
+                ).toList()
+                items(presets.size) { index ->
+                    val (seconds, label) = presets[index]
                     val isSelected = targetRestSeconds == seconds
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
                         modifier = Modifier
-                            .weight(1f)
                             .clickable { onPresetSelected(seconds) }
                             .testTag("interval_preset_$seconds")
                     ) {
                         Column(
-                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp),
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = "${seconds}s",
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = label.substringAfter("• ").take(7),
+                                text = label,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontSize = 8.sp,
-                                color = if (isSelected) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
