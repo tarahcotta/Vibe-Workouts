@@ -74,6 +74,16 @@ import com.example.ui.VitalViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun ProgressAnalyticsScreen(
@@ -383,7 +393,26 @@ fun SessionHistoryExpandableItem(
 }
 
 @Composable
+fun VicoLineChart() {
+    val modelProducer = remember { CartesianChartModelProducer() }
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            lineSeries { series(1, 2, 3, 2, 1) }
+        }
+    }
+    CartesianChartHost(
+        chart = rememberCartesianChart(
+            rememberLineCartesianLayer(),
+            startAxis = VerticalAxis.rememberStart(),
+            bottomAxis = HorizontalAxis.rememberBottom(),
+        ),
+        modelProducer = modelProducer,
+    )
+}
+
+@Composable
 fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
+
     val dateFormat = remember { SimpleDateFormat("MMM d", Locale.getDefault()) }
 
     Card(
