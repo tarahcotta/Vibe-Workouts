@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.runtime.mutableFloatStateOf
+import com.example.ui.components.BuiltInIntervalTimerCard
 import com.example.ui.components.ExerciseFormIllustrationBox
 import com.example.ui.components.PersonalBestNotificationBanner
 import com.example.ui.components.PreWorkoutMobilityCard
@@ -170,8 +171,10 @@ fun ActiveLoggerScreen(
     var activeFormDemoExercise by remember { mutableStateOf<String?>(null) }
 
     // Rest Timer state
-    var timerRemainingSeconds by remember { mutableIntStateOf(0) }
+    var targetRestSeconds by remember { mutableIntStateOf(90) }
+    var timerRemainingSeconds by remember { mutableIntStateOf(90) }
     var isTimerRunning by remember { mutableStateOf(false) }
+    var activeTimerExerciseName by remember { mutableStateOf("") }
 
     DisposableEffect(isTimerRunning, timerRemainingSeconds) {
         var timer: CountDownTimer? = null
@@ -192,8 +195,12 @@ fun ActiveLoggerScreen(
         }
     }
 
-    fun startRestTimer(seconds: Int) {
+    fun startRestTimer(seconds: Int, exerciseName: String = "") {
+        targetRestSeconds = seconds
         timerRemainingSeconds = seconds
+        if (exerciseName.isNotBlank()) {
+            activeTimerExerciseName = exerciseName
+        }
         isTimerRunning = true
     }
 
@@ -232,50 +239,6 @@ fun ActiveLoggerScreen(
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
                     }
                 }
-
-                // Active Rest Timer Bar
-                if (timerRemainingSeconds > 0 || isTimerRunning) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Timer,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Rest Timer: ${timerRemainingSeconds}s",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-
-                            Row {
-                                TextButton(onClick = { timerRemainingSeconds += 15 }) {
-                                    Text("+15s", style = MaterialTheme.typography.labelSmall)
-                                }
-                                TextButton(onClick = {
-                                    isTimerRunning = false
-                                    timerRemainingSeconds = 0
-                                }) {
-                                    Text("Skip", style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
 
@@ -293,6 +256,28 @@ fun ActiveLoggerScreen(
                 previousMaxLbs = prNotificationOldMax,
                 isVisible = showPrBanner,
                 onDismiss = { showPrBanner = false }
+            )
+
+            // Built-In Rest Interval Timer Component
+            BuiltInIntervalTimerCard(
+                activeExerciseName = activeTimerExerciseName,
+                targetRestSeconds = targetRestSeconds,
+                isRunning = isTimerRunning,
+                remainingSeconds = timerRemainingSeconds,
+                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
+                onResetTimer = { newTarget ->
+                    timerRemainingSeconds = newTarget
+                    isTimerRunning = true
+                },
+                onAdjustSeconds = { delta ->
+                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
+                },
+                onPresetSelected = { seconds ->
+                    targetRestSeconds = seconds
+                    timerRemainingSeconds = seconds
+                    isTimerRunning = true
+                },
+                modifier = Modifier.padding(bottom = 18.dp)
             )
 
             // 5-Minute Pre-Workout Dynamic Mobility Routine
@@ -514,7 +499,7 @@ fun ActiveLoggerScreen(
                                     onClick = {
                                         setInput.isCompleted = !setInput.isCompleted
                                         if (setInput.isCompleted) {
-                                            startRestTimer(90)
+                                            startRestTimer(targetRestSeconds, logState.exerciseName)
                                             val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
                                             val previousMax = personalBests[logState.exerciseName] ?: 0f
                                             if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {

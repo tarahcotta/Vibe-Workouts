@@ -43,6 +43,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -65,7 +66,265 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.BoneDensityGold
+import com.example.ui.theme.PostureTeal
 import kotlinx.coroutines.delay
+
+/**
+ * Built-In Interval Timer UI Card Component for tracking rest periods between sets.
+ * Placed directly inside the workout screen or floating container.
+ */
+@Composable
+fun BuiltInIntervalTimerCard(
+    activeExerciseName: String = "",
+    targetRestSeconds: Int = 90,
+    isRunning: Boolean = false,
+    remainingSeconds: Int = 90,
+    onTogglePlayPause: () -> Unit = {},
+    onResetTimer: (Int) -> Unit = {},
+    onAdjustSeconds: (Int) -> Unit = {},
+    onPresetSelected: (Int) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    var mode by remember { mutableStateOf(TimerMode.COUNTDOWN) }
+    val progress = if (targetRestSeconds > 0) {
+        ((targetRestSeconds - remainingSeconds).toFloat() / targetRestSeconds.toFloat()).coerceIn(0f, 1f)
+    } else 0f
+
+    val isFinished = remainingSeconds == 0 && targetRestSeconds > 0
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("built_in_interval_timer_card"),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFinished) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // 1. Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = CircleShape,
+                        color = if (isFinished) MaterialTheme.colorScheme.primary else PostureTeal,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isFinished) Icons.Default.NotificationsActive else Icons.Default.Timer,
+                                contentDescription = "Timer Icon",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column {
+                        Text(
+                            text = if (isFinished) "Rest Complete! Ready for Next Set" else "Rest Interval Timer",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (activeExerciseName.isNotBlank()) "Target for $activeExerciseName: ${targetRestSeconds}s" else "Target Recovery: ${targetRestSeconds}s",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.clickable {
+                        mode = if (mode == TimerMode.COUNTDOWN) TimerMode.STOPWATCH else TimerMode.COUNTDOWN
+                    }
+                ) {
+                    Text(
+                        text = if (mode == TimerMode.COUNTDOWN) "Countdown ⏳" else "Stopwatch ⏱️",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Linear Progress Bar
+            if (mode == TimerMode.COUNTDOWN) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (isFinished) MaterialTheme.colorScheme.primary else BoneDensityGold,
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // 3. Display & Primary Controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val m = remainingSeconds / 60
+                val s = remainingSeconds % 60
+                val displayTime = String.format("%02d:%02d", m, s)
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = displayTime,
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isFinished) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = 1.sp
+                    )
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    // Play/Pause Button
+                    Button(
+                        onClick = onTogglePlayPause,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier
+                            .size(44.dp)
+                            .testTag("interval_timer_play_pause_button")
+                    ) {
+                        Icon(
+                            imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play/Pause Timer",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Reset Button
+                    IconButton(
+                        onClick = { onResetTimer(targetRestSeconds) },
+                        modifier = Modifier.testTag("interval_timer_reset_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Replay,
+                            contentDescription = "Reset Timer",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Quick Adjustment Buttons (+15s / -15s)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier
+                            .clickable { onAdjustSeconds(-15) }
+                            .testTag("interval_timer_minus_15")
+                    ) {
+                        Text(
+                            text = "-15s",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier
+                            .clickable { onAdjustSeconds(15) }
+                            .testTag("interval_timer_plus_15")
+                    ) {
+                        Text(
+                            text = "+15s",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 4. Quick Rest Preset Chips
+            Text(
+                text = "OVERLOAD REST PRESETS:",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 10.sp
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                mapOf(
+                    45 to "45s • Hypertrophy",
+                    60 to "60s • Endurance",
+                    90 to "90s • Bone Density",
+                    120 to "120s • Strength",
+                    180 to "180s • Heavy Lift"
+                ).forEach { (seconds, label) ->
+                    val isSelected = targetRestSeconds == seconds
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onPresetSelected(seconds) }
+                            .testTag("interval_preset_$seconds")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "${seconds}s",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = label.substringAfter("• ").take(7),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 8.sp,
+                                color = if (isSelected) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 fun parseRestPeriodToSeconds(restStr: String): Int {
     val clean = restStr.lowercase().trim()
