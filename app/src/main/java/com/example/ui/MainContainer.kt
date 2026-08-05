@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Home
@@ -52,6 +54,7 @@ import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
+import com.example.ui.screens.PlateCalculatorScreen
 import com.example.ui.screens.ProgressAnalyticsScreen
 import com.example.ui.screens.RoutineTableScreen
 
@@ -65,6 +68,7 @@ enum class NavDestination(
     TABLE("table", "Routine Table", Icons.Filled.GridOn, Icons.Outlined.GridOn),
     LOGGER("logger", "Live Logger", Icons.Filled.PlayCircleFilled, Icons.Outlined.PlayCircle),
     PROGRESS("progress", "Analytics", Icons.Filled.Timeline, Icons.Outlined.Timeline),
+    PLATE_CALC("plate_calc", "Plate Calc", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
     GUIDE("guide", "Science Guide", Icons.Filled.HealthAndSafety, Icons.Outlined.HealthAndSafety),
     ASSESSMENT("assessment", "Assessment", Icons.Filled.Assignment, Icons.Outlined.Assignment)
 }
@@ -92,7 +96,7 @@ fun MainContainer(
         NavDestination.TABLE,
         NavDestination.LOGGER,
         NavDestination.PROGRESS,
-        NavDestination.GUIDE
+        NavDestination.PLATE_CALC
     )
 
     Scaffold(
@@ -110,6 +114,7 @@ fun MainContainer(
                                 NavDestination.TABLE -> "Longevity Workout Layout"
                                 NavDestination.LOGGER -> "Live Workout Logger"
                                 NavDestination.PROGRESS -> "Progressive Overload & History"
+                                NavDestination.PLATE_CALC -> "Barbell Plate Calculator"
                                 NavDestination.GUIDE -> "Longevity & Health Science"
                                 NavDestination.ASSESSMENT -> "Strength & Health Assessment"
                             },
@@ -277,6 +282,12 @@ fun MainContainer(
                             }
                             currentDestination = NavDestination.LOGGER
                         }
+                    )
+                }
+
+                NavDestination.PLATE_CALC -> {
+                    PlateCalculatorScreen(
+                        onNavigateBack = { currentDestination = NavDestination.HOME }
                     )
                 }
 
