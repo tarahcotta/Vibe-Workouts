@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.AuthSyncCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
 import com.example.ui.components.WorkoutCalendarSummaryCard
@@ -59,6 +60,7 @@ import com.example.ui.components.WomensStrengthLogoIcon
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.UserProfileEntity
 import com.example.data.WorkoutRoutineEntity
+import com.example.ui.VitalViewModel
 import com.example.ui.theme.BoneDensityGold
 import com.example.ui.theme.EmeraldTertiaryLight
 import com.example.ui.theme.PostureTeal
@@ -72,6 +74,8 @@ fun HomeScreen(
     routines: List<WorkoutRoutineEntity>,
     sessions: List<LoggedWorkoutSessionEntity>,
     overloadList: List<ProgressiveOverloadInfo> = emptyList(),
+    viewModel: VitalViewModel? = null,
+    onOpenAuthDialog: () -> Unit = {},
     onSelectRoutine: (WorkoutRoutineEntity) -> Unit,
     onNavigateToAssessment: () -> Unit,
     onNavigateToLogger: () -> Unit,
@@ -91,6 +95,14 @@ fun HomeScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
+        if (viewModel != null) {
+            AuthSyncCard(
+                viewModel = viewModel,
+                onOpenAuthDialog = onOpenAuthDialog
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // Hero Card
         Card(
             modifier = Modifier

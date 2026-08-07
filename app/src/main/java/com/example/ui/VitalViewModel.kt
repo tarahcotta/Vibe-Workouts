@@ -5,14 +5,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.Context
 import com.example.ui.theme.ThemeMode
+import com.example.data.FirebaseAuthManager
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
+import com.example.data.SyncStatus
 import com.example.data.UserProfileEntity
 import com.example.data.VitalDatabase
 import com.example.data.VitalRepository
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.ProgressiveOverloadInfo
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,6 +30,13 @@ import kotlinx.coroutines.launch
 class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: VitalRepository
+
+    val authManager: FirebaseAuthManager = FirebaseAuthManager(application)
+    val currentUser: StateFlow<FirebaseUser?> = authManager.currentUser
+    val authLoading: StateFlow<Boolean> = authManager.isLoading
+    val authError: StateFlow<String?> = authManager.authError
+
+    val syncStatus: StateFlow<SyncStatus>
 
     private val sharedPrefs = application.getSharedPreferences("vital_strength_prefs", Context.MODE_PRIVATE)
 
@@ -55,6 +65,7 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val dao = VitalDatabase.getDatabase(application).vitalDao()
         repository = VitalRepository(dao)
+        syncStatus = repository.firestoreSyncManager.syncStatus
 
         userProfile = repository.userProfile.stateIn(
             scope = viewModelScope,
@@ -156,13 +167,62 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun signInWithEmail(email: String, pass: String) {
+        viewModelScope.launch {
+            val user = authManager.signInWithEmail(email, pass)
+            if (user != null) {
+                repository.restoreUserDataFromCloud(user.uid)
+            }
+        }
+    }
+
+    fun signUpWithEmail(email: String, pass: String) {
+        viewModelScope.launch {
+            val user = authManager.signUpWithEmail(email, pass)
+            if (user != null) {
+                repository.backupAllLocalDataToCloud(user.uid)
+            }
+        }
+    }
+
+    fun signInAnonymously() {
+        viewModelScope.launch {
+            authManager.signInAnonymously()
+        }
+    }
+
+    fun signInWithGoogle(webClientId: String) {
+        viewModelScope.launch {
+            val user = authManager.signInWithGoogle(webClientId)
+            if (user != null) {
+                repository.restoreUserDataFromCloud(user.uid)
+            }
+        }
+    }
+
+    fun signOut() {
+        authManager.signOut()
+    }
+
+    fun triggerCloudSync() {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            repository.backupAllLocalDataToCloud(user.uid)
+        }
+    }
+
+    fun clearAuthError() {
+        authManager.clearError()
+    }
+
     fun selectRoutine(routine: WorkoutRoutineEntity) {
         _selectedRoutine.value = routine
     }
 
     fun saveUserProfile(profile: UserProfileEntity) {
         viewModelScope.launch {
-            repository.saveUserProfile(profile)
+            val uid = currentUser.value?.uid
+            repository.saveUserProfile(profile, uid)
         }
     }
 
@@ -189,7 +249,8 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
                 overallFeel = overallFeel,
                 notes = notes
             )
-            repository.logWorkoutSession(session, sets)
+            val uid = currentUser.value?.uid
+            repository.logWorkoutSession(session, sets, uid)
         }
     }
 

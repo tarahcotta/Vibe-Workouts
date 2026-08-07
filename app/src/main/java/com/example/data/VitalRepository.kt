@@ -3,7 +3,10 @@ package com.example.data
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
-class VitalRepository(private val dao: VitalDao) {
+class VitalRepository(
+    private val dao: VitalDao,
+    val firestoreSyncManager: FirestoreSyncManager = FirestoreSyncManager()
+) {
 
     val userProfile: Flow<UserProfileEntity?> = dao.getUserProfile()
     val activeRoutines: Flow<List<WorkoutRoutineEntity>> = dao.getActiveRoutines()
@@ -18,14 +21,22 @@ class VitalRepository(private val dao: VitalDao) {
         return dao.getSetsForSession(sessionId)
     }
 
+    suspend fun getSetsForSessionList(sessionId: Long): List<LoggedSetEntity> {
+        return dao.getSetsForSession(sessionId).firstOrNull() ?: emptyList()
+    }
+
     fun getMaxWeightForExercise(exerciseName: String): Flow<Float?> {
         return dao.getMaxWeightForExercise(exerciseName)
     }
 
-    suspend fun saveUserProfile(profile: UserProfileEntity) {
+    suspend fun saveUserProfile(profile: UserProfileEntity, userId: String? = null) {
         dao.saveUserProfile(profile)
         // Auto-generate fresh custom routines based on updated profile
         generateAndSaveRoutines(profile)
+
+        if (!userId.isNullOrBlank()) {
+            firestoreSyncManager.saveUserProfileToCloud(userId, profile)
+        }
     }
 
     suspend fun generateAndSaveRoutines(profile: UserProfileEntity) {
@@ -35,11 +46,17 @@ class VitalRepository(private val dao: VitalDao) {
 
     suspend fun logWorkoutSession(
         session: LoggedWorkoutSessionEntity,
-        sets: List<LoggedSetEntity>
+        sets: List<LoggedSetEntity>,
+        userId: String? = null
     ): Long {
         val sessionId = dao.insertSession(session)
         val updatedSets = sets.map { it.copy(sessionId = sessionId) }
         dao.insertSets(updatedSets)
+
+        if (!userId.isNullOrBlank()) {
+            val updatedSession = session.copy(id = sessionId)
+            firestoreSyncManager.saveLoggedSessionToCloud(userId, updatedSession, updatedSets)
+        }
         return sessionId
     }
 
@@ -55,5 +72,29 @@ class VitalRepository(private val dao: VitalDao) {
             dao.saveUserProfile(defaultProfile)
             generateAndSaveRoutines(defaultProfile)
         }
+    }
+
+    suspend fun restoreUserDataFromCloud(userId: String) {
+        val cloudProfile = firestoreSyncManager.fetchUserProfileFromCloud(userId)
+        if (cloudProfile != null) {
+            dao.saveUserProfile(cloudProfile)
+            generateAndSaveRoutines(cloudProfile)
+        }
+
+        val cloudSessions = firestoreSyncManager.fetchLoggedSessionsFromCloud(userId)
+        for ((session, sets) in cloudSessions) {
+            logWorkoutSession(session, sets)
+        }
+    }
+
+    suspend fun backupAllLocalDataToCloud(userId: String) {
+        val profile = dao.getUserProfile().firstOrNull()
+        val sessions = dao.getAllSessions().firstOrNull() ?: emptyList()
+        firestoreSyncManager.backupAllLocalDataToCloud(
+            userId = userId,
+            profile = profile,
+            sessions = sessions,
+            fetchSetsForSession = { sessionId -> getSetsForSessionList(sessionId) }
+        )
     }
 }

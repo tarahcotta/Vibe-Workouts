@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.FitnessCenter
+import com.example.ui.components.AuthDialog
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Home
@@ -81,6 +84,7 @@ fun MainContainer(
 ) {
     var currentDestination by remember { mutableStateOf(NavDestination.HOME) }
     var showThemeMenu by remember { mutableStateOf(false) }
+    var showAuthDialog by remember { mutableStateOf(false) }
 
     val themeMode by viewModel.themeMode.collectAsState()
     val profile by viewModel.userProfile.collectAsState()
@@ -125,6 +129,17 @@ fun MainContainer(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { showAuthDialog = true },
+                        modifier = Modifier.testTag("auth_dialog_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Firebase Auth & Cloud Sync",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     Box {
                         IconButton(
                             onClick = { showThemeMenu = true },
@@ -218,6 +233,13 @@ fun MainContainer(
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
+        if (showAuthDialog) {
+            AuthDialog(
+                viewModel = viewModel,
+                onDismiss = { showAuthDialog = false }
+            )
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -230,6 +252,8 @@ fun MainContainer(
                         routines = routines,
                         sessions = sessions,
                         overloadList = overloadList,
+                        viewModel = viewModel,
+                        onOpenAuthDialog = { showAuthDialog = true },
                         onSelectRoutine = { routine ->
                             viewModel.selectRoutine(routine)
                             currentDestination = NavDestination.TABLE
