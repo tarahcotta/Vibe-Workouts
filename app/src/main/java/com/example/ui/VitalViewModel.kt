@@ -67,6 +67,10 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
         repository = VitalRepository(dao)
         syncStatus = repository.firestoreSyncManager.syncStatus
 
+        viewModelScope.launch {
+            repository.ensureInitialDataLoaded()
+        }
+
         userProfile = repository.userProfile.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

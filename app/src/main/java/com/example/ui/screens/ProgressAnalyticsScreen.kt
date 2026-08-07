@@ -67,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ProgressiveOverloadHighlightCard
+import com.example.ui.components.WeightProgressionVicoChartCard
 import com.example.ui.components.WorkoutCalendarSummaryCard
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
@@ -231,6 +232,7 @@ fun ProgressAnalyticsScreen(
 
     val overloadList by viewModel.progressiveOverloadList.collectAsState()
     val routines by viewModel.activeRoutines.collectAsState()
+    val allLoggedSets by viewModel.allLoggedSets.collectAsState()
 
     val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
     val totalWorkouts = sessions.size
@@ -327,6 +329,14 @@ fun ProgressAnalyticsScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Vico Line Chart for Exercise Weight Progression over time
+        WeightProgressionVicoChartCard(
+            allSessions = sessions,
+            allLoggedSets = allLoggedSets
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 

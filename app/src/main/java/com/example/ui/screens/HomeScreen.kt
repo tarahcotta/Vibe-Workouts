@@ -42,6 +42,8 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.AuthSyncCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
+import com.example.ui.components.WeightProgressionVicoChartCard
 import com.example.ui.components.WorkoutCalendarSummaryCard
 import com.example.ui.components.WomensStrengthHeaderLogo
 import com.example.ui.components.WomensStrengthLogoIcon
@@ -248,6 +251,15 @@ fun HomeScreen(
                 onNavigateToLogger()
             }
         )
+
+        if (viewModel != null) {
+            val allLoggedSets by viewModel.allLoggedSets.collectAsState()
+            Spacer(modifier = Modifier.height(20.dp))
+            WeightProgressionVicoChartCard(
+                allSessions = sessions,
+                allLoggedSets = allLoggedSets
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
