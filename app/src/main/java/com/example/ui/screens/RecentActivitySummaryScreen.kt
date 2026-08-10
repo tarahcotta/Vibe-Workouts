@@ -759,10 +759,10 @@ fun ActivitySessionCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Highlight Volume & Stats Pills Row
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // Total Volume Pill
                 Surface(
