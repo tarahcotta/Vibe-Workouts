@@ -53,6 +53,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,6 +72,15 @@ import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.VitalViewModel
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -384,6 +394,114 @@ fun RecentActivitySummaryScreen(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Vico Total Volume Trend Chart Card (Past 30 Days)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("volume_trend_vico_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Volume Lifted Trend (Vico)",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Total volume trend over past 30 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val thirtyDaysAgo = now - (30L * 24 * 60 * 60 * 1000L)
+                val trendSessions = remember(sessions) {
+                    sessions.filter { it.dateTimestamp >= thirtyDaysAgo }
+                        .sortedBy { it.dateTimestamp }
+                }
+
+                val volumeValues = remember(trendSessions) {
+                    trendSessions.map { it.totalVolumeLbs.toFloat() }
+                }
+
+                val modelProducer = remember { CartesianChartModelProducer() }
+
+                LaunchedEffect(volumeValues) {
+                    modelProducer.runTransaction {
+                        lineSeries {
+                            series(if (volumeValues.isNotEmpty()) volumeValues else listOf(0f))
+                        }
+                    }
+                }
+
+                if (trendSessions.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No workout sessions recorded in the last 30 days.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(vertical = 4.dp)
+                    ) {
+                        CartesianChartHost(
+                            chart = rememberCartesianChart(
+                                rememberLineCartesianLayer(),
+                                startAxis = VerticalAxis.rememberStart(),
+                                bottomAxis = HorizontalAxis.rememberBottom(),
+                            ),
+                            modelProducer = modelProducer,
+                        )
+                    }
                 }
             }
         }
