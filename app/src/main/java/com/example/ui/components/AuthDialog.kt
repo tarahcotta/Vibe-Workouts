@@ -203,12 +203,15 @@ fun AuthDialog(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    val displayError = localError ?: authError
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (isSignUp) "Create Firebase Account" else "Sign In to Firebase",
+                text = if (isSignUp) "Create Account" else "Sign In",
                 fontWeight = FontWeight.Bold
             )
         },
@@ -220,19 +223,19 @@ fun AuthDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Sync your workout routines, strength logs, and longevity metrics securely with Firebase Auth & Firestore.",
+                    text = "Securely sync your workout routines, strength logs, and longevity metrics across devices.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                if (!authError.isNullOrBlank()) {
+                if (!displayError.isNullOrBlank()) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = authError ?: "",
+                            text = displayError,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(10.dp)
@@ -245,6 +248,7 @@ fun AuthDialog(
                     onValueChange = {
                         email = it
                         viewModel.clearAuthError()
+                        localError = null
                     },
                     label = { Text("Email Address") },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
@@ -258,6 +262,7 @@ fun AuthDialog(
                     onValueChange = {
                         password = it
                         viewModel.clearAuthError()
+                        localError = null
                     },
                     label = { Text("Password") },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
@@ -284,6 +289,7 @@ fun AuthDialog(
                         onClick = {
                             isSignUp = !isSignUp
                             viewModel.clearAuthError()
+                            localError = null
                         }
                     ) {
                         Text(if (isSignUp) "Already have an account? Sign In" else "New user? Create Account")
@@ -307,18 +313,22 @@ fun AuthDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (isSignUp) {
-                        viewModel.signUpWithEmail(email, password)
+                    if (email.isBlank() || password.isBlank()) {
+                        localError = "Please enter both email and password."
                     } else {
-                        viewModel.signInWithEmail(email, password)
+                        if (isSignUp) {
+                            viewModel.signUpWithEmail(email, password)
+                        } else {
+                            viewModel.signInWithEmail(email, password)
+                        }
                     }
                 },
-                enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
+                enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {

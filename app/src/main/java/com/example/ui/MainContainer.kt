@@ -137,7 +137,7 @@ fun MainContainer(
                         androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 10.dp))
                         Text(
                             text = when (currentDestination) {
-                                NavDestination.HOME -> "Women's Strength & Longevity"
+                                NavDestination.HOME -> "Strength & Longevity"
                                 NavDestination.LIBRARY -> "Strength Exercise Library"
                                 NavDestination.ACTIVITY -> "Recent Workout Activity"
                                 NavDestination.TABLE -> "Routines"
