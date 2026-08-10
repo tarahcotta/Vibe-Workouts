@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import com.example.ui.components.CustomFlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -759,10 +759,10 @@ fun ActivitySessionCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Highlight Volume & Stats Pills Row
-            FlowRow(
+            CustomFlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalSpacing = 8.dp,
+                verticalSpacing = 6.dp
             ) {
                 // Total Volume Pill
                 Surface(
@@ -829,10 +829,10 @@ fun ActivitySessionCard(
                         }
                 }
 
-                FlowRow(
+                CustomFlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalSpacing = 6.dp,
+                    verticalSpacing = 6.dp
                 ) {
                     exerciseSummary.forEach { summaryText ->
                         Surface(

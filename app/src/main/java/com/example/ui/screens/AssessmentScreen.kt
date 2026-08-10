@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import com.example.ui.components.CustomFlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -361,10 +361,10 @@ fun AssessmentScreen(
             subtitle = "Exercises are auto-scaled to protect these joint zones"
         )
         val jointOptions = listOf("Knees", "Lower Back", "Shoulders", "Wrists/Grip", "None")
-        FlowRow(
+        CustomFlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalSpacing = 8.dp,
+            verticalSpacing = 8.dp
         ) {
             jointOptions.forEach { joint ->
                 val isSelected = if (joint == "None") {
@@ -414,10 +414,10 @@ fun AssessmentScreen(
             "Core Stability",
             "Joint Mobility"
         )
-        FlowRow(
+        CustomFlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalSpacing = 8.dp,
+            verticalSpacing = 8.dp
         ) {
             focusOptions.forEach { focus ->
                 val isSelected = selectedFocus.value.contains(focus)

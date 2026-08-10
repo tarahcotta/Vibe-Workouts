@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import com.example.ui.components.CustomFlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -456,9 +456,9 @@ fun ExerciseCardItem(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Badges FlowRow (Category, Muscle Group, Equipment)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+            CustomFlowRow(
+                horizontalSpacing = 6.dp,
+                verticalSpacing = 6.dp
             ) {
                 // Health Category Badge
                 CategoryPill(
@@ -620,9 +620,9 @@ fun ExerciseDetailSheetContent(
 
         item {
             // Category & Equipment Tags
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            CustomFlowRow(
+                horizontalSpacing = 8.dp,
+                verticalSpacing = 8.dp
             ) {
                 CategoryPill(
                     text = "Focus: ${exercise.healthFocusCategory.displayName}",

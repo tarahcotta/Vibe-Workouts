@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import com.example.ui.components.CustomFlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -279,10 +280,10 @@ fun ProfileSetupScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FlowRow(
+                CustomFlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalSpacing = 8.dp,
+                    verticalSpacing = 8.dp
                 ) {
                     availableFitnessGoals.forEach { goal ->
                         val isSelected = selectedGoals.value.contains(goal)
