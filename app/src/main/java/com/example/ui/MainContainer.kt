@@ -58,8 +58,11 @@ import com.example.ui.components.WomensStrengthLogoIcon
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.outlined.MenuBook
 import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
+import com.example.ui.screens.ExerciseLibraryScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
 import com.example.ui.screens.OnboardingScreen
@@ -76,6 +79,7 @@ enum class NavDestination(
     val unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     HOME("home", "Dashboard", Icons.Filled.Home, Icons.Outlined.Home),
+    LIBRARY("library", "Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
     ACTIVITY("activity", "Activity", Icons.Filled.History, Icons.Outlined.History),
     TABLE("table", "Routine Table", Icons.Filled.GridOn, Icons.Outlined.GridOn),
     LOGGER("logger", "Live Logger", Icons.Filled.PlayCircleFilled, Icons.Outlined.PlayCircle),
@@ -116,7 +120,7 @@ fun MainContainer(
 
     val navItems = listOf(
         NavDestination.HOME,
-        NavDestination.ACTIVITY,
+        NavDestination.LIBRARY,
         NavDestination.TABLE,
         NavDestination.LOGGER,
         NavDestination.PROGRESS
@@ -134,6 +138,7 @@ fun MainContainer(
                         Text(
                             text = when (currentDestination) {
                                 NavDestination.HOME -> "Women's Strength & Longevity"
+                                NavDestination.LIBRARY -> "Strength Exercise Library"
                                 NavDestination.ACTIVITY -> "Recent Workout Activity"
                                 NavDestination.TABLE -> "Longevity Workout Layout"
                                 NavDestination.LOGGER -> "Live Workout Logger"
@@ -298,6 +303,17 @@ fun MainContainer(
                         onNavigateToLogger = { currentDestination = NavDestination.LOGGER },
                         onNavigateToGuide = { currentDestination = NavDestination.GUIDE },
                         onNavigateToActivity = { currentDestination = NavDestination.ACTIVITY }
+                    )
+                }
+
+                NavDestination.LIBRARY -> {
+                    ExerciseLibraryScreen(
+                        onSelectExerciseForWorkout = { exercise ->
+                            if (routines.isNotEmpty()) {
+                                viewModel.selectRoutine(routines.first())
+                            }
+                            currentDestination = NavDestination.LOGGER
+                        }
                     )
                 }
 
