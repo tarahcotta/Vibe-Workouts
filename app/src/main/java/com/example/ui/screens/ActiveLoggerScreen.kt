@@ -72,6 +72,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -117,6 +119,7 @@ fun ActiveLoggerScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 
     var activeDictationCallback by remember { mutableStateOf<((String) -> Unit)?>(null) }
@@ -611,6 +614,7 @@ fun ActiveLoggerScreen(
                                 IconButton(
                                     onClick = {
                                         setInput.isCompleted = !setInput.isCompleted
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         if (setInput.isCompleted) {
                                             startRestTimer(targetRestSeconds, logState.exerciseName)
                                             val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
