@@ -46,6 +46,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,6 +92,12 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
     val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    val isLoading by (viewModel?.isDataLoading?.collectAsState() ?: remember { mutableStateOf(false) })
+
+    if (isLoading) {
+        com.example.ui.components.ScreenSkeletonLoader(modifier = modifier)
+        return
+    }
 
     val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
     val totalSessionsLogged = sessions.size

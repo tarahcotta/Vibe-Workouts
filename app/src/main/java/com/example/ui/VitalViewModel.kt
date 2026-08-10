@@ -52,6 +52,9 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasCompletedOnboarding = MutableStateFlow(sharedPrefs.getBoolean("has_completed_onboarding", false))
     val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding.asStateFlow()
 
+    private val _isDataLoading = MutableStateFlow(true)
+    val isDataLoading: StateFlow<Boolean> = _isDataLoading.asStateFlow()
+
     val userProfile: StateFlow<UserProfileEntity?>
     val activeRoutines: StateFlow<List<WorkoutRoutineEntity>>
     val allSessions: StateFlow<List<LoggedWorkoutSessionEntity>>
@@ -73,6 +76,8 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             repository.ensureInitialDataLoaded()
+            kotlinx.coroutines.delay(300)
+            _isDataLoading.value = false
         }
 
         userProfile = repository.userProfile.stateIn(
