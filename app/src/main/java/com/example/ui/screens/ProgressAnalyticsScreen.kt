@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -68,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.WeightProgressionVicoChartCard
+import com.example.ui.components.IllustrativeEmptyState
 import com.example.ui.components.WorkoutCalendarSummaryCard
 import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
@@ -378,18 +381,12 @@ fun ProgressAnalyticsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Your workout history log will appear here after your first session.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                IllustrativeEmptyState(
+                    icon = Icons.Default.DirectionsRun,
+                    title = "Awaiting Your Triumphs",
+                    description = "Your workout history log will appear here after your first session. Lace up those shoes!",
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         } else {
             sessions.forEach { session ->
