@@ -64,7 +64,8 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val dao = VitalDatabase.getDatabase(application).vitalDao()
-        repository = VitalRepository(dao)
+        val syncManager = com.example.data.FirestoreSyncManager(application)
+        repository = VitalRepository(dao, syncManager)
         syncStatus = repository.firestoreSyncManager.syncStatus
 
         viewModelScope.launch {

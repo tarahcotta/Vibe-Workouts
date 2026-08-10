@@ -1,6 +1,8 @@
 package com.example.data
 
+import android.content.Context
 import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,13 +17,23 @@ sealed class SyncStatus {
     data class Error(val message: String) : SyncStatus()
 }
 
-class FirestoreSyncManager {
+class FirestoreSyncManager(private val context: Context? = null) {
 
-    private val firestore: FirebaseFirestore? = try {
-        FirebaseFirestore.getInstance()
-    } catch (e: Exception) {
-        Log.e("FirestoreSyncManager", "Error initializing FirebaseFirestore", e)
-        null
+    private val firestore: FirebaseFirestore? by lazy {
+        try {
+            if (context != null && FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+            }
+            val apps = if (context != null) FirebaseApp.getApps(context) else emptyList()
+            if (apps.isNotEmpty()) {
+                FirebaseFirestore.getInstance()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.w("FirestoreSyncManager", "FirebaseFirestore unavailable: ${e.message}")
+            null
+        }
     }
 
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)

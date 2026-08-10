@@ -7,6 +7,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -21,11 +22,20 @@ import kotlinx.coroutines.tasks.await
 
 class FirebaseAuthManager(private val context: Context) {
 
-    private val auth: FirebaseAuth? = try {
-        FirebaseAuth.getInstance()
-    } catch (e: Exception) {
-        Log.e("FirebaseAuthManager", "Error initializing FirebaseAuth", e)
-        null
+    private val auth: FirebaseAuth? by lazy {
+        try {
+            if (FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+            }
+            if (FirebaseApp.getApps(context).isNotEmpty()) {
+                FirebaseAuth.getInstance()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.w("FirebaseAuthManager", "FirebaseAuth unavailable: ${e.message}")
+            null
+        }
     }
 
     private val _currentUser = MutableStateFlow<FirebaseUser?>(auth?.currentUser)
