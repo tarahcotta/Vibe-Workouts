@@ -117,13 +117,13 @@ fun ProfileSetupScreen(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Firebase Auth & Profile Setup",
+                        text = "Account & Profile Setup",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Tailor your longevity programming based on age, goals & cloud sync.",
+                        text = "Tailor your longevity programming based on age, goals & preferences.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -212,7 +212,7 @@ fun ProfileSetupScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (currentUser != null) "Manage Firebase Account / Sign Out" else "Sign In with Firebase / Google",
+                        text = if (currentUser != null) "Manage Account / Sign Out" else "Sign In to Save Progress",
                         fontWeight = FontWeight.SemiBold
                     )
                 }

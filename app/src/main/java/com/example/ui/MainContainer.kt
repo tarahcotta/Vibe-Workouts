@@ -147,7 +147,7 @@ fun MainContainer(
                                 NavDestination.PLATE_CALC -> "Barbell Plate Calculator"
                                 NavDestination.GUIDE -> "Longevity & Health Science"
                                 NavDestination.ASSESSMENT -> "Strength & Health Assessment"
-                                NavDestination.PROFILE_SETUP -> "Firebase Profile Setup"
+                                NavDestination.PROFILE_SETUP -> "Account & Profile"
                             },
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
@@ -175,7 +175,7 @@ fun MainContainer(
                     ) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Firebase Auth & Cloud Sync",
+                            contentDescription = "Account & Profile",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
