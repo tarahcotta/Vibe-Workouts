@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
@@ -229,20 +231,26 @@ fun ActiveLoggerScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Log sets, weight, reps & joint response",
+                                text = "Track your progress and listen to your body",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        IconButton(onClick = onCancel) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        IconButton(
+                            onClick = onCancel,
+                            modifier = Modifier.size(48.dp) // WCAG touch target
+                        ) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Cancel Workout")
                         }
                     }
                 }
             }
         },
         bottomBar = {
+            val totalCompletedSets = exerciseLogs.sumOf { log -> log.sets.count { it.isCompleted } }
+            val isFinishEnabled = totalCompletedSets > 0
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surface,
@@ -289,13 +297,14 @@ fun ActiveLoggerScreen(
                         .padding(16.dp)
                         .height(56.dp)
                         .testTag("finish_workout_button"),
+                    enabled = isFinishEnabled,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Finish & Save Session",
+                        text = if (isFinishEnabled) "Finish & Save Session" else "Log a set to finish",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -354,11 +363,19 @@ fun ActiveLoggerScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Text(
-                            text = if (isTimerExpanded) "Collapse ▲" else "Expand View ▼",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isTimerExpanded) "Collapse" else "Expand View",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Icon(
+                                imageVector = if (isTimerExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                     
                     AnimatedVisibility(visible = isTimerExpanded || isTimerRunning) {
@@ -487,7 +504,7 @@ fun ActiveLoggerScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Joint Feel", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Log", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
+                            Text("Log", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(48.dp))
                         }
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -606,7 +623,7 @@ fun ActiveLoggerScreen(
                                         }
                                     },
                                     modifier = Modifier
-                                        .size(44.dp)
+                                        .size(48.dp) // WCAG minimum touch target
                                         .testTag("check_set_${exIndex}_$setIndex")
                                 ) {
                                     Icon(
