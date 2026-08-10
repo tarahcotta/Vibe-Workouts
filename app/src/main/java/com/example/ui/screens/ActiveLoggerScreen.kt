@@ -152,7 +152,7 @@ fun ActiveLoggerScreen(
                     SetLogInput(
                         setNumber = s,
                         weightText = "25",
-                        repsText = ex.repRange.filter { it.isDigit() }.take(2).ifEmpty { "8" },
+                        repsText = ex.repRange.substringBefore("-").filter { it.isDigit() }.ifEmpty { "8" },
                         rpe = 8,
                         jointFeel = "Comfortable"
                     )
@@ -624,12 +624,17 @@ fun ActiveLoggerScreen(
                                     },
                                     modifier = Modifier
                                         .size(48.dp) // WCAG minimum touch target
+                                        .background(
+                                            if (setInput.isCompleted) MaterialTheme.colorScheme.primary 
+                                            else MaterialTheme.colorScheme.surfaceVariant,
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
                                         .testTag("check_set_${exIndex}_$setIndex")
                                 ) {
                                     Icon(
-                                        imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.Check,
+                                        imageVector = Icons.Default.Check,
                                         contentDescription = "Complete Set",
-                                        tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                        tint = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 }
