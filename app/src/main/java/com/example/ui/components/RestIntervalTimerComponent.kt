@@ -196,24 +196,24 @@ fun BuiltInIntervalTimerCard(
                         letterSpacing = 1.sp
                     )
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     // Play/Pause Button
-                    Button(
+                    IconButton(
                         onClick = onTogglePlayPause,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                        ),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(48.dp)
+                            .background(
+                                color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                shape = CircleShape
+                            )
                             .testTag("interval_timer_play_pause_button")
                     ) {
                         Icon(
                             imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause Timer",
                             tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -246,7 +246,9 @@ fun BuiltInIntervalTimerCard(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
 
@@ -262,7 +264,9 @@ fun BuiltInIntervalTimerCard(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }

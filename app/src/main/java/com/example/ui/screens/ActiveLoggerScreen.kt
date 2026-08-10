@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -213,7 +214,7 @@ fun ActiveLoggerScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 4.dp
             ) {
@@ -252,7 +253,7 @@ fun ActiveLoggerScreen(
             val isFinishEnabled = totalCompletedSets > 0
 
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp,
                 shadowElevation = 16.dp
