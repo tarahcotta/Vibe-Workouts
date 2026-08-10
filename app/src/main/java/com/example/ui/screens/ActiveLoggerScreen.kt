@@ -51,6 +51,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -72,6 +73,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.SlowMotionVideo
@@ -205,50 +207,109 @@ fun ActiveLoggerScreen(
         isTimerRunning = true
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // Sticky Header / Rest Timer
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 4.dp
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = routineTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Log sets, weight, reps & joint response",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = routineTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Log sets, weight, reps & joint response",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
 
-                    IconButton(onClick = onCancel) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        IconButton(onClick = onCancel) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        }
                     }
                 }
             }
-        }
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp
+            ) {
+                Button(
+                    onClick = {
+                        val allLoggedSets = mutableListOf<LoggedSetEntity>()
+                        exerciseLogs.forEach { log ->
+                            log.sets.forEach { setInput ->
+                                val w = setInput.weightText.toFloatOrNull() ?: 0f
+                                val r = setInput.repsText.toIntOrNull() ?: 0
+                                allLoggedSets.add(
+                                    LoggedSetEntity(
+                                        sessionId = 0,
+                                        exerciseName = log.exerciseName,
+                                        setNumber = setInput.setNumber,
+                                        weightLbs = w,
+                                        repsCompleted = r,
+                                        rpeActual = setInput.rpe,
+                                        jointFeel = setInput.jointFeel
+                                    )
+                                )
+                            }
+                        }
 
-        // Main Form Content
+                        val combinedNotes = buildString {
+                            exerciseLogs.forEach { log ->
+                                if (log.formNotes.isNotBlank()) {
+                                    append("[${log.exerciseName}]: ${log.formNotes}\n")
+                                }
+                            }
+                            if (notesText.isNotBlank()) {
+                                append(notesText)
+                            }
+                        }.trim()
+
+                        onSaveSession(routineTitle, allLoggedSets, overallFeel, combinedNotes)
+                        showCompletionDialog = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp)
+                        .testTag("finish_workout_button"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Finish & Save Session",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             // Live Personal Best Notification Banner
             PersonalBestNotificationBanner(
@@ -259,27 +320,73 @@ fun ActiveLoggerScreen(
                 onDismiss = { showPrBanner = false }
             )
 
-            // Built-In Rest Interval Timer Component
-            BuiltInIntervalTimerCard(
-                activeExerciseName = activeTimerExerciseName,
-                targetRestSeconds = targetRestSeconds,
-                isRunning = isTimerRunning,
-                remainingSeconds = timerRemainingSeconds,
-                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
-                onResetTimer = { newTarget ->
-                    timerRemainingSeconds = newTarget
-                    isTimerRunning = true
-                },
-                onAdjustSeconds = { delta ->
-                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
-                },
-                onPresetSelected = { seconds ->
-                    targetRestSeconds = seconds
-                    timerRemainingSeconds = seconds
-                    isTimerRunning = true
-                },
-                modifier = Modifier.padding(bottom = 18.dp)
-            )
+            // Built-In Rest Interval Timer Component (Now Collapsible UX)
+            var isTimerExpanded by remember { mutableStateOf(false) }
+            
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 18.dp)
+                    .clickable { isTimerExpanded = !isTimerExpanded },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) 
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Timer,
+                                contentDescription = null,
+                                tint = if (isTimerRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isTimerRunning) "Resting: ${timerRemainingSeconds}s" else "Rest Timer",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = if (isTimerExpanded) "Collapse ▲" else "Expand View ▼",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    AnimatedVisibility(visible = isTimerExpanded || isTimerRunning) {
+                        Column {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            BuiltInIntervalTimerCard(
+                                activeExerciseName = activeTimerExerciseName,
+                                targetRestSeconds = targetRestSeconds,
+                                isRunning = isTimerRunning,
+                                remainingSeconds = timerRemainingSeconds,
+                                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
+                                onResetTimer = { newTarget ->
+                                    timerRemainingSeconds = newTarget
+                                    isTimerRunning = true
+                                },
+                                onAdjustSeconds = { delta ->
+                                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
+                                },
+                                onPresetSelected = { seconds ->
+                                    targetRestSeconds = seconds
+                                    timerRemainingSeconds = seconds
+                                    isTimerRunning = true
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             // 5-Minute Pre-Workout Dynamic Mobility Routine
             PreWorkoutMobilityCard(
@@ -374,13 +481,13 @@ fun ActiveLoggerScreen(
                         ) {
                             Text("Set", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(36.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Lbs", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
+                            Text("Lbs", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Reps", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp))
+                            Text("Reps", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Joint Feel", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Done", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(36.dp))
+                            Text("Log", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
                         }
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -423,11 +530,11 @@ fun ActiveLoggerScreen(
                                     value = setInput.weightText,
                                     onValueChange = { setInput.weightText = it },
                                     modifier = Modifier
-                                        .width(64.dp)
+                                        .width(72.dp)
                                         .testTag("weight_input_${exIndex}_$setIndex"),
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    textStyle = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 )
 
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -437,11 +544,11 @@ fun ActiveLoggerScreen(
                                     value = setInput.repsText,
                                     onValueChange = { setInput.repsText = it },
                                     modifier = Modifier
-                                        .width(64.dp)
+                                        .width(72.dp)
                                         .testTag("reps_input_${exIndex}_$setIndex"),
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    textStyle = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 )
 
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -499,11 +606,11 @@ fun ActiveLoggerScreen(
                                         }
                                     },
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(44.dp)
                                         .testTag("check_set_${exIndex}_$setIndex")
                                 ) {
                                     Icon(
-                                        imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.PlayArrow,
+                                        imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.Check,
                                         contentDescription = "Complete Set",
                                         tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                                     )
@@ -671,58 +778,6 @@ fun ActiveLoggerScreen(
                         }
                     )
                 }
-            }
-
-            // Finish Workout Button
-            Button(
-                onClick = {
-                    val allLoggedSets = mutableListOf<LoggedSetEntity>()
-                    exerciseLogs.forEach { log ->
-                        log.sets.forEach { setInput ->
-                            val w = setInput.weightText.toFloatOrNull() ?: 0f
-                            val r = setInput.repsText.toIntOrNull() ?: 0
-                            allLoggedSets.add(
-                                LoggedSetEntity(
-                                    sessionId = 0,
-                                    exerciseName = log.exerciseName,
-                                    setNumber = setInput.setNumber,
-                                    weightLbs = w,
-                                    repsCompleted = r,
-                                    rpeActual = setInput.rpe,
-                                    jointFeel = setInput.jointFeel
-                                )
-                            )
-                        }
-                    }
-
-                    val combinedNotes = buildString {
-                        exerciseLogs.forEach { log ->
-                            if (log.formNotes.isNotBlank()) {
-                                append("[${log.exerciseName}]: ${log.formNotes}\n")
-                            }
-                        }
-                        if (notesText.isNotBlank()) {
-                            append(notesText)
-                        }
-                    }.trim()
-
-                    onSaveSession(routineTitle, allLoggedSets, overallFeel, combinedNotes)
-                    showCompletionDialog = true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("finish_workout_button"),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Complete & Log Workout",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
