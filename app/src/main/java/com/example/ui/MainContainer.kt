@@ -54,12 +54,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.WomensStrengthLogoIcon
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.outlined.History
 import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
 import com.example.ui.screens.PlateCalculatorScreen
 import com.example.ui.screens.ProgressAnalyticsScreen
+import com.example.ui.screens.RecentActivitySummaryScreen
 import com.example.ui.screens.RoutineTableScreen
 
 enum class NavDestination(
@@ -69,6 +72,7 @@ enum class NavDestination(
     val unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     HOME("home", "Dashboard", Icons.Filled.Home, Icons.Outlined.Home),
+    ACTIVITY("activity", "Activity", Icons.Filled.History, Icons.Outlined.History),
     TABLE("table", "Routine Table", Icons.Filled.GridOn, Icons.Outlined.GridOn),
     LOGGER("logger", "Live Logger", Icons.Filled.PlayCircleFilled, Icons.Outlined.PlayCircle),
     PROGRESS("progress", "Analytics", Icons.Filled.Timeline, Icons.Outlined.Timeline),
@@ -98,10 +102,10 @@ fun MainContainer(
 
     val navItems = listOf(
         NavDestination.HOME,
+        NavDestination.ACTIVITY,
         NavDestination.TABLE,
         NavDestination.LOGGER,
-        NavDestination.PROGRESS,
-        NavDestination.PLATE_CALC
+        NavDestination.PROGRESS
     )
 
     Scaffold(
@@ -116,6 +120,7 @@ fun MainContainer(
                         Text(
                             text = when (currentDestination) {
                                 NavDestination.HOME -> "Women's Strength & Longevity"
+                                NavDestination.ACTIVITY -> "Recent Workout Activity"
                                 NavDestination.TABLE -> "Longevity Workout Layout"
                                 NavDestination.LOGGER -> "Live Workout Logger"
                                 NavDestination.PROGRESS -> "Progressive Overload & History"
@@ -265,7 +270,24 @@ fun MainContainer(
                         },
                         onNavigateToAssessment = { currentDestination = NavDestination.ASSESSMENT },
                         onNavigateToLogger = { currentDestination = NavDestination.LOGGER },
-                        onNavigateToGuide = { currentDestination = NavDestination.GUIDE }
+                        onNavigateToGuide = { currentDestination = NavDestination.GUIDE },
+                        onNavigateToActivity = { currentDestination = NavDestination.ACTIVITY }
+                    )
+                }
+
+                NavDestination.ACTIVITY -> {
+                    RecentActivitySummaryScreen(
+                        viewModel = viewModel,
+                        sessions = sessions,
+                        onDeleteSession = { sessionId ->
+                            viewModel.deleteSession(sessionId)
+                        },
+                        onStartNewWorkout = {
+                            if (routines.isNotEmpty()) {
+                                viewModel.selectRoutine(routines.first())
+                            }
+                            currentDestination = NavDestination.LOGGER
+                        }
                     )
                 }
 
