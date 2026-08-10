@@ -12,7 +12,8 @@ data class ExerciseLibraryItem(
     val stepByStepForm: List<String>,
     val proFormTips: List<String>,
     val commonMistakes: List<String>,
-    val longevityScienceNote: String
+    val longevityScienceNote: String,
+    val videoUrl: String
 )
 
 enum class HealthFocusCategory(
@@ -61,6 +62,8 @@ object ExerciseLibraryRepository {
                 "Rising onto toes or lifting heels off the ground."
             ),
             longevityScienceNote = "Ground reaction force combined with axial barbell load triggers mechanotransduction in bone tissue, signaling osteoblasts to deposit calcium and increase bone mineral density in the femoral neck and lumbar vertebrae."
+,
+            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
         ),
         ExerciseLibraryItem(
             id = "romanian_deadlift",
@@ -89,6 +92,8 @@ object ExerciseLibraryRepository {
                 "Hyperextending lower back at the top lockout position."
             ),
             longevityScienceNote = "Hinge mechanics train the posterior kinetic chain to absorb force efficiently during daily activities, drastically reducing lower back strain and improving pelvic bone density."
+,
+            videoUrl = "https://www.youtube.com/embed/JCXUYuzwNrM"
         ),
         ExerciseLibraryItem(
             id = "goblet_squat",
@@ -117,6 +122,8 @@ object ExerciseLibraryRepository {
                 "Heels rising off floor."
             ),
             longevityScienceNote = "Deep full-range knee flexion under moderate front load increases synovial fluid diffusion across articular cartilage, preserving knee joint longevity."
+,
+            videoUrl = "https://www.youtube.com/embed/MeIiIdhgPwg"
         ),
         ExerciseLibraryItem(
             id = "chest_supported_row",
@@ -145,6 +152,8 @@ object ExerciseLibraryRepository {
                 "Rushing through the eccentric (lowering) portion."
             ),
             longevityScienceNote = "Strengthening upper back posture muscles reverses kyphotic rounding caused by sitting, protecting thoracic spinal discs and improving breathing kinematics."
+,
+            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
         ),
         ExerciseLibraryItem(
             id = "farmers_walk",
@@ -173,6 +182,8 @@ object ExerciseLibraryRepository {
                 "Leaning laterally when carrying unequal loads."
             ),
             longevityScienceNote = "Grip strength correlates directly with cognitive reserve, cardiovascular health, and all-cause longevity in epidemiological research. Loaded carries exert compressive density forces on long arm bones and spine."
+,
+            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
         ),
         ExerciseLibraryItem(
             id = "bulgarian_split_squat",
@@ -201,6 +212,8 @@ object ExerciseLibraryRepository {
                 "Pushing off rear leg on bench instead of driving with front leg."
             ),
             longevityScienceNote = "Single-leg strength builds gluteus medius reactivity, maintaining lateral pelvic stability required for swift balance recovery during trips or stumbles."
+,
+            videoUrl = "https://www.youtube.com/embed/2C-uNgKwPLE"
         ),
         ExerciseLibraryItem(
             id = "pallof_press",
@@ -229,6 +242,8 @@ object ExerciseLibraryRepository {
                 "Arching lower back."
             ),
             longevityScienceNote = "Anti-rotation training fortifies the transverse abdominis and deep spinal stabilization muscles, shielding intervertebral discs against twisting forces under load."
+,
+            videoUrl = "https://www.youtube.com/embed/nrsUXN0Ww58"
         ),
         ExerciseLibraryItem(
             id = "hip_thrust",
@@ -257,6 +272,8 @@ object ExerciseLibraryRepository {
                 "Placing feet too far out, shifting tension onto hamstrings."
             ),
             longevityScienceNote = "Strong glutes act as the primary engine for human locomotion, offloading excessive strain from lower back discs and hip joints."
+,
+            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
         ),
         ExerciseLibraryItem(
             id = "neutral_floor_press",
@@ -285,6 +302,8 @@ object ExerciseLibraryRepository {
                 "Arching lower back off the floor."
             ),
             longevityScienceNote = "Ideal pressing alternative for individuals with prior shoulder discomfort, strengthening shoulder girdle bone attachments without tendon impingement."
+,
+            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
         ),
         ExerciseLibraryItem(
             id = "tibialis_raise",
@@ -313,6 +332,8 @@ object ExerciseLibraryRepository {
                 "Peeling buttocks off wall."
             ),
             longevityScienceNote = "The tibialis anterior absorbs ground force shock wave with every step during walking and stair climbing, acting as a natural brake for patellofemoral knee forces."
+,
+            videoUrl = "https://www.youtube.com/embed/gWia_82_xGo"
         ),
         ExerciseLibraryItem(
             id = "step_up_knee_drive",
@@ -341,6 +362,8 @@ object ExerciseLibraryRepository {
                 "Using box that is dangerously tall."
             ),
             longevityScienceNote = "Stair navigation and elevation step-ups are crucial functional independence tasks for older adults; step-ups preserve single-leg functional power reserves."
+,
+            videoUrl = "https://www.youtube.com/embed/9w_Y29G9H3Y"
         ),
         ExerciseLibraryItem(
             id = "face_pull",
@@ -369,6 +392,8 @@ object ExerciseLibraryRepository {
                 "Internal rotation of shoulders at end range."
             ),
             longevityScienceNote = "Infraspinatus and teres minor strengthening maintains humerus head centralization in shoulder socket, preventing rotator cuff impingement."
+,
+            videoUrl = "https://www.youtube.com/embed/rep-qVOkqgk"
         ),
         ExerciseLibraryItem(
             id = "dead_bug_bracing",
@@ -397,6 +422,8 @@ object ExerciseLibraryRepository {
                 "Moving both legs at once."
             ),
             longevityScienceNote = "Teaches lumbo-pelvic dissociation, allowing limbs to generate power without transferring harmful spinal flexion or extension stress to lumbar discs."
+,
+            videoUrl = "https://www.youtube.com/embed/4XLEnwUr1d8"
         ),
         ExerciseLibraryItem(
             id = "overhead_press",
@@ -425,6 +452,8 @@ object ExerciseLibraryRepository {
                 "Shrugging neck excessively."
             ),
             longevityScienceNote = "Overhead mobility preserves shoulder range required for reaching overhead shelves, loading luggage, and maintaining upper torso flexibility."
+,
+            videoUrl = "https://www.youtube.com/embed/QAQ64hK4Xxs"
         )
     )
 

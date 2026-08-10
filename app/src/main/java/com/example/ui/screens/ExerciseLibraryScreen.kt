@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import com.example.ui.components.CustomFlowRow
+import com.example.ui.components.YouTubeVideoPlayer
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,18 +92,24 @@ fun ExerciseLibraryScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(HealthFocusCategory.ALL) }
     var selectedEquipment by remember { mutableStateOf("All") }
+    var showOnlySaved by remember { mutableStateOf(false) }
     var selectedExerciseForDetail by remember { mutableStateOf<ExerciseLibraryItem?>(null) }
     val bookmarkedEntities by viewModel.bookmarkedExercises.collectAsStateWithLifecycle()
     val bookmarkedIds = remember(bookmarkedEntities) { bookmarkedEntities.map { it.exerciseId }.toSet() }
 
     val equipmentOptions = listOf("All", "Barbell", "Dumbbell", "Kettlebell", "Bodyweight", "Cable")
 
-    val filteredExercises = remember(searchQuery, selectedCategory, selectedEquipment) {
-        ExerciseLibraryRepository.searchExercises(
+    val filteredExercises = remember(searchQuery, selectedCategory, selectedEquipment, showOnlySaved, bookmarkedIds) {
+        val allFiltered = ExerciseLibraryRepository.searchExercises(
             query = searchQuery,
             category = selectedCategory,
             equipmentFilter = selectedEquipment
         )
+        if (showOnlySaved) {
+            allFiltered.filter { bookmarkedIds.contains(it.id) }
+        } else {
+            allFiltered
+        }
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -206,6 +213,34 @@ fun ExerciseLibraryScreen(
             contentPadding = PaddingValues(vertical = 4.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            item {
+                FilterChip(
+                    selected = showOnlySaved,
+                    onClick = { showOnlySaved = !showOnlySaved },
+                    label = {
+                        Text(
+                            text = "Saved",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (showOnlySaved) FontWeight.Bold else FontWeight.Medium
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (showOnlySaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Saved",
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                        labelColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.testTag("category_chip_saved")
+                )
+            }
             items(HealthFocusCategory.values()) { category ->
                 val isSelected = selectedCategory == category
                 FilterChip(
@@ -292,12 +327,13 @@ fun ExerciseLibraryScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            if (searchQuery.isNotEmpty() || selectedCategory != HealthFocusCategory.ALL || selectedEquipment != "All") {
+            if (searchQuery.isNotEmpty() || selectedCategory != HealthFocusCategory.ALL || selectedEquipment != "All" || showOnlySaved) {
                 TextButton(
                     onClick = {
                         searchQuery = ""
                         selectedCategory = HealthFocusCategory.ALL
                         selectedEquipment = "All"
+                        showOnlySaved = false
                     }
                 ) {
                     Text("Reset Filters", style = MaterialTheme.typography.labelMedium)
@@ -342,6 +378,7 @@ fun ExerciseLibraryScreen(
                             searchQuery = ""
                             selectedCategory = HealthFocusCategory.ALL
                             selectedEquipment = "All"
+                            showOnlySaved = false
                         }
                     ) {
                         Text("Clear All Filters")
@@ -620,6 +657,13 @@ fun ExerciseDetailSheetContent(
                     )
                 }
             }
+        }
+
+        item {
+            YouTubeVideoPlayer(
+                videoUrl = exercise.videoUrl,
+                modifier = Modifier.clip(RoundedCornerShape(12.dp))
+            )
         }
 
         item {

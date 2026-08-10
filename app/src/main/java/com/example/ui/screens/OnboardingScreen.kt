@@ -208,10 +208,8 @@ fun OnboardingScreen(
                                 .height(52.dp)
                                 .testTag("onboarding_next_button"),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (pagerState.currentPage == steps.size - 1) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = if (pagerState.currentPage == steps.size - 1) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onPrimaryContainer
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(16.dp)
                         ) {
@@ -291,7 +289,8 @@ private fun OnboardingPageContent(
             text = step.subtitle,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurface,
+            lineHeight = 24.sp,
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
@@ -417,9 +416,9 @@ private fun BoneDensityInteractiveCard() {
 
             // Load Level Indicator Box
             val (statusTitle, statusDesc, densityPercent, color) = when (loadLevel.toInt()) {
-                0 -> Quadruple("Sedentary / Light Walk", "Inadequate strain to trigger osteogenesis. Bone mass remains static or slowly degrades.", "75% Baseline Density", Color(0xFFD32F2F))
-                1 -> Quadruple("Moderate Resistance", "Mild stimulus. Maintains current bone mineral density but limits growth.", "90% Density Maintenance", Color(0xFFED6C02))
-                else -> Quadruple("Progressive Overload", "Optimal mechanical strain! Triggers osteoblast bone synthesis and trabecular thickening.", "+115% Enhanced Density", Color(0xFF2E7D32))
+                0 -> Quadruple("Sedentary / Light Walk", "Inadequate strain to trigger osteogenesis. Bone mass remains static or slowly degrades.", "75% Baseline Density", Color(0xFFE57373))
+                1 -> Quadruple("Moderate Resistance", "Mild stimulus. Maintains current bone mineral density but limits growth.", "90% Density Maintenance", Color(0xFFFFB74D))
+                else -> Quadruple("Progressive Overload", "Optimal mechanical strain! Triggers osteoblast bone synthesis and trabecular thickening.", "+115% Enhanced Density", Color(0xFF81C784))
             }
 
             Surface(
@@ -470,6 +469,11 @@ private fun BoneDensityInteractiveCard() {
                 onValueChange = { loadLevel = it },
                 valueRange = 0f..2f,
                 steps = 1,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                ),
                 modifier = Modifier.testTag("onboarding_bone_density_slider")
             )
 
@@ -479,7 +483,7 @@ private fun BoneDensityInteractiveCard() {
             ) {
                 Text("Low Strain", style = MaterialTheme.typography.labelSmall)
                 Text("Moderate", style = MaterialTheme.typography.labelSmall)
-                Text("Optimal Overload", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                Text("Optimal Overload", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF81C784))
             }
         }
     }
@@ -622,17 +626,19 @@ private fun MicroProgressionInteractiveCard() {
                         Text(
                             text = "Goblet Squat (Bone Density Focus)",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = Color(0xFF2E7D32).copy(alpha = 0.12f),
+                            color = Color(0xFF81C784).copy(alpha = 0.12f),
                             shape = CircleShape
                         ) {
                             Text(
                                 text = "READY FOR OVERLOAD",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2E7D32),
+                                color = Color(0xFF81C784),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
@@ -645,9 +651,9 @@ private fun MicroProgressionInteractiveCard() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text("Previous Target:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("35 lbs × 10 reps", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text("35 lbs × 10 reps", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         }
 
                         Icon(
@@ -656,9 +662,9 @@ private fun MicroProgressionInteractiveCard() {
                             tint = MaterialTheme.colorScheme.primary
                         )
 
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Recommended Today:", style = MaterialTheme.typography.labelMedium, color = Color(0xFF2E7D32))
-                            Text("37.5 lbs × 10 reps (+2.5 lbs)", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1.2f)) {
+                            Text("Recommended Today:", style = MaterialTheme.typography.labelMedium, color = Color(0xFF81C784))
+                            Text("37.5 lbs × 10 reps (+2.5 lbs)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF81C784))
                         }
                     }
                 }

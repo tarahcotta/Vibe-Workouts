@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.AuthSyncCard
+import com.example.ui.components.AIRecommendationsCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
 import com.example.ui.components.WeightProgressionVicoChartCard
@@ -388,6 +389,14 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // AI Recommendations
+        AIRecommendationsCard(
+            sessions = sessions,
+            routines = routines
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
         if (routines.isEmpty()) {
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),

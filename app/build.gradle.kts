@@ -3,6 +3,7 @@ import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesS
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
@@ -110,6 +111,8 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
+  implementation(libs.retrofit.converter.kotlinx.serialization)
+  implementation(libs.kotlinx.serialization.json)
   implementation(libs.vico.compose)
   implementation(libs.vico.compose.m3)
   testImplementation(libs.androidx.compose.ui.test.junit4)
