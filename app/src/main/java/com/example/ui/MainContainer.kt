@@ -56,10 +56,12 @@ import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.WomensStrengthLogoIcon
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.filled.HelpOutline
 import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
+import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PlateCalculatorScreen
 import com.example.ui.screens.ProgressAnalyticsScreen
 import com.example.ui.screens.RecentActivitySummaryScreen
@@ -92,6 +94,7 @@ fun MainContainer(
     var showAuthDialog by remember { mutableStateOf(false) }
 
     val themeMode by viewModel.themeMode.collectAsState()
+    val hasCompletedOnboarding by viewModel.hasCompletedOnboarding.collectAsState()
     val profile by viewModel.userProfile.collectAsState()
     val routines by viewModel.activeRoutines.collectAsState()
     val sessions by viewModel.allSessions.collectAsState()
@@ -99,6 +102,14 @@ fun MainContainer(
     val exercises by viewModel.selectedRoutineExercises.collectAsState()
     val personalBests by viewModel.personalBests.collectAsState()
     val overloadList by viewModel.progressiveOverloadList.collectAsState()
+
+    if (!hasCompletedOnboarding) {
+        OnboardingScreen(
+            onCompleteOnboarding = { viewModel.completeOnboarding() },
+            modifier = modifier
+        )
+        return
+    }
 
     val navItems = listOf(
         NavDestination.HOME,
@@ -137,6 +148,17 @@ fun MainContainer(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { viewModel.replayOnboarding() },
+                        modifier = Modifier.testTag("onboarding_replay_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.HelpOutline,
+                            contentDescription = "Replay Progressive Overload Science Onboarding",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     IconButton(
                         onClick = { showAuthDialog = true },
                         modifier = Modifier.testTag("auth_dialog_button")

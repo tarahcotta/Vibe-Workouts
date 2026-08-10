@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -258,6 +259,30 @@ fun HomeScreen(
                                 text = "View Activity & Volume Consistency",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    if (viewModel != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        TextButton(
+                            onClick = { viewModel.replayOnboarding() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("explore_onboarding_guide_cta")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Replay Progressive Overload Onboarding",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }

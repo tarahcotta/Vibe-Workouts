@@ -49,6 +49,9 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     )
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
+    private val _hasCompletedOnboarding = MutableStateFlow(sharedPrefs.getBoolean("has_completed_onboarding", false))
+    val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding.asStateFlow()
+
     val userProfile: StateFlow<UserProfileEntity?>
     val activeRoutines: StateFlow<List<WorkoutRoutineEntity>>
     val allSessions: StateFlow<List<LoggedWorkoutSessionEntity>>
@@ -280,5 +283,14 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
             ThemeMode.SYSTEM -> ThemeMode.LIGHT
         }
         setThemeMode(nextMode)
+    }
+
+    fun completeOnboarding() {
+        _hasCompletedOnboarding.value = true
+        sharedPrefs.edit().putBoolean("has_completed_onboarding", true).apply()
+    }
+
+    fun replayOnboarding() {
+        _hasCompletedOnboarding.value = false
     }
 }
