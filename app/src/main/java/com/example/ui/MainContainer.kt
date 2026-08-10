@@ -81,7 +81,7 @@ enum class NavDestination(
     HOME("home", "Dashboard", Icons.Filled.Home, Icons.Outlined.Home),
     LIBRARY("library", "Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
     ACTIVITY("activity", "Activity", Icons.Filled.History, Icons.Outlined.History),
-    TABLE("table", "Routine Table", Icons.Filled.GridOn, Icons.Outlined.GridOn),
+    TABLE("table", "Routines", Icons.Filled.GridOn, Icons.Outlined.GridOn),
     LOGGER("logger", "Live Logger", Icons.Filled.PlayCircleFilled, Icons.Outlined.PlayCircle),
     PROGRESS("progress", "Analytics", Icons.Filled.Timeline, Icons.Outlined.Timeline),
     PLATE_CALC("plate_calc", "Plate Calc", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
@@ -140,7 +140,7 @@ fun MainContainer(
                                 NavDestination.HOME -> "Women's Strength & Longevity"
                                 NavDestination.LIBRARY -> "Strength Exercise Library"
                                 NavDestination.ACTIVITY -> "Recent Workout Activity"
-                                NavDestination.TABLE -> "Longevity Workout Layout"
+                                NavDestination.TABLE -> "Routines"
                                 NavDestination.LOGGER -> "Live Workout Logger"
                                 NavDestination.PROGRESS -> "Progressive Overload & History"
                                 NavDestination.PLATE_CALC -> "Barbell Plate Calculator"

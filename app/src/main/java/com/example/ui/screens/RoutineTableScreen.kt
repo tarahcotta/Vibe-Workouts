@@ -214,7 +214,7 @@ fun RoutineTableScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Longevity Workout Layout",
+                        text = "Workout Routines",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -280,10 +280,12 @@ fun RoutineTableScreen(
                             Box(
                                 modifier = Modifier
                                     .width(750.dp)
-                                    .padding(24.dp),
+                                    .padding(48.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("Loading exercises for this routine...")
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         } else {
                             exercises.forEachIndexed { idx, ex ->
