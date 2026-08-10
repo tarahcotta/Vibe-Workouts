@@ -158,7 +158,7 @@ fun RoutineTableScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.FitnessCenter,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -240,7 +240,7 @@ fun RoutineTableScreen(
                         Row(
                             modifier = Modifier
                                 .background(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
                                     shape = RoundedCornerShape(10.dp)
                                 )
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -257,7 +257,7 @@ fun RoutineTableScreen(
 
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
                         )
 
                         // Table Content Rows
@@ -278,7 +278,7 @@ fun RoutineTableScreen(
                                     modifier = Modifier
                                         .background(
                                             if (idx % 2 == 0) MaterialTheme.colorScheme.surface
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                                         )
                                         .padding(vertical = 12.dp, horizontal = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -412,7 +412,7 @@ fun RoutineTableScreen(
 
                                 if (idx < exercises.size - 1) {
                                     HorizontalDivider(
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
                                     )
                                 }
                             }
@@ -430,7 +430,7 @@ fun RoutineTableScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
@@ -461,7 +461,7 @@ fun RoutineTableScreen(
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     ) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Icon")
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Regenerate Program", fontWeight = FontWeight.Bold)
                     }
@@ -511,7 +511,7 @@ fun RoutineTableScreen(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Icon")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Start Logging This Session", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }

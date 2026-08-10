@@ -139,7 +139,7 @@ fun WorkoutCalendarSummaryCard(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -314,7 +314,7 @@ fun WorkoutCalendarSummaryCard(
 
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth().testTag("calendar_selected_day_details")
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -357,7 +357,7 @@ fun WorkoutCalendarSummaryCard(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         tint = BoneDensityGold,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -391,7 +391,7 @@ fun WorkoutCalendarSummaryCard(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.EventAvailable,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -421,7 +421,7 @@ fun WorkoutCalendarSummaryCard(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.PlayArrow,
-                                            contentDescription = null,
+                                            contentDescription = "Icon",
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -432,7 +432,7 @@ fun WorkoutCalendarSummaryCard(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.SelfImprovement,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         tint = MaterialTheme.colorScheme.secondary,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -448,7 +448,7 @@ fun WorkoutCalendarSummaryCard(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.SelfImprovement,
-                                    contentDescription = null,
+                                    contentDescription = "Icon",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -499,7 +499,7 @@ fun CalendarDayCell(
             .then(
                 if (isToday) Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
                 else if (isSelected && !isCompleted) Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant, RoundedCornerShape(10.dp))
-                else if (isScheduled) Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                else if (isScheduled) Modifier.border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f), RoundedCornerShape(10.dp))
                 else Modifier
             )
             .clickable { onClick() }

@@ -46,7 +46,7 @@ fun AuthSyncCard(
             .testTag("auth_sync_card"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         )
     ) {
         Row(
@@ -76,7 +76,7 @@ fun AuthSyncCard(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Person,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 modifier = Modifier.size(20.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -112,7 +112,7 @@ fun AuthSyncCard(
                                 is SyncStatus.Success -> {
                                     Icon(
                                         imageVector = Icons.Default.CloudDone,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         modifier = Modifier.size(12.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -132,7 +132,7 @@ fun AuthSyncCard(
                                 else -> {
                                     Icon(
                                         imageVector = Icons.Default.CloudUpload,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         modifier = Modifier.size(12.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -251,7 +251,7 @@ fun AuthDialog(
                         localError = null
                     },
                     label = { Text("Email Address") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Icon") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth()
@@ -265,7 +265,7 @@ fun AuthDialog(
                         localError = null
                     },
                     label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Icon") },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(

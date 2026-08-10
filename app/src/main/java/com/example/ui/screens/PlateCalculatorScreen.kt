@@ -117,7 +117,7 @@ fun PlateCalculatorScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.FitnessCenter,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -258,7 +258,7 @@ fun PlateCalculatorScreen(
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                 shape = RoundedCornerShape(12.dp)
                             ),
-                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surface
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surface
                     ) {
                         Row(
                             modifier = Modifier
@@ -291,7 +291,7 @@ fun PlateCalculatorScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
             )
         ) {
             Column(modifier = Modifier.padding(20.dp)) {

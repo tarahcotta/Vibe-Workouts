@@ -218,7 +218,7 @@ fun ExerciseLibraryScreen(
                         {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -226,7 +226,7 @@ fun ExerciseLibraryScreen(
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                         labelColor = MaterialTheme.colorScheme.onSurface
                     ),
                     shape = RoundedCornerShape(20.dp),
@@ -314,7 +314,7 @@ fun ExerciseLibraryScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Default.FilterList,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.outline
                     )
@@ -416,12 +416,12 @@ fun ExerciseCardItem(
             .clickable { onClick() }
             .testTag("exercise_card_${exercise.id}"),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ),
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
         )
     ) {
         Column(
@@ -487,7 +487,7 @@ fun ExerciseCardItem(
                 // Difficulty Badge
                 CategoryPill(
                     text = exercise.difficulty,
-                    containerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    containerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -498,7 +498,7 @@ fun ExerciseCardItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
+                    contentDescription = "Icon",
                     modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -646,7 +646,7 @@ fun ExerciseDetailSheetContent(
             // Targeted Bones & Joints Box
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -695,7 +695,7 @@ fun ExerciseDetailSheetContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Lightbulb,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.size(20.dp)
                         )
@@ -777,7 +777,7 @@ fun ExerciseDetailSheetContent(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .size(18.dp)
@@ -812,7 +812,7 @@ fun ExerciseDetailSheetContent(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Warning,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier
                                 .size(18.dp)
@@ -840,7 +840,7 @@ fun ExerciseDetailSheetContent(
                         .testTag("select_exercise_for_workout_button"),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.FitnessCenter, contentDescription = null)
+                    Icon(imageVector = Icons.Default.FitnessCenter, contentDescription = "Icon")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Include in Next Workout Session")
                 }

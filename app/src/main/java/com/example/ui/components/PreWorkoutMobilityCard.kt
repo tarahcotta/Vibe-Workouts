@@ -181,7 +181,7 @@ fun PreWorkoutMobilityCard(
                     ) {
                         Icon(
                             imageVector = if (completedDrills.size == drills.size) Icons.Default.CheckCircle else Icons.Default.Shield,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = if (completedDrills.size == drills.size) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
@@ -210,7 +210,7 @@ fun PreWorkoutMobilityCard(
             // Expanded Mobility Drills Section
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -230,9 +230,7 @@ fun PreWorkoutMobilityCard(
                                 },
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isDone) MaterialTheme.colorScheme.primaryContainer.copy(
-                                    alpha = 0.35f
-                                ) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                containerColor = if (isDone) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                             )
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
@@ -359,7 +357,7 @@ fun PreWorkoutMobilityCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.RestartAlt,
-                                    contentDescription = null,
+                                    contentDescription = "Icon",
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -379,7 +377,7 @@ fun PreWorkoutMobilityCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = null,
+                                    contentDescription = "Icon",
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))

@@ -302,7 +302,7 @@ fun ActiveLoggerScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null)
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Icon")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (isFinishEnabled) "Finish & Save Session" else "Log a set to finish",
@@ -340,8 +340,8 @@ fun ActiveLoggerScreen(
                     .clickable { isTimerExpanded = !isTimerExpanded },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) 
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) 
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                 )
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -353,7 +353,7 @@ fun ActiveLoggerScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Timer,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = if (isTimerRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -372,7 +372,7 @@ fun ActiveLoggerScreen(
                             )
                             Icon(
                                 imageVector = if (isTimerExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -508,7 +508,7 @@ fun ActiveLoggerScreen(
                             Text("Log", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(48.dp))
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
 
                         // Set Rows
                         logState.sets.forEachIndexed { setIndex, setInput ->
@@ -585,8 +585,8 @@ fun ActiveLoggerScreen(
                                         },
                                     shape = RoundedCornerShape(8.dp),
                                     color = when (setInput.jointFeel) {
-                                        "Comfortable" -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-                                        "Mild Tension" -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                                        "Comfortable" -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+                                        "Mild Tension" -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
                                         else -> MaterialTheme.colorScheme.errorContainer
                                     }
                                 ) {
@@ -686,7 +686,7 @@ fun ActiveLoggerScreen(
                                 },
                                 modifier = Modifier.align(Alignment.CenterVertically)
                             ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(imageVector = Icons.Default.Add, contentDescription = "Icon", modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Add Set", style = MaterialTheme.typography.labelSmall)
                             }

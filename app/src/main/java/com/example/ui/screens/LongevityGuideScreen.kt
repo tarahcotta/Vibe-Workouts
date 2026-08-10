@@ -71,7 +71,7 @@ fun LongevityGuideScreen(modifier: Modifier = Modifier) {
                 ) {
                     Icon(
                         imageVector = Icons.Default.HealthAndSafety,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -184,7 +184,7 @@ fun GuidePillarCard(
                     ) {
                         Icon(
                             imageVector = icon,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.size(20.dp)
                         )
@@ -211,7 +211,7 @@ fun GuidePillarCard(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(

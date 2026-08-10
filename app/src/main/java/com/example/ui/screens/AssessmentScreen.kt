@@ -168,7 +168,7 @@ fun AssessmentScreen(
                         selected = themeMode == ThemeMode.LIGHT,
                         onClick = { onThemeModeChange(ThemeMode.LIGHT) },
                         label = { Text("Light") },
-                        leadingIcon = { Icon(Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        leadingIcon = { Icon(Icons.Default.LightMode, contentDescription = "Icon", modifier = Modifier.size(16.dp)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -180,7 +180,7 @@ fun AssessmentScreen(
                         selected = themeMode == ThemeMode.DARK,
                         onClick = { onThemeModeChange(ThemeMode.DARK) },
                         label = { Text("Dark") },
-                        leadingIcon = { Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        leadingIcon = { Icon(Icons.Default.DarkMode, contentDescription = "Icon", modifier = Modifier.size(16.dp)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -192,7 +192,7 @@ fun AssessmentScreen(
                         selected = themeMode == ThemeMode.SYSTEM,
                         onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
                         label = { Text("System") },
-                        leadingIcon = { Icon(Icons.Default.SettingsBrightness, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        leadingIcon = { Icon(Icons.Default.SettingsBrightness, contentDescription = "Icon", modifier = Modifier.size(16.dp)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -223,11 +223,11 @@ fun AssessmentScreen(
                         .testTag("strength_level_$level"),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.outlinedCardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surface
                     ),
                     border = CardDefaults.outlinedCardBorder().copy(
                         brush = androidx.compose.ui.graphics.SolidColor(
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
                         )
                     )
                 ) {
@@ -270,7 +270,7 @@ fun AssessmentScreen(
                         .testTag("equipment_$eq"),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                     )
                 ) {
                     Row(
@@ -281,7 +281,7 @@ fun AssessmentScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -324,7 +324,7 @@ fun AssessmentScreen(
                         .testTag("schedule_$daysCount"),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                     )
                 ) {
                     Column(
@@ -392,7 +392,7 @@ fun AssessmentScreen(
                     },
                     label = { Text(joint) },
                     leadingIcon = if (isSelected) {
-                        { Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        { Icon(Icons.Default.Shield, contentDescription = "Icon", modifier = Modifier.size(16.dp)) }
                     } else null,
                     modifier = Modifier.testTag("joint_chip_$joint")
                 )
@@ -469,7 +469,7 @@ fun AssessmentScreen(
                 containerColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Icon")
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Generate Custom Longevity Plan",
@@ -477,7 +477,7 @@ fun AssessmentScreen(
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Icon")
         }
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -109,7 +109,7 @@ fun ProfileSetupScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(28.dp)
                     )
@@ -167,7 +167,7 @@ fun ProfileSetupScreen(
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Person,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -207,7 +207,7 @@ fun ProfileSetupScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.VerifiedUser,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -303,7 +303,7 @@ fun ProfileSetupScreen(
                                 {
                                     Icon(
                                         imageVector = Icons.Default.Check,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -401,7 +401,7 @@ fun ProfileSetupScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.CloudSync,
-                contentDescription = null
+                contentDescription = "Icon"
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -424,7 +424,7 @@ fun ProfileSetupScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CloudDone,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(10.dp))

@@ -139,7 +139,7 @@ fun WeightProgressionVicoChartCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrendingUp,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -192,7 +192,7 @@ fun WeightProgressionVicoChartCard(
                                 {
                                     Icon(
                                         imageVector = Icons.Default.FitnessCenter,
-                                        contentDescription = null,
+                                        contentDescription = "Icon",
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -210,7 +210,7 @@ fun WeightProgressionVicoChartCard(
                         .fillMaxWidth()
                         .height(180.dp)
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                             shape = RoundedCornerShape(14.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -218,8 +218,8 @@ fun WeightProgressionVicoChartCard(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.ShowChart,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            contentDescription = "Icon",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -244,7 +244,7 @@ fun WeightProgressionVicoChartCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                             shape = RoundedCornerShape(12.dp)
                         )
                         .padding(12.dp),

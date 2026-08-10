@@ -242,7 +242,7 @@ fun ExerciseFormIllustrationBox(
                     ) {
                         Icon(
                             imageVector = Icons.Default.VerifiedUser,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
@@ -265,7 +265,7 @@ fun ExerciseFormIllustrationBox(
                     .fillMaxWidth()
                     .height(210.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
@@ -448,7 +448,7 @@ fun ExerciseFormIllustrationBox(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.SlowMotionVideo,
-                                    contentDescription = null,
+                                    contentDescription = "Icon",
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                     modifier = Modifier.size(14.dp)
                                 )
@@ -466,7 +466,7 @@ fun ExerciseFormIllustrationBox(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.MotionPhotosAuto,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(14.dp)
                         )
@@ -544,7 +544,7 @@ fun ExerciseFormIllustrationBox(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Shield,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(14.dp)
                         )
@@ -580,7 +580,7 @@ fun ExerciseFormIllustrationBox(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(16.dp)

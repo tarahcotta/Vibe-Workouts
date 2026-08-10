@@ -154,7 +154,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -198,7 +198,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
                             .padding(14.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
@@ -238,7 +238,7 @@ fun HomeScreen(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Icon")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Start Live Workout Session",
@@ -259,7 +259,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -281,7 +281,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Shield,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -371,7 +371,7 @@ fun HomeScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.GridOn,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(16.dp)
                     )
@@ -445,7 +445,7 @@ fun HomeScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.HealthAndSafety,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onTertiary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -466,7 +466,7 @@ fun HomeScreen(
                 }
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
+                    contentDescription = "Icon",
                     tint = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
@@ -510,7 +510,7 @@ fun HomeScreen(
                         .padding(bottom = 8.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                     )
                 ) {
                     Row(
@@ -629,7 +629,7 @@ fun RoutineCardItem(
                     Spacer(modifier = Modifier.width(2.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(12.dp)
                     )

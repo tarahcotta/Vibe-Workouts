@@ -223,7 +223,7 @@ fun OnboardingScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = if (pagerState.currentPage == steps.size - 1) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null
+                                contentDescription = "Icon"
                             )
                         }
                     }
@@ -311,7 +311,7 @@ private fun OnboardingPageContent(
 private fun WelcomeStepVisualCard(step: OnboardingStepData) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ),
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth()
@@ -331,7 +331,7 @@ private fun WelcomeStepVisualCard(step: OnboardingStepData) {
             ) {
                 Icon(
                     imageVector = step.icon,
-                    contentDescription = null,
+                    contentDescription = "Icon",
                     tint = step.primaryColor,
                     modifier = Modifier.size(36.dp)
                 )
@@ -369,7 +369,7 @@ private fun WelcomeStepVisualCard(step: OnboardingStepData) {
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -391,7 +391,7 @@ private fun BoneDensityInteractiveCard() {
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ),
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth()
@@ -489,7 +489,7 @@ private fun BoneDensityInteractiveCard() {
 private fun JointHealthVisualCard() {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ),
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth()
@@ -557,7 +557,7 @@ private fun JointBenefitItem(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "Icon",
                     tint = Color(0xFF006C4C),
                     modifier = Modifier.size(20.dp)
                 )
@@ -585,7 +585,7 @@ private fun JointBenefitItem(
 private fun MicroProgressionInteractiveCard() {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ),
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth()
@@ -610,7 +610,7 @@ private fun MicroProgressionInteractiveCard() {
             Surface(
                 color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -652,7 +652,7 @@ private fun MicroProgressionInteractiveCard() {
 
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary
                         )
 

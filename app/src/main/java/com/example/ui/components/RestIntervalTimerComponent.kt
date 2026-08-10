@@ -171,7 +171,7 @@ fun BuiltInIntervalTimerCard(
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = if (isFinished) MaterialTheme.colorScheme.primary else BoneDensityGold,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -443,7 +443,7 @@ fun FloatingRestTimerBar(
                         ) {
                             Icon(
                                 imageVector = if (isFinished) Icons.Default.NotificationsActive else Icons.Default.Timer,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = if (isFinished) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -590,7 +590,7 @@ fun FloatingRestTimerBar(
                             val isSel = mode == TimerMode.COUNTDOWN && totalTargetSeconds == preset
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                                 modifier = Modifier.clickable {
                                     mode = TimerMode.COUNTDOWN
                                     totalTargetSeconds = preset

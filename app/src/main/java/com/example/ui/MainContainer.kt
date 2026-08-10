@@ -206,7 +206,7 @@ fun MainContainer(
                                     showThemeMenu = false
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.Default.LightMode, contentDescription = null)
+                                    Icon(Icons.Default.LightMode, contentDescription = "Icon")
                                 },
                                 modifier = Modifier.testTag("theme_option_light")
                             )
@@ -217,7 +217,7 @@ fun MainContainer(
                                     showThemeMenu = false
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.Default.DarkMode, contentDescription = null)
+                                    Icon(Icons.Default.DarkMode, contentDescription = "Icon")
                                 },
                                 modifier = Modifier.testTag("theme_option_dark")
                             )
@@ -228,7 +228,7 @@ fun MainContainer(
                                     showThemeMenu = false
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.Default.SettingsBrightness, contentDescription = null)
+                                    Icon(Icons.Default.SettingsBrightness, contentDescription = "Icon")
                                 },
                                 modifier = Modifier.testTag("theme_option_system")
                             )

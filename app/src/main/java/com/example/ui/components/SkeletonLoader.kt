@@ -23,9 +23,9 @@ fun SkeletonBox(
     shape: RoundedCornerShape = RoundedCornerShape(8.dp)
 ) {
     val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")

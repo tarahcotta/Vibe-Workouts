@@ -93,7 +93,7 @@ fun PersonalBestNotificationBanner(
                         Brush.horizontalGradient(
                             colors = listOf(
                                 BoneDensityGold.copy(alpha = 0.25f),
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
                             )
                         )
                     )
@@ -132,7 +132,7 @@ fun PersonalBestNotificationBanner(
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = BoneDensityGold,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -189,7 +189,7 @@ fun ProgressiveOverloadTag(
         ) {
             Icon(
                 imageVector = if (isReadyForIncrement) Icons.Default.TrendingUp else Icons.Default.EmojiEvents,
-                contentDescription = null,
+                contentDescription = "Icon",
                 tint = if (isReadyForIncrement) MaterialTheme.colorScheme.primary else BoneDensityGold,
                 modifier = Modifier.size(12.dp)
             )
@@ -236,7 +236,7 @@ fun ProgressiveOverloadHighlightCard(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -266,7 +266,7 @@ fun ProgressiveOverloadHighlightCard(
             if (overloadList.isEmpty()) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -275,7 +275,7 @@ fun ProgressiveOverloadHighlightCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -291,8 +291,8 @@ fun ProgressiveOverloadHighlightCard(
                 overloadList.take(3).forEach { info ->
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = if (info.isReadyToIncrement) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        color = if (info.isReadyToIncrement) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 10.dp)

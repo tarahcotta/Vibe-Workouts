@@ -263,7 +263,7 @@ fun ProgressAnalyticsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Timeline,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -474,7 +474,7 @@ fun SessionHistoryExpandableItem(
 
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -528,7 +528,7 @@ fun SessionHistoryExpandableItem(
                             onClick = onDelete,
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                         ) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Icon", modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Delete Entry")
                         }
@@ -583,7 +583,7 @@ fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
                     ) {
                         Icon(
                             imageVector = Icons.Default.Shield,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
@@ -606,7 +606,7 @@ fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
                         .fillMaxWidth()
                         .height(180.dp)
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                             shape = RoundedCornerShape(14.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -661,7 +661,7 @@ fun LoadBearingVolumeChart(sessions: List<LoggedWorkoutSessionEntity>) {
                 // Selected Point Summary Banner
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                 ) {
                     Row(
                         modifier = Modifier

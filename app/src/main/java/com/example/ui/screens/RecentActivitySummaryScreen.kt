@@ -201,7 +201,7 @@ fun RecentActivitySummaryScreen(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.History,
-                        contentDescription = null,
+                        contentDescription = "Icon",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -245,7 +245,7 @@ fun RecentActivitySummaryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -285,7 +285,7 @@ fun RecentActivitySummaryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -331,7 +331,7 @@ fun RecentActivitySummaryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Speed,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -371,7 +371,7 @@ fun RecentActivitySummaryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = androidx.compose.ui.graphics.Color(0xFFE65100),
                             modifier = Modifier.size(16.dp)
                         )
@@ -429,7 +429,7 @@ fun RecentActivitySummaryScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -572,7 +572,7 @@ fun RecentActivitySummaryScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
+                    contentDescription = "Icon",
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -601,8 +601,8 @@ fun RecentActivitySummaryScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        contentDescription = "Icon",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -706,7 +706,7 @@ fun ActivitySessionCard(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.FitnessCenter,
-                                contentDescription = null,
+                                contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -776,7 +776,7 @@ fun ActivitySessionCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrendingUp,
-                            contentDescription = null,
+                            contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
@@ -865,7 +865,7 @@ fun ActivitySessionCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(8.dp)
