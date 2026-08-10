@@ -247,13 +247,13 @@ fun ProgressiveOverloadHighlightCard(
 
                     Column {
                         Text(
-                            text = "Progressive Overload Readiness",
+                            text = "Progressive Overload",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Compound Lift Adaptation & Load Guidance",
+                            text = "Readiness to increase weight based on your recent feedback",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

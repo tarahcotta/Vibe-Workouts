@@ -270,13 +270,13 @@ fun ProgressAnalyticsScreen(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Progressive Overload & Analytics",
+                        text = "Analytics",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Track total mechanical strain and progressive load to ensure bone density adaptation.",
+                        text = "Track your strength progress and consistency over time.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
