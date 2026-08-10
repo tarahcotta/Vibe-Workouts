@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayCircleFilled
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.GridOn
 import androidx.compose.material.icons.outlined.HealthAndSafety
@@ -63,6 +64,7 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
 import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PlateCalculatorScreen
+import com.example.ui.screens.ProfileSetupScreen
 import com.example.ui.screens.ProgressAnalyticsScreen
 import com.example.ui.screens.RecentActivitySummaryScreen
 import com.example.ui.screens.RoutineTableScreen
@@ -80,7 +82,8 @@ enum class NavDestination(
     PROGRESS("progress", "Analytics", Icons.Filled.Timeline, Icons.Outlined.Timeline),
     PLATE_CALC("plate_calc", "Plate Calc", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
     GUIDE("guide", "Science Guide", Icons.Filled.HealthAndSafety, Icons.Outlined.HealthAndSafety),
-    ASSESSMENT("assessment", "Assessment", Icons.Filled.Assignment, Icons.Outlined.Assignment)
+    ASSESSMENT("assessment", "Assessment", Icons.Filled.Assignment, Icons.Outlined.Assignment),
+    PROFILE_SETUP("profile_setup", "Profile Setup", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,6 +141,7 @@ fun MainContainer(
                                 NavDestination.PLATE_CALC -> "Barbell Plate Calculator"
                                 NavDestination.GUIDE -> "Longevity & Health Science"
                                 NavDestination.ASSESSMENT -> "Strength & Health Assessment"
+                                NavDestination.PROFILE_SETUP -> "Firebase Profile Setup"
                             },
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
@@ -160,7 +164,7 @@ fun MainContainer(
                     }
 
                     IconButton(
-                        onClick = { showAuthDialog = true },
+                        onClick = { currentDestination = NavDestination.PROFILE_SETUP },
                         modifier = Modifier.testTag("auth_dialog_button")
                     ) {
                         Icon(
@@ -379,6 +383,14 @@ fun MainContainer(
                         onNavigateToRoutines = {
                             currentDestination = NavDestination.TABLE
                         }
+                    )
+                }
+
+                NavDestination.PROFILE_SETUP -> {
+                    ProfileSetupScreen(
+                        viewModel = viewModel,
+                        onOpenAuthDialog = { showAuthDialog = true },
+                        onNavigateBack = { currentDestination = NavDestination.HOME }
                     )
                 }
             }

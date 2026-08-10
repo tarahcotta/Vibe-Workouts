@@ -45,10 +45,12 @@ class FirestoreSyncManager(private val context: Context? = null) {
             _syncStatus.value = SyncStatus.Syncing
             val profileData = mapOf(
                 "id" to profile.id,
+                "age" to profile.age,
                 "strengthLevel" to profile.strengthLevel,
                 "availableEquipment" to profile.availableEquipment,
                 "scheduleDaysPerWeek" to profile.scheduleDaysPerWeek,
                 "jointHistory" to profile.jointHistory,
+                "fitnessGoals" to profile.fitnessGoals,
                 "focusAreas" to profile.focusAreas,
                 "targetRpeRange" to profile.targetRpeRange,
                 "updatedAt" to profile.updatedAt
@@ -80,10 +82,12 @@ class FirestoreSyncManager(private val context: Context? = null) {
             if (doc.exists()) {
                 UserProfileEntity(
                     id = (doc.getLong("id")?.toInt() ?: 1),
+                    age = (doc.getLong("age")?.toInt() ?: 45),
                     strengthLevel = (doc.getString("strengthLevel") ?: "Intermediate"),
                     availableEquipment = (doc.getString("availableEquipment") ?: "Dumbbells & Kettlebells"),
                     scheduleDaysPerWeek = (doc.getLong("scheduleDaysPerWeek")?.toInt() ?: 3),
                     jointHistory = (doc.getString("jointHistory") ?: "None"),
+                    fitnessGoals = (doc.getString("fitnessGoals") ?: "Bone Mineral Density, Joint & Cartilage Longevity"),
                     focusAreas = (doc.getString("focusAreas") ?: "Bone Density, Posture"),
                     targetRpeRange = (doc.getString("targetRpeRange") ?: "7-8"),
                     updatedAt = (doc.getLong("updatedAt") ?: System.currentTimeMillis())
