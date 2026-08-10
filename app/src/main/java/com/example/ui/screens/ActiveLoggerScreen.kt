@@ -298,26 +298,34 @@ fun ActiveLoggerScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${exIndex + 1}. ${logState.exerciseName}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${exIndex + 1}. ${logState.exerciseName}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                GoalBadge(goal = logState.primaryGoal)
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier
-                                        .padding(end = 8.dp)
-                                        .clickable { activeFormDemoExercise = logState.exerciseName }
+                                    modifier = Modifier.clickable { activeFormDemoExercise = logState.exerciseName }
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -339,13 +347,10 @@ fun ActiveLoggerScreen(
                                     }
                                 }
 
-                                GoalBadge(goal = logState.primaryGoal)
-
                                 val currentPr = personalBests[logState.exerciseName] ?: 0f
                                 ProgressiveOverloadTag(
                                     currentPrLbs = currentPr,
-                                    isReadyForIncrement = currentPr > 0f && logState.sets.all { it.isCompleted && it.rpe <= 8 },
-                                    modifier = Modifier.padding(start = 6.dp)
+                                    isReadyForIncrement = currentPr > 0f && logState.sets.all { it.isCompleted && it.rpe <= 8 }
                                 )
                             }
                         }
