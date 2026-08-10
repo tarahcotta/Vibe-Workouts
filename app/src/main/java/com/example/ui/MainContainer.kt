@@ -97,6 +97,7 @@ fun MainContainer(
     modifier: Modifier = Modifier
 ) {
     var currentDestination by remember { mutableStateOf(NavDestination.HOME) }
+    var customExercisesForSession by remember { mutableStateOf<List<com.example.data.WorkoutExerciseEntity>>(emptyList()) }
     var showThemeMenu by remember { mutableStateOf(false) }
     var showAuthDialog by remember { mutableStateOf(false) }
 
@@ -309,9 +310,22 @@ fun MainContainer(
                 NavDestination.LIBRARY -> {
                     ExerciseLibraryScreen(
                         onSelectExerciseForWorkout = { exercise ->
-                            if (routines.isNotEmpty()) {
+                            if (routines.isNotEmpty() && selectedRoutine == null) {
                                 viewModel.selectRoutine(routines.first())
                             }
+                            val newEx = com.example.data.WorkoutExerciseEntity(
+                                id = 0,
+                                routineId = selectedRoutine?.id ?: routines.firstOrNull()?.id ?: 0L,
+                                exerciseName = exercise.name,
+                                primaryGoal = exercise.healthFocusCategory.displayName,
+                                sets = 3,
+                                repRange = "8-12",
+                                restPeriod = "90-120s",
+                                rpe = "RPE 7-8",
+                                coachingCues = exercise.proFormTips.firstOrNull() ?: "",
+                                orderIndex = exercises.size + customExercisesForSession.size
+                            )
+                            customExercisesForSession = customExercisesForSession + newEx
                             currentDestination = NavDestination.LOGGER
                         }
                     )
@@ -353,12 +367,17 @@ fun MainContainer(
                 NavDestination.LOGGER -> {
                     ActiveLoggerScreen(
                         routine = selectedRoutine ?: routines.firstOrNull(),
-                        exercises = exercises,
+                        exercises = exercises + customExercisesForSession,
                         personalBests = personalBests,
                         onSaveSession = { title, loggedSets, feel, notes ->
                             viewModel.logWorkoutSession(title, loggedSets, feel, notes)
+                            customExercisesForSession = emptyList()
+                            currentDestination = NavDestination.HOME
                         },
-                        onCancel = { currentDestination = NavDestination.HOME }
+                        onCancel = { 
+                            currentDestination = NavDestination.HOME
+                            customExercisesForSession = emptyList()
+                        }
                     )
                 }
 
