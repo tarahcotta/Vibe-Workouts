@@ -62,6 +62,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ui.VitalViewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,6 +84,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ExerciseLibraryScreen(
+    viewModel: VitalViewModel,
     onSelectExerciseForWorkout: ((ExerciseLibraryItem) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -89,7 +92,8 @@ fun ExerciseLibraryScreen(
     var selectedCategory by remember { mutableStateOf(HealthFocusCategory.ALL) }
     var selectedEquipment by remember { mutableStateOf("All") }
     var selectedExerciseForDetail by remember { mutableStateOf<ExerciseLibraryItem?>(null) }
-    var bookmarkedIds by remember { mutableStateOf(setOf<String>()) }
+    val bookmarkedEntities by viewModel.bookmarkedExercises.collectAsStateWithLifecycle()
+    val bookmarkedIds = remember(bookmarkedEntities) { bookmarkedEntities.map { it.exerciseId }.toSet() }
 
     val equipmentOptions = listOf("All", "Barbell", "Dumbbell", "Kettlebell", "Bodyweight", "Cable")
 
@@ -357,10 +361,10 @@ fun ExerciseLibraryScreen(
                         exercise = exercise,
                         isBookmarked = isBookmarked,
                         onToggleBookmark = {
-                            bookmarkedIds = if (isBookmarked) {
-                                bookmarkedIds - exercise.id
+                            if (isBookmarked) {
+                                viewModel.removeBookmark(exercise.id)
                             } else {
-                                bookmarkedIds + exercise.id
+                                viewModel.addBookmark(exercise.id)
                             }
                         },
                         onClick = {

@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VitalDao {
-
     // User Profile
     @Query("SELECT * FROM user_profiles WHERE id = 1 LIMIT 1")
     fun getUserProfile(): Flow<UserProfileEntity?>
@@ -79,4 +78,14 @@ interface VitalDao {
 
     @Query("DELETE FROM logged_sets WHERE sessionId = :sessionId")
     suspend fun deleteSetsForSession(sessionId: Long)
+
+    // Bookmarked Exercises
+    @Query("SELECT * FROM bookmarked_exercises")
+    fun getBookmarkedExercises(): Flow<List<BookmarkedExerciseEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertBookmarkedExercise(exercise: BookmarkedExerciseEntity)
+
+    @Query("DELETE FROM bookmarked_exercises WHERE exerciseId = :exerciseId")
+    suspend fun deleteBookmarkedExercise(exerciseId: String)
 }

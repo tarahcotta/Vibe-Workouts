@@ -309,6 +309,7 @@ fun MainContainer(
 
                 NavDestination.LIBRARY -> {
                     ExerciseLibraryScreen(
+                        viewModel = viewModel,
                         onSelectExerciseForWorkout = { exercise ->
                             if (routines.isNotEmpty() && selectedRoutine == null) {
                                 viewModel.selectRoutine(routines.first())

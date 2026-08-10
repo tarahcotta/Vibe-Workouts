@@ -17,6 +17,17 @@ class VitalRepository(
         return dao.getExercisesForRoutine(routineId)
     }
 
+
+    val bookmarkedExercises: Flow<List<BookmarkedExerciseEntity>> = dao.getBookmarkedExercises()
+
+    suspend fun addBookmark(exerciseId: String) {
+        dao.insertBookmarkedExercise(BookmarkedExerciseEntity(exerciseId))
+    }
+
+    suspend fun removeBookmark(exerciseId: String) {
+        dao.deleteBookmarkedExercise(exerciseId)
+    }
+
     fun getSetsForSession(sessionId: Long): Flow<List<LoggedSetEntity>> {
         return dao.getSetsForSession(sessionId)
     }

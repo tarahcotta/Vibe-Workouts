@@ -10,6 +10,7 @@ import com.example.data.LoggedSetEntity
 import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.SyncStatus
 import com.example.data.UserProfileEntity
+import com.example.data.BookmarkedExerciseEntity
 import com.example.data.VitalDatabase
 import com.example.data.VitalRepository
 import com.example.data.WorkoutExerciseEntity
@@ -68,6 +69,21 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     @OptIn(ExperimentalCoroutinesApi::class)
     val selectedRoutineExercises: StateFlow<List<WorkoutExerciseEntity>>
 
+
+    lateinit var bookmarkedExercises: StateFlow<List<BookmarkedExerciseEntity>>
+
+    fun addBookmark(exerciseId: String) {
+        viewModelScope.launch {
+            repository.addBookmark(exerciseId)
+        }
+    }
+
+    fun removeBookmark(exerciseId: String) {
+        viewModelScope.launch {
+            repository.removeBookmark(exerciseId)
+        }
+    }
+
     init {
         val dao = VitalDatabase.getDatabase(application).vitalDao()
         val syncManager = com.example.data.FirestoreSyncManager(application)
@@ -80,6 +96,12 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
             _isDataLoading.value = false
         }
 
+
+        bookmarkedExercises = repository.bookmarkedExercises.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
         userProfile = repository.userProfile.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
