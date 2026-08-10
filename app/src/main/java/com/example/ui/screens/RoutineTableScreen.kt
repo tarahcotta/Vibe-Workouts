@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.AlertDialog
@@ -178,22 +179,6 @@ fun RoutineTableScreen(
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = { onStartLogging(activeRoutine) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .testTag("log_this_session_button"),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Start Logging This Session", fontWeight = FontWeight.Bold)
-                        }
                     }
                 }
 
@@ -214,7 +199,7 @@ fun RoutineTableScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Workout Routines",
+                        text = "Session Exercises",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -465,22 +450,9 @@ fun RoutineTableScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { onStartLogging(activeRoutine) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp)
-                            .testTag("table_start_logging_button"),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Log Workout", fontWeight = FontWeight.Bold)
-                    }
-
-                    Button(
                         onClick = onRegenerateProgram,
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(52.dp)
                             .testTag("regenerate_program_button"),
                         shape = RoundedCornerShape(14.dp),
@@ -491,7 +463,7 @@ fun RoutineTableScreen(
                     ) {
                         Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Regenerate", fontWeight = FontWeight.Bold)
+                        Text("Regenerate Program", fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
@@ -517,6 +489,34 @@ fun RoutineTableScreen(
         onDismiss = { isTimerActive = false },
         modifier = Modifier.align(Alignment.BottomCenter)
     )
+
+    // Sticky Bottom Action (only show when timer is not active)
+    if (!isTimerActive && activeRoutine != null) {
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+            shadowElevation = 8.dp
+        ) {
+            Button(
+                onClick = { onStartLogging(activeRoutine) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .height(56.dp)
+                    .testTag("sticky_log_session_button"),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Start Logging This Session", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
     // Popup Form Illustration Dialog
@@ -553,11 +553,11 @@ fun TableHeaderCell(text: String, width: androidx.compose.ui.unit.Dp, textAlign:
 @Composable
 fun GoalBadge(goal: String) {
     val (bgColor, textColor) = when {
-        goal.contains("Bone", ignoreCase = true) -> Pair(BoneDensityGold.copy(alpha = 0.2f), Color(0xFF8C5800))
-        goal.contains("Posture", ignoreCase = true) -> Pair(PostureTeal.copy(alpha = 0.2f), Color(0xFF0F5A51))
-        goal.contains("Balance", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
-        goal.contains("Grip", ignoreCase = true) -> Pair(JointSafetyCoral.copy(alpha = 0.2f), Color(0xFF8B2B15))
-        else -> Pair(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
+        goal.contains("Bone", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+        goal.contains("Posture", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
+        goal.contains("Balance", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+        goal.contains("Grip", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
+        else -> Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
     }
 
     Surface(
@@ -570,7 +570,8 @@ fun GoalBadge(goal: String) {
             fontWeight = FontWeight.Bold,
             color = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            maxLines = 1
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
