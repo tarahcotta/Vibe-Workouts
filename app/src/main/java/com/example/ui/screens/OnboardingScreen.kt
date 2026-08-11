@@ -65,28 +65,28 @@ fun OnboardingScreen(
                 subtitle = "Empowering women across all life stages through science-backed resistance training tailored for bone mineral density, joint resilience, and metabolic health.",
                 badge = "WELCOME TO VITAL STRENGTH",
                 icon = Icons.Default.FitnessCenter,
-                primaryColor = Color(0xFF084E72)
+                primaryColor = Color(0xFF4FC3F7)
             ),
             OnboardingStepData(
                 title = "Progressive Overload & Bone Density",
                 subtitle = "Bones are dynamic living tissue that respond directly to mechanical stress. Gradual weight increases signal osteoblasts to deposit calcium and strengthen bone architecture.",
                 badge = "BONE HEALTH SCIENCE",
                 icon = Icons.Default.Shield,
-                primaryColor = Color(0xFFC45A00)
+                primaryColor = Color(0xFFFFB74D)
             ),
             OnboardingStepData(
                 title = "Joint Stability & Cartilage Health",
                 subtitle = "Progressive resistance fortifies tendons, ligaments, and surrounding musculature while circulating nourishing synovial fluid to keep joints pain-free and resilient.",
                 badge = "JOINT & CONNECTIVE TISSUE",
                 icon = Icons.Default.HealthAndSafety,
-                primaryColor = Color(0xFF006C4C)
+                primaryColor = Color(0xFF81C784)
             ),
             OnboardingStepData(
-                title = "Smart Micro-Progressions",
+                title = "Smart\nMicro-Progressions",
                 subtitle = "Our live workout engine tracks your volume and guides safe, incremental gains (+2.5 lbs or +1 rep) so you build strength consistently without injury or burnout.",
                 badge = "INTELLIGENT PROGRESSION",
                 icon = Icons.Default.TrendingUp,
-                primaryColor = Color(0xFF533F93)
+                primaryColor = Color(0xFFB39DDB)
             )
         )
     }
