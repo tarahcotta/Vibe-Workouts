@@ -32,7 +32,7 @@ abstract class VitalDatabase : RoomDatabase() {
                     VitalDatabase::class.java,
                     "vital_strength_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance
                 instance

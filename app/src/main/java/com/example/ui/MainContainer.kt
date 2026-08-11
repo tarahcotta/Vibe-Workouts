@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CloudSync
@@ -79,14 +82,14 @@ enum class NavDestination(
     val unselectedIcon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     HOME("home", "Dashboard", Icons.Filled.Home, Icons.Outlined.Home),
-    LIBRARY("library", "Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
+    LIBRARY("library", "Library", Icons.AutoMirrored.Filled.MenuBook, Icons.AutoMirrored.Outlined.MenuBook),
     ACTIVITY("activity", "Activity", Icons.Filled.History, Icons.Outlined.History),
-    TABLE("table", "Routines", Icons.Filled.GridOn, Icons.Outlined.GridOn),
+    TABLE("table", "Program", Icons.Filled.GridOn, Icons.Outlined.GridOn),
     LOGGER("logger", "Live Logger", Icons.Filled.PlayCircleFilled, Icons.Outlined.PlayCircle),
     PROGRESS("progress", "Analytics", Icons.Filled.Timeline, Icons.Outlined.Timeline),
     PLATE_CALC("plate_calc", "Plate Calc", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
     GUIDE("guide", "Science Guide", Icons.Filled.HealthAndSafety, Icons.Outlined.HealthAndSafety),
-    ASSESSMENT("assessment", "Assessment", Icons.Filled.Assignment, Icons.Outlined.Assignment),
+    ASSESSMENT("assessment", "Assessment", Icons.AutoMirrored.Filled.Assignment, Icons.AutoMirrored.Outlined.Assignment),
     PROFILE_SETUP("profile_setup", "Profile Setup", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
 }
 

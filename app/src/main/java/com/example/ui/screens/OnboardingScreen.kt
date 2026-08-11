@@ -18,6 +18,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
@@ -37,7 +40,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.WomensStrengthLogoIcon
@@ -82,10 +84,10 @@ fun OnboardingScreen(
                 primaryColor = Color(0xFF81C784)
             ),
             OnboardingStepData(
-                title = "Smart\nMicro-Progressions",
+                title = "Smart Micro-Progression",
                 subtitle = "Our live workout engine tracks your volume and guides safe, incremental gains (+2.5 lbs or +1 rep) so you build strength consistently without injury or burnout.",
                 badge = "INTELLIGENT PROGRESSION",
-                icon = Icons.Default.TrendingUp,
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
                 primaryColor = Color(0xFFB39DDB)
             )
         )

@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -188,7 +191,7 @@ fun ProgressiveOverloadTag(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = if (isReadyForIncrement) Icons.Default.TrendingUp else Icons.Default.EmojiEvents,
+                imageVector = if (isReadyForIncrement) Icons.AutoMirrored.Filled.TrendingUp else Icons.Default.EmojiEvents,
                 contentDescription = "Icon",
                 tint = if (isReadyForIncrement) MaterialTheme.colorScheme.primary else BoneDensityGold,
                 modifier = Modifier.size(12.dp)
@@ -235,7 +238,7 @@ fun ProgressiveOverloadHighlightCard(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                 contentDescription = "Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
