@@ -315,7 +315,8 @@ fun MainContainer(
                         onNavigateToAssessment = { currentDestination = NavDestination.ASSESSMENT },
                         onNavigateToLogger = { currentDestination = NavDestination.LOGGER },
                         onNavigateToGuide = { currentDestination = NavDestination.GUIDE },
-                        onNavigateToActivity = { currentDestination = NavDestination.ACTIVITY }
+                        onNavigateToActivity = { currentDestination = NavDestination.ACTIVITY },
+                        onNavigateToProgress = { currentDestination = NavDestination.PROGRESS }
                     )
                 }
 

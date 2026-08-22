@@ -11,12 +11,16 @@ import com.example.data.LoggedWorkoutSessionEntity
 import com.example.data.SyncStatus
 import com.example.data.UserProfileEntity
 import com.example.data.BookmarkedExerciseEntity
+import com.example.data.ProgressPhotoEntity
+import com.example.data.LocalPhotoStorageManager
 import com.example.data.VitalDatabase
 import com.example.data.VitalRepository
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.ProgressiveOverloadInfo
 import com.google.firebase.auth.FirebaseUser
+import android.net.Uri
+import android.graphics.Bitmap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -62,6 +66,7 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     val allLoggedSets: StateFlow<List<LoggedSetEntity>>
     val personalBests: StateFlow<Map<String, Float>>
     val progressiveOverloadList: StateFlow<List<ProgressiveOverloadInfo>>
+    val allProgressPhotos: StateFlow<List<ProgressPhotoEntity>>
 
     private val _selectedRoutine = MutableStateFlow<WorkoutRoutineEntity?>(null)
     val selectedRoutine: StateFlow<WorkoutRoutineEntity?> = _selectedRoutine.asStateFlow()
@@ -121,6 +126,12 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         allLoggedSets = repository.allLoggedSets.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        allProgressPhotos = repository.allProgressPhotos.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
@@ -297,6 +308,109 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getSetsForSession(sessionId: Long) = repository.getSetsForSession(sessionId)
     fun getMaxWeightForExercise(exerciseName: String) = repository.getMaxWeightForExercise(exerciseName)
+
+    fun addProgressPhotoFromUri(uri: Uri, poseTag: String, bodyWeightLbs: Float?, notes: String) {
+        viewModelScope.launch {
+            val localPath = LocalPhotoStorageManager.saveImageFromUri(getApplication(), uri)
+            val photo = ProgressPhotoEntity(
+                filePath = localPath,
+                dateTimestamp = System.currentTimeMillis(),
+                poseTag = poseTag,
+                bodyWeightLbs = bodyWeightLbs,
+                notes = notes,
+                isSample = false
+            )
+            repository.addProgressPhoto(photo)
+        }
+    }
+
+    fun addProgressPhotoFromBitmap(bitmap: Bitmap, poseTag: String, bodyWeightLbs: Float?, notes: String) {
+        viewModelScope.launch {
+            val localPath = LocalPhotoStorageManager.saveBitmapLocally(getApplication(), bitmap)
+            val photo = ProgressPhotoEntity(
+                filePath = localPath,
+                dateTimestamp = System.currentTimeMillis(),
+                poseTag = poseTag,
+                bodyWeightLbs = bodyWeightLbs,
+                notes = notes,
+                isSample = false
+            )
+            repository.addProgressPhoto(photo)
+        }
+    }
+
+    fun deleteProgressPhoto(photo: ProgressPhotoEntity) {
+        viewModelScope.launch {
+            repository.deleteProgressPhoto(photo.id, photo.filePath)
+        }
+    }
+
+    fun seedSampleProgressPhotosIfEmpty() {
+        viewModelScope.launch {
+            if (allProgressPhotos.value.isEmpty()) {
+                val now = System.currentTimeMillis()
+                val dayMs = 86400000L
+                val app = getApplication<Application>()
+
+                // Sample 1: Baseline 6 weeks ago
+                val bmp1 = LocalPhotoStorageManager.createSamplePostureBitmap(
+                    title = "Baseline Posture Scan",
+                    subtitle = "Week 1 Baseline",
+                    isImproved = false,
+                    angle = "Side View"
+                )
+                val path1 = LocalPhotoStorageManager.saveBitmapLocally(app, bmp1)
+                repository.addProgressPhoto(
+                    ProgressPhotoEntity(
+                        filePath = path1,
+                        dateTimestamp = now - (42 * dayMs),
+                        poseTag = "Side Alignment",
+                        bodyWeightLbs = 172.5f,
+                        notes = "Initial baseline posture scan. Noticed slight forward head posture and anterior pelvic tilt.",
+                        isSample = true
+                    )
+                )
+
+                // Sample 2: Intermediate Front 3 weeks ago
+                val bmp2 = LocalPhotoStorageManager.createSamplePostureBitmap(
+                    title = "Midpoint Symmetry Check",
+                    subtitle = "Week 3 Progression",
+                    isImproved = false,
+                    angle = "Front View"
+                )
+                val path2 = LocalPhotoStorageManager.saveBitmapLocally(app, bmp2)
+                repository.addProgressPhoto(
+                    ProgressPhotoEntity(
+                        filePath = path2,
+                        dateTimestamp = now - (21 * dayMs),
+                        poseTag = "Front Posture",
+                        bodyWeightLbs = 171.0f,
+                        notes = "Improving shoulder leveling after consistent face pulls and goblet squats.",
+                        isSample = true
+                    )
+                )
+
+                // Sample 3: Recent Side View 2 days ago
+                val bmp3 = LocalPhotoStorageManager.createSamplePostureBitmap(
+                    title = "Spinal Alignment Milestone",
+                    subtitle = "Week 6 Milestone",
+                    isImproved = true,
+                    angle = "Side View"
+                )
+                val path3 = LocalPhotoStorageManager.saveBitmapLocally(app, bmp3)
+                repository.addProgressPhoto(
+                    ProgressPhotoEntity(
+                        filePath = path3,
+                        dateTimestamp = now - (2 * dayMs),
+                        poseTag = "Side Alignment",
+                        bodyWeightLbs = 170.2f,
+                        notes = "Significant cervical and thoracic extension improvements. Hip hinge mechanics feeling solid.",
+                        isSample = true
+                    )
+                )
+            }
+        }
+    }
 
     fun setThemeMode(mode: ThemeMode) {
         _themeMode.value = mode

@@ -88,4 +88,17 @@ interface VitalDao {
 
     @Query("DELETE FROM bookmarked_exercises WHERE exerciseId = :exerciseId")
     suspend fun deleteBookmarkedExercise(exerciseId: String)
+
+    // Localized Progress Photos
+    @Query("SELECT * FROM progress_photos ORDER BY dateTimestamp DESC")
+    fun getAllProgressPhotos(): Flow<List<ProgressPhotoEntity>>
+
+    @Query("SELECT * FROM progress_photos WHERE poseTag = :poseTag ORDER BY dateTimestamp DESC")
+    fun getProgressPhotosByPose(poseTag: String): Flow<List<ProgressPhotoEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProgressPhoto(photo: ProgressPhotoEntity): Long
+
+    @Query("DELETE FROM progress_photos WHERE id = :id")
+    suspend fun deleteProgressPhoto(id: Long)
 }

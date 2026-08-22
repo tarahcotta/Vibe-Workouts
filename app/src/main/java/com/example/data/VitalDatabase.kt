@@ -12,9 +12,10 @@ import androidx.room.RoomDatabase
         WorkoutExerciseEntity::class,
         LoggedWorkoutSessionEntity::class,
         LoggedSetEntity::class,
-        BookmarkedExerciseEntity::class
+        BookmarkedExerciseEntity::class,
+        ProgressPhotoEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class VitalDatabase : RoomDatabase() {

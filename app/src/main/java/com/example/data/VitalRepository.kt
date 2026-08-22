@@ -19,6 +19,7 @@ class VitalRepository(
 
 
     val bookmarkedExercises: Flow<List<BookmarkedExerciseEntity>> = dao.getBookmarkedExercises()
+    val allProgressPhotos: Flow<List<ProgressPhotoEntity>> = dao.getAllProgressPhotos()
 
     suspend fun addBookmark(exerciseId: String) {
         dao.insertBookmarkedExercise(BookmarkedExerciseEntity(exerciseId))
@@ -26,6 +27,15 @@ class VitalRepository(
 
     suspend fun removeBookmark(exerciseId: String) {
         dao.deleteBookmarkedExercise(exerciseId)
+    }
+
+    suspend fun addProgressPhoto(photo: ProgressPhotoEntity): Long {
+        return dao.insertProgressPhoto(photo)
+    }
+
+    suspend fun deleteProgressPhoto(id: Long, filePath: String) {
+        LocalPhotoStorageManager.deleteLocalPhotoFile(filePath)
+        dao.deleteProgressPhoto(id)
     }
 
     fun getSetsForSession(sessionId: Long): Flow<List<LoggedSetEntity>> {

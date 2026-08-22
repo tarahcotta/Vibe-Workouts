@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Mic
@@ -180,6 +181,7 @@ fun ActiveLoggerScreen(
     var overallFeel by remember { mutableStateOf("Strong & Energized") }
     var notesText by remember { mutableStateOf("") }
     var showCompletionDialog by remember { mutableStateOf(false) }
+    var showRpeInfoDialog by remember { mutableStateOf(false) }
     var activeFormDemoExercise by remember { mutableStateOf<String?>(null) }
     var rpePickerSet by remember { mutableStateOf<Pair<SetLogInput, String>?>(null) }
 
@@ -694,17 +696,32 @@ fun ActiveLoggerScreen(
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Accessible Interactive Joint Feel Selector Pill (WCAG Compliant)
-                                    val (jointBg, jointFg, jointLabel) = when (setInput.jointFeel) {
-                                        "Comfortable" -> Triple(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer, "Normal ▾")
-                                        "Mild Tension" -> Triple(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer, "Tension ▾")
-                                        else -> Triple(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer, "Strain ▾")
+                                    // Accessible Interactive Joint Feel Selector Pill (WCAG Compliant) with Semantic Iconography
+                                    val jointBg = when (setInput.jointFeel) {
+                                        "Comfortable" -> MaterialTheme.colorScheme.tertiaryContainer
+                                        "Mild Tension" -> MaterialTheme.colorScheme.secondaryContainer
+                                        else -> MaterialTheme.colorScheme.errorContainer
+                                    }
+                                    val jointFg = when (setInput.jointFeel) {
+                                        "Comfortable" -> MaterialTheme.colorScheme.onTertiaryContainer
+                                        "Mild Tension" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                        else -> MaterialTheme.colorScheme.onErrorContainer
+                                    }
+                                    val jointIcon = when (setInput.jointFeel) {
+                                        "Comfortable" -> Icons.Default.Shield
+                                        "Mild Tension" -> Icons.Default.Warning
+                                        else -> Icons.Default.Warning
+                                    }
+                                    val jointLabel = when (setInput.jointFeel) {
+                                        "Comfortable" -> "Normal"
+                                        "Mild Tension" -> "Tension"
+                                        else -> "Strain"
                                     }
 
                                     Surface(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(44.dp)
+                                            .height(48.dp)
                                             .clickable {
                                                 setInput.jointFeel = when (setInput.jointFeel) {
                                                     "Comfortable" -> "Mild Tension"
@@ -713,14 +730,23 @@ fun ActiveLoggerScreen(
                                                 }
                                             },
                                         shape = RoundedCornerShape(10.dp),
-                                        color = jointBg
+                                        color = jointBg,
+                                        border = BorderStroke(1.dp, jointFg.copy(alpha = 0.3f))
                                     ) {
-                                        Box(
-                                            contentAlignment = Alignment.Center,
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
                                             modifier = Modifier.padding(horizontal = 4.dp)
                                         ) {
+                                            Icon(
+                                                imageVector = jointIcon,
+                                                contentDescription = null,
+                                                tint = jointFg,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = jointLabel,
+                                                text = "$jointLabel ▾",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = jointFg,
@@ -732,12 +758,19 @@ fun ActiveLoggerScreen(
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Complete Set Button (High contrast, explicit state)
+                                    // Complete Set Button (High contrast, auto-propagates forward to next set)
                                     IconButton(
                                         onClick = {
                                             setInput.isCompleted = !setInput.isCompleted
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             if (setInput.isCompleted) {
+                                                // Auto-populate subsequent sets if they have default values
+                                                logState.sets.forEachIndexed { i, s ->
+                                                    if (i > setIndex && !s.isCompleted) {
+                                                        s.weightText = setInput.weightText
+                                                        s.repsText = setInput.repsText
+                                                    }
+                                                }
                                                 startRestTimer(targetRestSeconds, logState.exerciseName)
                                                 val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
                                                 val previousMax = personalBests[logState.exerciseName] ?: 0f
@@ -768,7 +801,7 @@ fun ActiveLoggerScreen(
 
                                 Spacer(modifier = Modifier.height(6.dp))
 
-                                // Micro-Loading Steppers & Target RPE Selector Row (No horizontal clipping)
+                                // Micro-Loading Steppers & Target RPE / RIR Selector Row
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -800,10 +833,12 @@ fun ActiveLoggerScreen(
                                         }
                                     }
 
-                                    // Compact Interactive RPE Selector Chip
+                                    // Contextual RPE & RIR Decoder Pill with direct info helper
+                                    val rirCount = (10 - setInput.rpe).coerceAtLeast(0)
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
                                         color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                                         modifier = Modifier.clickable {
                                             rpePickerSet = Pair(setInput, logState.exerciseName)
                                         }
@@ -813,7 +848,7 @@ fun ActiveLoggerScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "RPE ${setInput.rpe} ▾",
+                                                text = "RPE ${setInput.rpe} (${rirCount} RIR) ▾",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -824,9 +859,11 @@ fun ActiveLoggerScreen(
                             }
                         }
 
-                        // Add Set Button
+                        // Set Row Actions: Add Set & Apply Set 1 to All
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -846,6 +883,44 @@ fun ActiveLoggerScreen(
                                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Set", modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Add Set", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                            }
+
+                            if (logState.sets.size > 1) {
+                                Surface(
+                                    modifier = Modifier.clickable {
+                                        val firstSet = logState.sets.firstOrNull()
+                                        if (firstSet != null) {
+                                            logState.sets.forEachIndexed { i, s ->
+                                                if (i > 0) {
+                                                    s.weightText = firstSet.weightText
+                                                    s.repsText = firstSet.repsText
+                                                }
+                                            }
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Match Sets",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Copy Set 1 to All",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -973,7 +1048,24 @@ fun ActiveLoggerScreen(
         AlertDialog(
             onDismissRequest = { rpePickerSet = null },
             title = {
-                Text("Select Target RPE (Intensity)", fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Target RPE (Intensity)", fontWeight = FontWeight.Bold)
+                    IconButton(
+                        onClick = { showRpeInfoDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "RPE & RIR Guide",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             },
             text = {
                 Column {
@@ -985,14 +1077,15 @@ fun ActiveLoggerScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     val rpeOptions = listOf(
-                        6 to "RPE 6 · Warmup / Very Light (4+ reps in reserve)",
-                        7 to "RPE 7 · Optimal Osteogenic Baseline (3 reps in reserve)",
-                        8 to "RPE 8 · Target Heavy Bone Remodeling (2 reps in reserve)",
-                        9 to "RPE 9 · Very Hard (1 rep in reserve)",
-                        10 to "RPE 10 · Absolute Maximum Effort"
+                        Triple(6, "RPE 6 · 4+ RIR", "Warmup / speed work. Very low neural fatigue."),
+                        Triple(7, "RPE 7 · 3 RIR", "Crisp velocity. Excellent form threshold for beginners."),
+                        Triple(8, "RPE 8 · 2 RIR", "Optimal Osteogenic Zone · High axial load without breakdown."),
+                        Triple(9, "RPE 9 · 1 RIR", "Near failure. 1 grinding rep left in reserve."),
+                        Triple(10, "RPE 10 · 0 RIR", "Absolute max limit. Zero reps remaining.")
                     )
 
-                    rpeOptions.forEach { (valRpe, desc) ->
+                    rpeOptions.forEach { (valRpe, title, sub) ->
+                        val isSelected = targetSet.rpe == valRpe
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1001,16 +1094,45 @@ fun ActiveLoggerScreen(
                                     targetSet.rpe = valRpe
                                     rpePickerSet = null
                                 },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (targetSet.rpe == valRpe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            border = if (valRpe == 8) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
                         ) {
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = if (targetSet.rpe == valRpe) FontWeight.Bold else FontWeight.Normal,
-                                color = if (targetSet.rpe == valRpe) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(10.dp)
-                            )
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    if (valRpe == 8) {
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.primary
+                                        ) {
+                                            Text(
+                                                text = "RECOMMENDED",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = sub,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -1018,6 +1140,94 @@ fun ActiveLoggerScreen(
             confirmButton = {
                 TextButton(onClick = { rpePickerSet = null }) {
                     Text("Cancel", fontWeight = FontWeight.Bold)
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // Comprehensive RPE & RIR Guide Dialog
+    if (showRpeInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showRpeInfoDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "RPE Guide",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("RPE & RIR Explained", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                    ) {
+                        Text(
+                            text = "RPE (Rate of Perceived Exertion) measures workout intensity. RIR (Reps in Reserve) is how many more clean reps you could complete before failure.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+
+                    Text(
+                        text = "Why RPE 7–8 for Bone Density?",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Clinical research shows that loading bones at 70–85% 1RM (RPE 7–8, 2–3 reps in reserve) creates peak osteogenic mechanotransduction while protecting spinal and joint integrity.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    Text(
+                        text = "Intensity Scale Quick Reference:",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    listOf(
+                        "RPE 6 (4+ RIR)" to "Light warmup. Weight moves briskly.",
+                        "RPE 7 (3 RIR)" to "Moderate load. Bar speed is crisp.",
+                        "RPE 8 (2 RIR)" to "Ideal Working Zone. 2 reps left in reserve.",
+                        "RPE 9 (1 RIR)" to "Near maximal effort. 1 grinding rep left.",
+                        "RPE 10 (0 RIR)" to "Absolute failure. No more reps possible."
+                    ).forEach { (scale, desc) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = "• $scale: ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = desc,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showRpeInfoDialog = false }) {
+                    Text("Got It", fontWeight = FontWeight.Bold)
                 }
             },
             shape = RoundedCornerShape(20.dp)

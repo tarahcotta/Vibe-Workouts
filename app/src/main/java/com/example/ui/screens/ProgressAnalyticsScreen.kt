@@ -37,7 +37,11 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -225,6 +229,7 @@ fun WeeklyWorkoutStatsCard(sessions: List<LoggedWorkoutSessionEntity>) {
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressAnalyticsScreen(
     viewModel: VitalViewModel,
@@ -233,62 +238,130 @@ fun ProgressAnalyticsScreen(
     onStartWorkout: (com.example.data.WorkoutRoutineEntity?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
-    val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
-
-    val overloadList by viewModel.progressiveOverloadList.collectAsState()
-    val routines by viewModel.activeRoutines.collectAsState()
-    val allLoggedSets by viewModel.allLoggedSets.collectAsState()
-
-    val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
-    val totalWorkouts = sessions.size
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scrollState)
-            .padding(16.dp)
     ) {
-        // Top Header
+        // Top View Selector: Strength Analytics vs Progress Photos
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 2.dp,
+            shadowElevation = 1.dp
         ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
+            PrimaryTabRow(
+                selectedTabIndex = selectedTab,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Timeline,
-                        contentDescription = "Icon",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = "Analytics",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = "Track your strength progress and consistency over time.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                }
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        ) {
+                            Icon(Icons.Default.Timeline, contentDescription = "Strength Analytics", modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Strength Charts",
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                    },
+                    modifier = Modifier.testTag("analytics_tab_strength")
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 12.dp)
+                        ) {
+                            Icon(Icons.Default.PhotoCamera, contentDescription = "Progress Photos", modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Progress Photos",
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                    },
+                    modifier = Modifier.testTag("analytics_tab_photos")
+                )
             }
         }
+
+        if (selectedTab == 1) {
+            ProgressPhotosScreen(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            val scrollState = rememberScrollState()
+            val dateFormat = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
+
+            val overloadList by viewModel.progressiveOverloadList.collectAsState()
+            val routines by viewModel.activeRoutines.collectAsState()
+            val allLoggedSets by viewModel.allLoggedSets.collectAsState()
+
+            val totalVolumeAllTime = sessions.sumOf { it.totalVolumeLbs.toDouble() }.toInt()
+            val totalWorkouts = sessions.size
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(16.dp)
+            ) {
+                // Top Header
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Timeline,
+                                contentDescription = "Icon",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                text = "Analytics",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Track your strength progress and consistency over time.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -404,6 +477,8 @@ fun ProgressAnalyticsScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
     }
 }
 
