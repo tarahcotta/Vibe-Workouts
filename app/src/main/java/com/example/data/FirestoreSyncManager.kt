@@ -173,7 +173,7 @@ class FirestoreSyncManager(private val context: Context? = null) {
                 )
 
                 val rawSets = doc.get("sets") as? List<*> ?: emptyList<Any>()
-                val setsList = rawSets.mapNotNull { it as? Map<String, Any> }.mapIndexed { idx, map ->
+                val setsList = rawSets.filterIsInstance<Map<String, Any>>().mapIndexed { idx, map ->
                     LoggedSetEntity(
                         id = (map["id"] as? Long) ?: 0L,
                         sessionId = (map["sessionId"] as? Long) ?: sessionId,

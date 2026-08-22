@@ -220,7 +220,7 @@ fun WeightProgressionVicoChartCard(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Default.ShowChart,
+                            imageVector = Icons.AutoMirrored.Filled.ShowChart,
                             contentDescription = "Icon",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.size(32.dp)

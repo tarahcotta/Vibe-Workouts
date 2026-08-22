@@ -65,6 +65,7 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.outlined.MenuBook
 import com.example.ui.screens.ActiveLoggerScreen
 import com.example.ui.screens.AssessmentScreen
+import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.ExerciseLibraryScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LongevityGuideScreen
@@ -166,7 +167,7 @@ fun MainContainer(
                         modifier = Modifier.testTag("onboarding_replay_button")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.HelpOutline,
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                             contentDescription = "Replay Progressive Overload Science Onboarding",
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -292,7 +293,7 @@ fun MainContainer(
         ) {
             when (currentDestination) {
                 NavDestination.HOME -> {
-                    HomeScreen(
+                    DashboardScreen(
                         profile = profile,
                         routines = routines,
                         sessions = sessions,

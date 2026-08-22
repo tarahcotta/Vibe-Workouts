@@ -189,7 +189,7 @@ fun RecentActivitySummaryScreen(
                     modifier = Modifier.testTag("activity_back_button")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Navigate Back"
                     )
                 }

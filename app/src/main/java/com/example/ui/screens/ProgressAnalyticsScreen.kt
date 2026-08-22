@@ -385,7 +385,7 @@ fun ProgressAnalyticsScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 IllustrativeEmptyState(
-                    icon = Icons.Default.DirectionsRun,
+                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
                     title = "Awaiting Your Triumphs",
                     description = "Your workout history log will appear here after your first session. Lace up those shoes!",
                     modifier = Modifier.padding(12.dp)
