@@ -3,10 +3,10 @@ package com.example.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsRun
@@ -33,24 +31,33 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,25 +66,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.filled.SlowMotionVideo
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.runtime.mutableStateOf
+import com.example.data.WorkoutExerciseEntity
+import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.ExerciseFormIllustrationBox
 import com.example.ui.components.FloatingRestTimerBar
 import com.example.ui.components.PreWorkoutMobilityCard
 import com.example.ui.components.ProgressiveOverloadTag
 import com.example.ui.components.parseRestPeriodToSeconds
-import com.example.data.WorkoutExerciseEntity
-import com.example.data.WorkoutRoutineEntity
-import com.example.ui.theme.BoneDensityGold
-import com.example.ui.theme.EmeraldTertiaryLight
-import com.example.ui.theme.JointSafetyCoral
-import com.example.ui.theme.PostureTeal
 
 @Composable
 fun RoutineTableScreen(
@@ -105,421 +104,529 @@ fun RoutineTableScreen(
     } else selectedRoutine
 
     val verticalScrollState = rememberScrollState()
-    val tableHorizontalScrollState = rememberScrollState()
 
-    // Box wrapper to anchor floating rest timer overlay
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    // Box wrapper to anchor floating rest timer overlay & sticky CTA
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         // Main Screen Content
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-        // Top Day Selector Header
-        if (routines.isNotEmpty()) {
-            ScrollableTabRow(
-                selectedTabIndex = selectedTabIndex,
-                edgePadding = 16.dp,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
-            ) {
-                routines.forEachIndexed { index, r ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = {
-                            selectedTabIndex = index
-                            onSelectRoutine(r)
-                        },
-                        text = {
-                            Text(
-                                text = "Day ${index + 1}",
-                                fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    )
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(verticalScrollState)
-                .padding(16.dp)
-        ) {
-            if (activeRoutine != null) {
-                // Routine Header Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("routine_header_card"),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Fixed Top Day Selector Bar (Enclosed in a solid Surface with distinct divider)
+            if (routines.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.FitnessCenter,
-                                contentDescription = "Icon",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = activeRoutine.dayName,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Text(
-                            text = activeRoutine.focusSummary,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Tailored 5-Minute Pre-Workout Dynamic Mobility Warmup
-                PreWorkoutMobilityCard(
-                    exercises = exercises,
-                    onWarmupCompleted = {}
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Section Label
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Session Exercises",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Text(
-                            text = "${exercises.size} Exercises",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Scrollable Table Container
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("workout_table_container"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(tableHorizontalScrollState)
-                            .padding(12.dp)
-                    ) {
-                        // Table Header Row
-                        Row(
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .padding(vertical = 12.dp, horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    Column {
+                        ScrollableTabRow(
+                            selectedTabIndex = selectedTabIndex,
+                            edgePadding = 16.dp,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            indicator = { tabPositions ->
+                                if (selectedTabIndex < tabPositions.size) {
+                                    TabRowDefaults.SecondaryIndicator(
+                                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        height = 3.dp
+                                    )
+                                }
+                            },
+                            divider = {}
                         ) {
-                            TableHeaderCell("Exercise", 160.dp)
-                            TableHeaderCell("Primary Goal", 140.dp)
-                            TableHeaderCell("Sets", 60.dp, TextAlign.Center)
-                            TableHeaderCell("Reps", 100.dp, TextAlign.Center)
-                            TableHeaderCell("Rest", 80.dp, TextAlign.Center)
-                            TableHeaderCell("Focus / Form Cues", 200.dp)
-                            TableHeaderCell("Form Demo", 100.dp, TextAlign.Center)
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
-                        )
-
-                        // Table Content Rows
-                        if (exercises.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .width(750.dp)
-                                    .padding(48.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                androidx.compose.material3.CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary
+                            routines.forEachIndexed { index, r ->
+                                val isSelected = selectedTabIndex == index
+                                val dayFocus = when {
+                                    r.dayName.contains("Axial", ignoreCase = true) || r.dayName.contains("Lower", ignoreCase = true) -> "Lower & Spine"
+                                    r.dayName.contains("Upper", ignoreCase = true) || r.dayName.contains("Press", ignoreCase = true) -> "Upper & Posture"
+                                    else -> "Full Body"
+                                }
+                                Tab(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedTabIndex = index
+                                        onSelectRoutine(r)
+                                    },
+                                    text = {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = "Day ${index + 1}",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = dayFocus,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
                                 )
                             }
-                        } else {
-                            exercises.forEachIndexed { idx, ex ->
+                        }
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+
+            // Scrollable Content Column with sufficient bottom clearance
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(verticalScrollState)
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                if (activeRoutine != null) {
+                    // Routine Header Card
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("routine_header_card"),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .background(
-                                            if (idx % 2 == 0) MaterialTheme.colorScheme.surface
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                                        )
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    // Column 1: Exercise
-                                    Column(modifier = Modifier.width(160.dp)) {
-                                        Text(
-                                            text = ex.exerciseName,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = ex.rpe,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.SemiBold
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.FitnessCenter,
+                                                contentDescription = "Workout Routine",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
                                             )
-                                            val prWeight = personalBests[ex.exerciseName] ?: 0f
-                                            if (prWeight > 0f) {
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = activeRoutine.dayName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "Prescription: 3-4 Sets · Heavy Osteogenic Loading",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = activeRoutine.focusSummary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 5-Minute Pre-Workout Dynamic Mobility Warmup
+                    PreWorkoutMobilityCard(
+                        exercises = exercises,
+                        onWarmupCompleted = {}
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Section Title
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Prescribed Exercises",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Targeting spine, hip & femur bone density stimulus",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                text = "${exercises.size} Exercises",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Vertical List of Responsive Exercise Cards
+                    if (exercises.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("workout_cards_container")
+                        ) {
+                            exercises.forEachIndexed { idx, ex ->
+                                val (cleanTitle, altName) = parseExerciseTitle(ex.exerciseName)
+                                val prWeight = personalBests[ex.exerciseName] ?: 0f
+
+                                OutlinedCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("exercise_card_${ex.id}"),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.outlinedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    border = CardDefaults.outlinedCardBorder().copy(
+                                        brush = androidx.compose.ui.graphics.SolidColor(
+                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    ) {
+                                        // Header Row: Exercise Name + Goal Badge
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.Top
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Surface(
+                                                        shape = CircleShape,
+                                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                                        modifier = Modifier.size(24.dp)
+                                                    ) {
+                                                        Box(contentAlignment = Alignment.Center) {
+                                                            Text(
+                                                                text = "${idx + 1}",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                            )
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = cleanTitle,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+
+                                                if (altName != null) {
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = "Alternative: $altName",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                                                        modifier = Modifier.padding(start = 32.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            GoalBadge(goal = ex.primaryGoal)
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        // Metric Parameter Chips Row (Sets, Reps, RPE, Rest)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Sets & Reps
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant
+                                            ) {
+                                                Text(
+                                                    text = "${ex.sets} Sets × ${ex.repRange}",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                )
+                                            }
+
+                                            // RPE Target
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                            ) {
+                                                Text(
+                                                    text = ex.rpe,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                )
+                                            }
+
+                                            // Rest Interval (Interactive)
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
+                                                modifier = Modifier.clickable {
+                                                    activeTimerExerciseName = ex.exerciseName
+                                                    activeTimerInitialSeconds = parseRestPeriodToSeconds(ex.restPeriod)
+                                                    isTimerActive = true
+                                                }
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Timer,
+                                                        contentDescription = "Start Rest Timer",
+                                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                        modifier = Modifier.size(12.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(
+                                                        text = ex.restPeriod,
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Optional Personal Record / Progression Tag
+                                        if (prWeight > 0f) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = "Previous Best: ${prWeight.toInt()} lbs",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 ProgressiveOverloadTag(
                                                     currentPrLbs = prWeight,
                                                     isReadyForIncrement = true
                                                 )
                                             }
                                         }
-                                    }
 
-                                    // Column 2: Primary Goal Badge
-                                    Box(modifier = Modifier.width(140.dp)) {
-                                        GoalBadge(goal = ex.primaryGoal)
-                                    }
-
-                                    // Column 3: Sets
-                                    Text(
-                                        text = "${ex.sets}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.width(60.dp),
-                                        textAlign = TextAlign.Center
-                                    )
-
-                                    // Column 4: Reps
-                                    Text(
-                                        text = ex.repRange,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.width(100.dp),
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    // Column 5: Rest Interval (Interactive Timer Launcher)
-                                    Box(
-                                        modifier = Modifier.width(80.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
-                                            modifier = Modifier.clickable {
-                                                activeTimerExerciseName = ex.exerciseName
-                                                activeTimerInitialSeconds = parseRestPeriodToSeconds(ex.restPeriod)
-                                                isTimerActive = true
-                                            }
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                        // Coaching Cues & Joint Protection Box
+                                        if (ex.coachingCues.isNotBlank()) {
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                                modifier = Modifier.fillMaxWidth()
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Timer,
-                                                    contentDescription = "Start Rest Timer",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                Text(
-                                                    text = ex.restPeriod,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                )
+                                                Row(
+                                                    modifier = Modifier.padding(10.dp),
+                                                    verticalAlignment = Alignment.Top
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Shield,
+                                                        contentDescription = "Joint Safety & Form",
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier
+                                                            .size(16.dp)
+                                                            .padding(top = 1.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = ex.coachingCues,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        lineHeight = 18.sp
+                                                    )
+                                                }
                                             }
                                         }
-                                    }
 
-                                    // Column 6: Focus / Cues
-                                    Text(
-                                        text = ex.coachingCues,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.width(200.dp),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                        Spacer(modifier = Modifier.height(10.dp))
 
-                                    // Column 7: Form Demo Action
-                                    Box(
-                                        modifier = Modifier.width(100.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.primaryContainer,
-                                            modifier = Modifier.clickable {
-                                                activeFormDemoExercise = ex.exerciseName
-                                            }
+                                        // Action Row: Form Demo & Rest Timer Launch
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                            FilledTonalButton(
+                                                onClick = { activeFormDemoExercise = ex.exerciseName },
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier.weight(1f),
+                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.SlowMotionVideo,
-                                                    contentDescription = "View Form",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(14.dp)
+                                                    contentDescription = "Watch Form Demonstration",
+                                                    modifier = Modifier.size(16.dp)
                                                 )
-                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
-                                                    text = "Demo",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                    text = "Form Demo",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+
+                                            OutlinedButton(
+                                                onClick = {
+                                                    activeTimerExerciseName = ex.exerciseName
+                                                    activeTimerInitialSeconds = parseRestPeriodToSeconds(ex.restPeriod)
+                                                    isTimerActive = true
+                                                },
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier.weight(1f),
+                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Timer,
+                                                    contentDescription = "Rest Interval Timer",
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "Rest Timer",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
                                     }
-                                }
-
-                                if (idx < exercises.size - 1) {
-                                    HorizontalDivider(
-                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
-                                    )
                                 }
                             }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                // Scroll Indicator Tip
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Icon",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Swipe table horizontally to view full parameters & coaching cues",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Action Bar
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
+                    // Secondary Action: Regenerate Program
+                    OutlinedButton(
                         onClick = onRegenerateProgram,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .height(48.dp)
                             .testTag("regenerate_program_button"),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Icon")
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Regenerate Program", fontWeight = FontWeight.Bold)
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Regenerate Program")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Regenerate Program from Profile", fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No routine selected.", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
-            } else {
-                Box(
+
+                // Generous bottom spacer to prevent sticky CTA from masking the last cards
+                Spacer(modifier = Modifier.height(96.dp))
+            }
+        }
+
+        // Floating Interactive Rest Timer Bar (Anchored above sticky bottom)
+        FloatingRestTimerBar(
+            exerciseName = activeTimerExerciseName ?: "Rest Interval",
+            initialSeconds = activeTimerInitialSeconds,
+            isActive = isTimerActive,
+            onDismiss = { isTimerActive = false },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+
+        // Sticky Bottom Action (Full-width Material 3 Surface with shadow elevation)
+        if (!isTimerActive && activeRoutine != null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Text("No routine selected.")
+                    Button(
+                        onClick = { onStartLogging(activeRoutine) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp)
+                            .testTag("sticky_log_session_button"),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Start Logging This Session",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
-
-    // Floating Interactive Rest Timer Bar
-    FloatingRestTimerBar(
-        exerciseName = activeTimerExerciseName ?: "Rest Interval",
-        initialSeconds = activeTimerInitialSeconds,
-        isActive = isTimerActive,
-        onDismiss = { isTimerActive = false },
-        modifier = Modifier.align(Alignment.BottomCenter)
-    )
-
-    // Sticky Bottom Action (only show when timer is not active)
-    if (!isTimerActive && activeRoutine != null) {
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-            shadowElevation = 8.dp
-        ) {
-            Button(
-                onClick = { onStartLogging(activeRoutine) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(56.dp)
-                    .testTag("sticky_log_session_button"),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Icon")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Logging This Session", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
 
     // Popup Form Illustration Dialog
     if (activeFormDemoExercise != null) {
@@ -540,25 +647,34 @@ fun RoutineTableScreen(
     }
 }
 
-@Composable
-fun TableHeaderCell(text: String, width: androidx.compose.ui.unit.Dp, textAlign: TextAlign = TextAlign.Start) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onPrimaryContainer,
-        modifier = Modifier.width(width),
-        textAlign = textAlign
-    )
+/**
+ * Parses composite names like "Trap Bar / Dumbbell RDL" into a clean title & alternative tag.
+ */
+private fun parseExerciseTitle(rawName: String): Pair<String, String?> {
+    return when {
+        rawName.contains(" / ") -> {
+            val parts = rawName.split(" / ")
+            Pair(parts[0], parts.getOrNull(1))
+        }
+        rawName.contains(" or ") -> {
+            val parts = rawName.split(" or ")
+            Pair(parts[0], parts.getOrNull(1))
+        }
+        else -> Pair(rawName, null)
+    }
 }
 
 @Composable
 fun GoalBadge(goal: String) {
     val (bgColor, textColor) = when {
-        goal.contains("Bone", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
-        goal.contains("Posture", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
-        goal.contains("Balance", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
-        goal.contains("Grip", ignoreCase = true) -> Pair(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
+        goal.contains("Bone", ignoreCase = true) || goal.contains("Spine", ignoreCase = true) || goal.contains("Axial", ignoreCase = true) ->
+            Pair(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+        goal.contains("Posture", ignoreCase = true) || goal.contains("Scapular", ignoreCase = true) ->
+            Pair(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+        goal.contains("Glute", ignoreCase = true) || goal.contains("Sacral", ignoreCase = true) ->
+            Pair(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
+        goal.contains("Grip", ignoreCase = true) || goal.contains("Core", ignoreCase = true) ->
+            Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
         else -> Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
     }
 
@@ -572,7 +688,7 @@ fun GoalBadge(goal: String) {
             fontWeight = FontWeight.Bold,
             color = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
     }

@@ -146,7 +146,7 @@ fun MainContainer(
                                 NavDestination.HOME -> "Strength & Longevity"
                                 NavDestination.LIBRARY -> "Strength Exercise Library"
                                 NavDestination.ACTIVITY -> "Recent Workout Activity"
-                                NavDestination.TABLE -> "Routines"
+                                NavDestination.TABLE -> "Program"
                                 NavDestination.LOGGER -> "Live Workout Logger"
                                 NavDestination.PROGRESS -> "Analytics"
                                 NavDestination.PLATE_CALC -> "Barbell Plate Calculator"
