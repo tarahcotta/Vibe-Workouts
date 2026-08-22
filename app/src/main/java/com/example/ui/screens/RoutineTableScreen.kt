@@ -140,9 +140,14 @@ fun RoutineTableScreen(
                             routines.forEachIndexed { index, r ->
                                 val isSelected = selectedTabIndex == index
                                 val dayFocus = when {
-                                    r.dayName.contains("Axial", ignoreCase = true) || r.dayName.contains("Lower", ignoreCase = true) -> "Lower & Spine"
-                                    r.dayName.contains("Upper", ignoreCase = true) || r.dayName.contains("Press", ignoreCase = true) -> "Upper & Posture"
-                                    else -> "Full Body"
+                                    r.dayName.contains("Axial", ignoreCase = true) || r.dayName.contains("Lower", ignoreCase = true) || r.dayName.contains("Squat", ignoreCase = true) -> "Lower & Spine"
+                                    r.dayName.contains("Hinge", ignoreCase = true) || r.dayName.contains("Grip", ignoreCase = true) || r.dayName.contains("Posterior", ignoreCase = true) || r.dayName.contains("Deadlift", ignoreCase = true) -> "Hinge & Grip"
+                                    r.dayName.contains("Upper", ignoreCase = true) || r.dayName.contains("Press", ignoreCase = true) || r.dayName.contains("Pull", ignoreCase = true) -> "Upper & Posture"
+                                    r.dayName.contains("Density", ignoreCase = true) || r.dayName.contains("Power", ignoreCase = true) -> "Osteogenic Core"
+                                    index == 0 -> "Lower & Spine"
+                                    index == 1 -> "Hinge & Grip"
+                                    index == 2 -> "Upper & Posture"
+                                    else -> "Compound Strength"
                                 }
                                 Tab(
                                     selected = isSelected,
@@ -158,13 +163,14 @@ fun RoutineTableScreen(
                                             Text(
                                                 text = "Day ${index + 1}",
                                                 style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                             )
                                             Text(
                                                 text = dayFocus,
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -257,13 +263,13 @@ fun RoutineTableScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Section Title
+                    // Section Title & Count Badge (Fixed word wrapping bug)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Prescribed Exercises",
                                 style = MaterialTheme.typography.titleMedium,
@@ -277,31 +283,95 @@ fun RoutineTableScreen(
                             )
                         }
 
+                        Spacer(modifier = Modifier.width(12.dp))
+
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Text(
-                                text = "${exercises.size} Exercises",
+                                text = if (exercises.isEmpty()) "Loading..." else "${exercises.size} Exercises",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Vertical List of Responsive Exercise Cards
+                    // Vertical List of Responsive Exercise Cards or Skeleton Loaders
                     if (exercises.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(48.dp),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            repeat(3) {
+                                OutlinedCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.outlinedCardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    border = CardDefaults.outlinedCardBorder().copy(
+                                        brush = androidx.compose.ui.graphics.SolidColor(
+                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        )
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(140.dp)
+                                                        .height(18.dp)
+                                                        .clip(RoundedCornerShape(4.dp))
+                                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(80.dp)
+                                                    .height(20.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(96.dp)
+                                                    .height(24.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(64.dp)
+                                                    .height(24.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     } else {
                         Column(
@@ -606,22 +676,39 @@ fun RoutineTableScreen(
                 ) {
                     Button(
                         onClick = { onStartLogging(activeRoutine) },
+                        enabled = exercises.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(54.dp)
                             .testTag("sticky_log_session_button"),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Start Logging This Session",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (exercises.isNotEmpty()) {
+                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Start Logging This Session",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Loading Prescribed Exercises...",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }

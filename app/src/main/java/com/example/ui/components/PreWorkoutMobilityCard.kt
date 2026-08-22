@@ -18,17 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -123,7 +119,10 @@ fun PreWorkoutMobilityCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(42.dp)
@@ -132,8 +131,8 @@ fun PreWorkoutMobilityCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.SelfImprovement,
-                            contentDescription = "Dynamic Mobility",
+                            imageVector = Icons.Default.DirectionsRun,
+                            contentDescription = "Dynamic Movement Mobility",
                             tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
@@ -141,14 +140,12 @@ fun PreWorkoutMobilityCard(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "5-Min Pre-Workout Dynamic Mobility",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                        Text(
+                            text = "5-Min Pre-Workout Dynamic Mobility",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Text(
                             text = "${completedDrills.size}/${drills.size} drills completed • Tailored to today's lifts",
                             style = MaterialTheme.typography.bodySmall,
@@ -166,7 +163,7 @@ fun PreWorkoutMobilityCard(
                 }
             }
 
-            // Quick Status Pill & Action Button
+            // Quick Status Pill & Action Button (High Contrast WCAG AA)
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
@@ -205,7 +202,8 @@ fun PreWorkoutMobilityCard(
                     Text(
                         text = if (expanded) "Hide Drills" else "View Drills",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
