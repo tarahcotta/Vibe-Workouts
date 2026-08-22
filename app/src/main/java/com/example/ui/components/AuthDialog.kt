@@ -90,7 +90,7 @@ fun AuthSyncCard(
                 Column {
                     if (currentUser != null) {
                         Text(
-                            text = currentUser?.email ?: (if (currentUser?.isAnonymous == true) "Guest User" else "Signed In"),
+                            text = currentUser?.email ?: (if (currentUser?.isAnonymous == true) "Guest Trainee" else "Cloud Account"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -107,7 +107,7 @@ fun AuthSyncCard(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Syncing Firestore...",
+                                        text = "Syncing workouts...",
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -115,27 +115,27 @@ fun AuthSyncCard(
                                 is SyncStatus.Success -> {
                                     Icon(
                                         imageVector = Icons.Default.CloudDone,
-                                        contentDescription = "Icon",
+                                        contentDescription = "Cloud Synced",
                                         modifier = Modifier.size(12.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Firestore Synced",
+                                        text = "Cloud Backup Synced",
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 is SyncStatus.Error -> {
                                     Text(
-                                        text = "Sync error",
+                                        text = "Offline Mode (Local Storage Active)",
                                         fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.error
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 else -> {
                                     Icon(
                                         imageVector = Icons.Default.CloudUpload,
-                                        contentDescription = "Icon",
+                                        contentDescription = "Cloud Active",
                                         modifier = Modifier.size(12.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -149,12 +149,13 @@ fun AuthSyncCard(
                         }
                     } else {
                         Text(
-                            text = "Offline Mode (Local Storage)",
+                            text = "On-Device Storage Active",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Sign in to back up data to Firebase",
+                            text = "All logs safely stored on device · Enable cloud sync",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -166,11 +167,11 @@ fun AuthSyncCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     IconButton(
                         onClick = { viewModel.triggerCloudSync() },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.CloudSync,
-                            contentDescription = "Sync Now",
+                            contentDescription = "Sync Cloud Workouts",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -182,12 +183,12 @@ fun AuthSyncCard(
                     }
                 }
             } else {
-                Button(
+                FilledTonalButton(
                     onClick = onOpenAuthDialog,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Sign In", fontSize = 12.sp)
+                    Text("Cloud Sync", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

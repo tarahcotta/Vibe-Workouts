@@ -149,13 +149,13 @@ fun WeightProgressionVicoChartCard(
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Weight Progression (Vico)",
+                            text = "Strength & Weight Progression",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Track resistance progression over time from Room DB",
+                            text = "Track progressive overload and working weight over time",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -167,7 +167,7 @@ fun WeightProgressionVicoChartCard(
                     color = MaterialTheme.colorScheme.tertiaryContainer
                 ) {
                     Text(
-                        text = "Vico Chart",
+                        text = "Overload Trend",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,

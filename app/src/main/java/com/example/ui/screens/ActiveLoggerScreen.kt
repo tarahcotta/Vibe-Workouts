@@ -648,27 +648,57 @@ fun ActiveLoggerScreen(
                                 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 
-                                // RPE Slider
+                                 // RPE & Quick Weight Stepper Controls
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 42.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(start = 42.dp, top = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = "RPE: ${setInput.rpe}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.width(60.dp),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Slider(
-                                        value = setInput.rpe.toFloat(),
-                                        onValueChange = { setInput.rpe = it.toInt() },
-                                        valueRange = 1f..10f,
-                                        steps = 8,
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                     // Micro-loading weight adjustment chips
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        listOf(-5f, 2.5f, 5f).forEach { delta ->
+                                            Surface(
+                                                modifier = Modifier.clickable {
+                                                    val current = setInput.weightText.toFloatOrNull() ?: 0f
+                                                    val newWeight = (current + delta).coerceAtLeast(0f)
+                                                    setInput.weightText = if (newWeight % 1f == 0f) "${newWeight.toInt()}" else "$newWeight"
+                                                },
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.surfaceVariant
+                                            ) {
+                                                Text(
+                                                    text = if (delta > 0f) "+$delta" else "$delta",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // RPE Slider and Value
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f).padding(start = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "RPE ${setInput.rpe}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Slider(
+                                            value = setInput.rpe.toFloat(),
+                                            onValueChange = { setInput.rpe = it.toInt() },
+                                            valueRange = 1f..10f,
+                                            steps = 8,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 }
                             }
                         }

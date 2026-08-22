@@ -45,6 +45,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -224,40 +225,52 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            WomensStrengthLogoIcon(size = 42.dp)
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            WomensStrengthLogoIcon(size = 44.dp)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "READINESS • OPTIMAL",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "STRENGTH & LONGEVITY",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    letterSpacing = 1.2.sp
-                                )
-                                Text(
-                                    text = "Performance Dashboard",
-                                    style = MaterialTheme.typography.titleLarge,
+                                    text = profile?.let { "${it.strengthLevel} Program" } ?: "Strength & Longevity",
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
 
-                        OutlinedButton(
+                        IconButton(
                             onClick = onNavigateToAssessment,
-                            shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.testTag("edit_assessment_button")
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surface,
+                                    CircleShape
+                                )
+                                .testTag("edit_assessment_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Profile",
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Profile",
-                                style = MaterialTheme.typography.labelMedium
+                                contentDescription = "Edit Profile & Goals",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -265,7 +278,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Visualizing clinical osteogenic loading stimulus, resistance habit frequency, and progressive overload trends.",
+                        text = "Track osteogenic bone remodeling stimulus, training consistency, and progressive resistance trends.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -287,9 +300,9 @@ fun DashboardScreen(
                             subtext = "This Wk"
                         )
                         DashboardHeaderMetric(
-                            label = "BMD Score",
-                            value = if (latestBmdScore > 0) "$latestBmdScore" else "--",
-                            subtext = "Osteo Index"
+                            label = "Bone Stimulus",
+                            value = if (latestBmdScore > 0) "${latestBmdScore / 1000}.${(latestBmdScore % 1000) / 100}k" else "--",
+                            subtext = if (latestBmdScore >= 3000) "Optimal" else "Active"
                         )
                         DashboardHeaderMetric(
                             label = "Workouts",
@@ -306,6 +319,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(18.dp))
 
                     // Primary Start Workout Button
+                    val nextRoutineTitle = routines.firstOrNull()?.title ?: "Full Body Axial Loading"
                     Button(
                         onClick = {
                             if (routines.isNotEmpty()) {
@@ -315,7 +329,7 @@ fun DashboardScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .height(54.dp)
                             .testTag("start_workout_cta"),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -324,11 +338,13 @@ fun DashboardScreen(
                     ) {
                         Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout")
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Start Live Workout Session",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Start Live Workout Session",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -552,13 +568,13 @@ fun StrengthTrainingFrequencyVicoChartCard(
                     }
                     Column {
                         Text(
-                            text = "Strength Training Frequency",
+                            text = "Weekly Training Consistency",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Weekly habits vs $targetDaysPerWeek-day target from Room DB",
+                            text = "Completed sessions vs $targetDaysPerWeek-day weekly target",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -570,7 +586,7 @@ fun StrengthTrainingFrequencyVicoChartCard(
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
-                        text = "Vico Chart",
+                        text = "Consistency",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -840,7 +856,7 @@ fun BoneDensityTrendsVicoChartCard(
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
-                        text = "Vico Chart",
+                        text = "Bone Stimulus",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -853,7 +869,7 @@ fun BoneDensityTrendsVicoChartCard(
 
             // Score explanation info
             Text(
-                text = "The Bone Density Stimulus Score calculates axial mechanical tension on the spine & femur, progressive overload weight, and intensity (RPE 7-8) from logged Room workouts.",
+                text = "The Bone Density Stimulus Score calculates axial mechanical tension on the spine & femur, progressive overload weight, and intensity (RPE 7-8) from your logged workouts.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
