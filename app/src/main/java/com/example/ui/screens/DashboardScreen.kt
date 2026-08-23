@@ -86,6 +86,7 @@ import com.example.data.WorkoutRoutineEntity
 import com.example.ui.VitalViewModel
 import com.example.ui.components.AIRecommendationsCard
 import com.example.ui.components.AuthSyncCard
+import com.example.ui.components.BoneDensityDxaSimulatorCard
 import com.example.ui.components.FirstWorkoutOnboardingCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
@@ -539,6 +540,11 @@ fun DashboardScreen(
                 weeklyAdherence = adherencePercent,
                 onNavigateToGuide = onNavigateToGuide
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 4. LIFTMOR TRIAL CLINICAL DXA DENSITY SIMULATOR
+            BoneDensityDxaSimulatorCard()
 
             if (viewModel != null) {
                 Spacer(modifier = Modifier.height(16.dp))

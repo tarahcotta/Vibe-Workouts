@@ -87,14 +87,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.ExerciseLibraryRepository
 import com.example.data.LoggedSetEntity
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.BuiltInIntervalTimerCard
 import com.example.ui.components.ExerciseFormIllustrationBox
+import com.example.ui.components.ExerciseSubstitutionDialog
 import com.example.ui.components.PersonalBestNotificationBanner
 import com.example.ui.components.PreWorkoutMobilityCard
 import com.example.ui.components.ProgressiveOverloadTag
+import com.example.ui.components.RpeEffortCalibrationDialog
+import com.example.ui.components.WorkoutFocusHud
 
 data class ExerciseLogState(
     val exerciseName: String,
@@ -186,6 +190,12 @@ fun ActiveLoggerScreen(
     var showRpeInfoDialog by remember { mutableStateOf(false) }
     var activeFormDemoExercise by remember { mutableStateOf<String?>(null) }
     var rpePickerSet by remember { mutableStateOf<Pair<SetLogInput, String>?>(null) }
+    
+    // Deeper Redesign & Safety States
+    var isFocusHudMode by remember { mutableStateOf(false) }
+    var activeFocusExerciseIndex by remember { mutableIntStateOf(0) }
+    var swapExerciseDialogTarget by remember { mutableStateOf<String?>(null) }
+    var rpeCalibrationDialogSet by remember { mutableStateOf<Pair<SetLogInput, String>?>(null) }
 
     // Rest Timer state
     var targetRestSeconds by remember { mutableIntStateOf(90) }
@@ -298,6 +308,69 @@ fun ActiveLoggerScreen(
                             Icon(imageVector = Icons.Default.Close, contentDescription = "Close Workout")
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // View Mode Switch: Focus HUD vs Detailed List
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(34.dp)
+                                .clickable { isFocusHudMode = false },
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (!isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Full List View",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (!isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(34.dp)
+                                .clickable { isFocusHudMode = true },
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FitnessCenter,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Focus HUD (In-Workout)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -376,22 +449,69 @@ fun ActiveLoggerScreen(
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            // Live Personal Best Notification Banner
-            PersonalBestNotificationBanner(
-                exerciseName = prNotificationExercise ?: "",
-                newWeightLbs = prNotificationNewWeight,
-                previousMaxLbs = prNotificationOldMax,
-                isVisible = showPrBanner,
-                onDismiss = { showPrBanner = false }
-            )
+        if (isFocusHudMode) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp)
+            ) {
+                // Live Personal Best Notification Banner
+                PersonalBestNotificationBanner(
+                    exerciseName = prNotificationExercise ?: "",
+                    newWeightLbs = prNotificationNewWeight,
+                    previousMaxLbs = prNotificationOldMax,
+                    isVisible = showPrBanner,
+                    onDismiss = { showPrBanner = false }
+                )
+
+                WorkoutFocusHud(
+                    exerciseLogs = exerciseLogs,
+                    activeExerciseIndex = activeFocusExerciseIndex,
+                    onSelectExerciseIndex = { activeFocusExerciseIndex = it },
+                    onOpenSwapDialog = { exName -> swapExerciseDialogTarget = exName },
+                    onOpenRpeDialog = { set, exName -> rpeCalibrationDialogSet = Pair(set, exName) },
+                    onStartRestTimer = { seconds, exName -> startRestTimer(seconds, exName) },
+                    isTimerRunning = isTimerRunning,
+                    timerRemainingSeconds = timerRemainingSeconds,
+                    onAdjustTimer = { delta -> timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0) },
+                    onSkipTimer = {
+                        timerRemainingSeconds = 0
+                        isTimerRunning = false
+                    },
+                    onCompleteSet = { setInput ->
+                        val currentEx = exerciseLogs.getOrNull(activeFocusExerciseIndex)
+                        if (currentEx != null) {
+                            val currentPr = personalBests[currentEx.exerciseName] ?: 0f
+                            val loggedWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                            if (loggedWeight > currentPr && currentPr > 0f) {
+                                prNotificationExercise = currentEx.exerciseName
+                                prNotificationNewWeight = loggedWeight
+                                prNotificationOldMax = currentPr
+                                showPrBanner = true
+                            }
+                        }
+                    }
+                )
+            }
+        } else {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                // Live Personal Best Notification Banner
+                PersonalBestNotificationBanner(
+                    exerciseName = prNotificationExercise ?: "",
+                    newWeightLbs = prNotificationNewWeight,
+                    previousMaxLbs = prNotificationOldMax,
+                    isVisible = showPrBanner,
+                    onDismiss = { showPrBanner = false }
+                )
 
             // Built-In Rest Interval Timer Component (Collapsible UX & Direct Quick Controls)
             var isTimerExpanded by remember { mutableStateOf(false) }
@@ -633,6 +753,31 @@ fun ActiveLoggerScreen(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.clickable { swapExerciseDialogTarget = logState.exerciseName }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Swap Exercise",
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Swap",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
                                 }
                             }
@@ -1142,6 +1287,7 @@ fun ActiveLoggerScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 
     // Modal RPE Selector Dialog
     if (rpePickerSet != null) {
@@ -1450,6 +1596,43 @@ fun ActiveLoggerScreen(
                 )
             },
             shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // Exercise Substitution / Spine-Sparing Alternatives Dialog
+    if (swapExerciseDialogTarget != null) {
+        ExerciseSubstitutionDialog(
+            currentExerciseName = swapExerciseDialogTarget ?: "",
+            onDismiss = { swapExerciseDialogTarget = null },
+            onSelectAlternative = { newExerciseName ->
+                val targetName = swapExerciseDialogTarget
+                val foundIndex = exerciseLogs.indexOfFirst { it.exerciseName == targetName }
+                if (foundIndex != -1) {
+                    val currentSets = exerciseLogs[foundIndex].sets
+                    val defaultEx = ExerciseLibraryRepository.exercises.firstOrNull { it.name.equals(newExerciseName, ignoreCase = true) }
+                    exerciseLogs[foundIndex] = ExerciseLogState(
+                        exerciseName = newExerciseName,
+                        primaryGoal = defaultEx?.targetBonesAndJoints ?: "Osteogenic Compound",
+                        coachingCues = defaultEx?.proFormTips?.joinToString("; ") ?: "Maintain neutral spine; Controlled tempo",
+                        sets = currentSets
+                    )
+                }
+                swapExerciseDialogTarget = null
+            }
+        )
+    }
+
+    // Comprehensive Interactive RPE & RIR Calibration Dialog
+    if (rpeCalibrationDialogSet != null) {
+        val (targetSet, exName) = rpeCalibrationDialogSet!!
+        RpeEffortCalibrationDialog(
+            currentRpe = targetSet.rpe,
+            exerciseName = exName,
+            onDismiss = { rpeCalibrationDialogSet = null },
+            onSelectRpe = { selectedRpe ->
+                targetSet.rpe = selectedRpe
+                rpeCalibrationDialogSet = null
+            }
         )
     }
 }

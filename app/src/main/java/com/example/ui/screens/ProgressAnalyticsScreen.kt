@@ -76,6 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.FirstWorkoutOnboardingCard
+import com.example.ui.components.BoneDensityDxaSimulatorCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.WeightProgressionVicoChartCard
 import com.example.ui.components.IllustrativeEmptyState
@@ -417,6 +418,11 @@ fun ProgressAnalyticsScreen(
             allSessions = sessions,
             allLoggedSets = allLoggedSets
         )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Clinical LIFTMOR DXA Bone Density Simulation Model
+        BoneDensityDxaSimulatorCard()
 
         Spacer(modifier = Modifier.height(20.dp))
 
