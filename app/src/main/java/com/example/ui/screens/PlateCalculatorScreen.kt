@@ -304,7 +304,12 @@ fun PlateCalculatorScreen(
 
                     OutlinedTextField(
                         value = targetWeightText,
-                        onValueChange = { targetWeightText = it },
+                        onValueChange = { input ->
+                            val sanitized = input.filter { it.isDigit() || it == '.' }
+                            if (sanitized.count { it == '.' } <= 1) {
+                                targetWeightText = sanitized
+                            }
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp)
@@ -457,6 +462,11 @@ fun PlateCalculatorScreen(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    val sleeveSemanticDesc = remember(selectedEquipment, plateBreakdown, weightPerSide) {
+                        "${selectedEquipment.name} with " + if (plateBreakdown.isEmpty()) "no plates"
+                        else plateBreakdown.joinToString(", ") { "${it.count} plates of ${if (it.plateWeight % 1.0 == 0.0) it.plateWeight.toInt() else it.plateWeight} lbs" } + " per side"
+                    }
+
                     // Visual Sleeve / Implement representation
                     Box(
                         modifier = Modifier
@@ -466,7 +476,10 @@ fun PlateCalculatorScreen(
                                 color = MaterialTheme.colorScheme.surface,
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .padding(horizontal = 14.dp),
+                            .padding(horizontal = 14.dp)
+                            .semantics {
+                                contentDescription = sleeveSemanticDesc
+                            },
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Row(
