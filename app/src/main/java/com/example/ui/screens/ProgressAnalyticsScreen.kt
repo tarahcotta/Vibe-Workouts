@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.FirstWorkoutOnboardingCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.WeightProgressionVicoChartCard
 import com.example.ui.components.IllustrativeEmptyState
@@ -453,17 +454,11 @@ fun ProgressAnalyticsScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         if (sessions.isEmpty()) {
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                IllustrativeEmptyState(
-                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                    title = "Awaiting Your Triumphs",
-                    description = "Your workout history log will appear here after your first session. Lace up those shoes!",
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
+            FirstWorkoutOnboardingCard(
+                onStartWorkout = {
+                    onStartWorkout(routines.firstOrNull())
+                }
+            )
         } else {
             sessions.forEach { session ->
                 SessionHistoryExpandableItem(

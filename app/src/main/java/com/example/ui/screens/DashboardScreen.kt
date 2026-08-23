@@ -86,6 +86,7 @@ import com.example.data.WorkoutRoutineEntity
 import com.example.ui.VitalViewModel
 import com.example.ui.components.AIRecommendationsCard
 import com.example.ui.components.AuthSyncCard
+import com.example.ui.components.FirstWorkoutOnboardingCard
 import com.example.ui.components.ProgressiveOverloadHighlightCard
 import com.example.ui.components.ProgressiveOverloadInfo
 import com.example.ui.components.ScreenSkeletonLoader
@@ -437,6 +438,19 @@ fun DashboardScreen(
         if (dashboardTab == 0) {
             // TAB 0: TODAY'S PLAN, PROGRESSIVE OVERLOAD, HISTORY & COACHING
             
+            // Empty state interactive guide for new users
+            if (sessions.isEmpty()) {
+                FirstWorkoutOnboardingCard(
+                    onStartWorkout = {
+                        if (routines.isNotEmpty()) {
+                            onSelectRoutine(routines.first())
+                        }
+                        onNavigateToLogger()
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // Progressive Overload Readiness Card
             ProgressiveOverloadHighlightCard(
                 overloadList = overloadList,
@@ -482,6 +496,18 @@ fun DashboardScreen(
         } else {
             // TAB 1: CLINICAL ANALYTICS & DEEP CHARTS
             
+            if (sessions.isEmpty()) {
+                FirstWorkoutOnboardingCard(
+                    onStartWorkout = {
+                        if (routines.isNotEmpty()) {
+                            onSelectRoutine(routines.first())
+                        }
+                        onNavigateToLogger()
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // 1. STRENGTH TRAINING FREQUENCY VICO CHART CARD
             StrengthTrainingFrequencyVicoChartCard(
                 weeklyFrequencyList = weeklyFrequencyList,
