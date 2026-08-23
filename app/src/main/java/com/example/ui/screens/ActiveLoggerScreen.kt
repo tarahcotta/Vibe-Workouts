@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SlowMotionVideo
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -91,13 +92,19 @@ import com.example.data.ExerciseLibraryRepository
 import com.example.data.LoggedSetEntity
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
+import com.example.ui.components.AnimatedSetCompletionButton
+import com.example.ui.components.BaselineCalibrationDialog
 import com.example.ui.components.BuiltInIntervalTimerCard
 import com.example.ui.components.ExerciseFormIllustrationBox
 import com.example.ui.components.ExerciseSubstitutionDialog
 import com.example.ui.components.PersonalBestNotificationBanner
+import com.example.ui.components.PersonalRecordCelebrationDialog
 import com.example.ui.components.PreWorkoutMobilityCard
 import com.example.ui.components.ProgressiveOverloadTag
 import com.example.ui.components.RpeEffortCalibrationDialog
+import com.example.ui.components.SmartWarmupDialog
+import com.example.ui.components.WarmupSetStep
+import com.example.ui.components.WorkoutExitConfirmationDialog
 import com.example.ui.components.WorkoutFocusHud
 
 data class ExerciseLogState(
@@ -150,6 +157,7 @@ fun ActiveLoggerScreen(
     var prNotificationNewWeight by remember { mutableFloatStateOf(0f) }
     var prNotificationOldMax by remember { mutableFloatStateOf(0f) }
     var showPrBanner by remember { mutableStateOf(false) }
+    var showPrCelebrationDialog by remember { mutableStateOf(false) }
 
     // Routine Title
     val routineTitle = routine?.dayName ?: "Live Longevity Workout"
@@ -196,6 +204,9 @@ fun ActiveLoggerScreen(
     var activeFocusExerciseIndex by remember { mutableIntStateOf(0) }
     var swapExerciseDialogTarget by remember { mutableStateOf<String?>(null) }
     var rpeCalibrationDialogSet by remember { mutableStateOf<Pair<SetLogInput, String>?>(null) }
+    var showExitConfirmationDialog by remember { mutableStateOf(false) }
+    var smartWarmupDialogTarget by remember { mutableStateOf<Pair<String, Float>?>(null) }
+    var baselineCalibrationTarget by remember { mutableStateOf<String?>(null) }
 
     // Rest Timer state
     var targetRestSeconds by remember { mutableIntStateOf(90) }
@@ -300,7 +311,13 @@ fun ActiveLoggerScreen(
                         }
 
                         IconButton(
-                            onClick = onCancel,
+                            onClick = {
+                                if (totalCompletedSets > 0) {
+                                    showExitConfirmationDialog = true
+                                } else {
+                                    onCancel()
+                                }
+                            },
                             modifier = Modifier
                                 .size(48.dp)
                                 .testTag("cancel_workout_button")
@@ -490,6 +507,7 @@ fun ActiveLoggerScreen(
                                 prNotificationNewWeight = loggedWeight
                                 prNotificationOldMax = currentPr
                                 showPrBanner = true
+                                showPrCelebrationDialog = true
                             }
                         }
                     }
@@ -782,6 +800,62 @@ fun ActiveLoggerScreen(
                                 }
                             }
 
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.clickable { 
+                                    val currentWeight = logState.sets.firstOrNull()?.weightText?.toFloatOrNull() ?: currentPr
+                                    smartWarmupDialogTarget = Pair(logState.exerciseName, if (currentWeight > 0f) currentWeight else 95f)
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FitnessCenter,
+                                        contentDescription = "Warm-Up Ladder",
+                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Warmup",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+
+                            // Safe Baseline Load Calibrator Chip
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.clickable { 
+                                    baselineCalibrationTarget = logState.exerciseName
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Speed,
+                                        contentDescription = "Calibrate Safe Working Weight",
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Calibrate",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+
                             ProgressiveOverloadTag(
                                 currentPrLbs = currentPr,
                                 isReadyForIncrement = currentPr > 0f && logState.sets.all { it.isCompleted && it.rpe <= 8 }
@@ -999,11 +1073,11 @@ fun ActiveLoggerScreen(
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Complete Set Button (High contrast, auto-propagates forward to next set)
-                                    IconButton(
-                                        onClick = {
+                                    // Complete Set Animated Button (Spring pop, ripple burst, auto-propagates forward)
+                                    AnimatedSetCompletionButton(
+                                        isCompleted = setInput.isCompleted,
+                                        onToggle = {
                                             setInput.isCompleted = !setInput.isCompleted
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             if (setInput.isCompleted) {
                                                 // Auto-populate subsequent sets if they have default values
                                                 logState.sets.forEachIndexed { i, s ->
@@ -1025,24 +1099,13 @@ fun ActiveLoggerScreen(
                                                     prNotificationNewWeight = currentWeight
                                                     prNotificationOldMax = previousMax
                                                     showPrBanner = true
+                                                    showPrCelebrationDialog = true
                                                 }
                                             }
                                         },
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .background(
-                                                if (setInput.isCompleted) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.surfaceVariant,
-                                                shape = RoundedCornerShape(12.dp)
-                                            )
-                                            .testTag("check_set_${exIndex}_$setIndex")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = if (setInput.isCompleted) "Completed Set" else "Mark Complete",
-                                            tint = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                        size = 48.dp,
+                                        testTag = "check_set_${exIndex}_$setIndex"
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -1632,6 +1695,105 @@ fun ActiveLoggerScreen(
             onSelectRpe = { selectedRpe ->
                 targetSet.rpe = selectedRpe
                 rpeCalibrationDialogSet = null
+            }
+        )
+    }
+
+    // Workout Exit Disambiguation Dialog
+    if (showExitConfirmationDialog) {
+        WorkoutExitConfirmationDialog(
+            routineTitle = routineTitle,
+            completedSetsCount = totalCompletedSets,
+            totalSetsCount = totalPrescribedSets,
+            onSavePartial = {
+                showExitConfirmationDialog = false
+                executeSaveAndComplete()
+            },
+            onDiscard = {
+                showExitConfirmationDialog = false
+                onCancel()
+            },
+            onKeepTraining = {
+                showExitConfirmationDialog = false
+            },
+            onDismiss = {
+                showExitConfirmationDialog = false
+            }
+        )
+    }
+
+    // Smart Warm-Up Progression Ladder Dialog
+    if (smartWarmupDialogTarget != null) {
+        val (targetExName, targetWorkingWeight) = smartWarmupDialogTarget!!
+        SmartWarmupDialog(
+            exerciseName = targetExName,
+            workingWeightLbs = targetWorkingWeight,
+            onDismiss = { smartWarmupDialogTarget = null },
+            onApplyWarmupSets = { warmupSteps ->
+                val foundIndex = exerciseLogs.indexOfFirst { it.exerciseName == targetExName }
+                if (foundIndex != -1) {
+                    val exLog = exerciseLogs[foundIndex]
+                    // Prepend warmup sets to the existing sets
+                    val newSets = mutableStateListOf<SetLogInput>()
+                    warmupSteps.forEachIndexed { idx, step ->
+                        newSets.add(
+                            SetLogInput(
+                                setNumber = idx + 1,
+                                weightText = step.targetWeightLbs.toInt().toString(),
+                                repsText = step.recommendedReps.toString(),
+                                rpe = 5 + idx,
+                                jointFeel = "Warmup",
+                                isCompleted = false
+                            )
+                        )
+                    }
+                    // Append remaining working sets
+                    exLog.sets.forEachIndexed { sIdx, existingSet ->
+                        newSets.add(
+                            SetLogInput(
+                                setNumber = warmupSteps.size + sIdx + 1,
+                                weightText = existingSet.weightText,
+                                repsText = existingSet.repsText,
+                                rpe = existingSet.rpe,
+                                jointFeel = existingSet.jointFeel,
+                                isCompleted = existingSet.isCompleted
+                            )
+                        )
+                    }
+                    exerciseLogs[foundIndex] = exLog.copy(sets = newSets)
+                }
+                smartWarmupDialogTarget = null
+            }
+        )
+    }
+
+    // Full-Screen / Modal Personal Record Confetti Celebration Dialog
+    if (showPrCelebrationDialog && prNotificationExercise != null) {
+        PersonalRecordCelebrationDialog(
+            exerciseName = prNotificationExercise ?: "",
+            newWeightLbs = prNotificationNewWeight,
+            previousMaxLbs = prNotificationOldMax,
+            onDismiss = { showPrCelebrationDialog = false }
+        )
+    }
+
+    // Safe Baseline Strength Calibration Dialog
+    if (baselineCalibrationTarget != null) {
+        val targetExName = baselineCalibrationTarget!!
+        BaselineCalibrationDialog(
+            exerciseName = targetExName,
+            onDismiss = { baselineCalibrationTarget = null },
+            onApplyStartingWeight = { calibratedWeight ->
+                val foundIndex = exerciseLogs.indexOfFirst { it.exerciseName == targetExName }
+                if (foundIndex != -1) {
+                    val exLog = exerciseLogs[foundIndex]
+                    exLog.sets.forEach { setInput ->
+                        if (!setInput.isCompleted) {
+                            setInput.weightText = "${calibratedWeight.toInt()}"
+                        }
+                    }
+                }
+                baselineCalibrationTarget = null
             }
         )
     }

@@ -23,6 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -76,8 +80,21 @@ fun BoneDensityDxaSimulatorCard(
         else -> Color(0xFFE57373)
     }
 
+    val dxaAccessibleSummary = remember(simulatedTScore, initialTScore, interventionGainPercent, weeks, trainingFrequencyPerWeek, isSedentaryComparison) {
+        if (isSedentaryComparison) {
+            "Simulated sedentary bone mineral density trend over $weeks weeks. Projected T-score is ${String.format("%.2f", simulatedTScore)} from baseline ${String.format("%.2f", initialTScore)}, representing a net decline of ${String.format("%.1f", -interventionGainPercent)} percent due to natural age-related resorption."
+        } else {
+            "Simulated LIFTMOR high-intensity resistance training bone density projection over $weeks weeks with $trainingFrequencyPerWeek sessions per week. Projected T-score improves to ${String.format("%.2f", simulatedTScore)} from baseline ${String.format("%.2f", initialTScore)} ($statusLabel), with an estimated bone mineral density net increase of ${String.format("%.1f", interventionGainPercent)} percent."
+        }
+    }
+
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                heading()
+                contentDescription = dxaAccessibleSummary
+            },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -105,7 +122,7 @@ fun BoneDensityDxaSimulatorCard(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Science,
-                                contentDescription = null,
+                                contentDescription = "Clinical Science Icon",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -130,13 +147,48 @@ fun BoneDensityDxaSimulatorCard(
 
                 IconButton(
                     onClick = { showClinicalDetails = !showClinicalDetails },
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .semantics {
+                            contentDescription = if (showClinicalDetails) "Hide clinical trial details" else "Show clinical trial details"
+                        }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = "Info",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Prominent Non-Diagnostic Research Badge
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Science,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "RESEARCH SIMULATION — NOT A MEDICAL DIAGNOSIS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        fontSize = 10.sp,
+                        letterSpacing = 0.5.sp
                     )
                 }
             }
@@ -173,7 +225,10 @@ fun BoneDensityDxaSimulatorCard(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                    .padding(14.dp),
+                    .padding(14.dp)
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = "Projected T-Score: ${String.format("%.2f", simulatedTScore)}, baseline ${String.format("%.2f", initialTScore)}. Status: $statusLabel. Estimated Bone Mineral Density Net Change: ${if (interventionGainPercent >= 0) "+" else ""}${String.format("%.1f", interventionGainPercent)}%."
+                    },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -269,7 +324,11 @@ fun BoneDensityDxaSimulatorCard(
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                modifier = Modifier.semantics {
+                    contentDescription = "Simulated training duration slider"
+                    stateDescription = "$weeks weeks"
+                }
             )
 
             // Frequency & Comparison Selectors
@@ -295,7 +354,11 @@ fun BoneDensityDxaSimulatorCard(
                                 trainingFrequencyPerWeek = freq
                             },
                             label = { Text("${freq}x/wk", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            modifier = Modifier.height(28.dp)
+                            modifier = Modifier
+                                .height(28.dp)
+                                .semantics {
+                                    stateDescription = if (isSel) "$freq sessions per week selected" else "Select $freq sessions per week"
+                                }
                         )
                     }
 
@@ -303,7 +366,11 @@ fun BoneDensityDxaSimulatorCard(
                         selected = isSedentaryComparison,
                         onClick = { isSedentaryComparison = !isSedentaryComparison },
                         label = { Text("Sedentary", fontSize = 11.sp) },
-                        modifier = Modifier.height(28.dp)
+                        modifier = Modifier
+                            .height(28.dp)
+                            .semantics {
+                                stateDescription = if (isSedentaryComparison) "Sedentary comparison mode active" else "Switch to sedentary comparison mode"
+                            }
                     )
                 }
             }

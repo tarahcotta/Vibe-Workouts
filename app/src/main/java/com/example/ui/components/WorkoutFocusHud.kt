@@ -1,6 +1,11 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,9 +33,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.screens.ExerciseLogState
 import com.example.ui.screens.SetLogInput
+import kotlinx.coroutines.launch
 
 /**
  * Dedicated In-Workout Heads-Up Display (Focus HUD Mode)
@@ -575,11 +583,33 @@ fun WorkoutFocusHud(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // PRIMARY COMPLETE BUTTON (High-Impact Large Action)
+                    // PRIMARY COMPLETE BUTTON (High-Impact Large Action with Spring Animation)
+                    val coroutineScope = rememberCoroutineScope()
+                    val buttonScaleAnim = remember { Animatable(1f) }
+                    val animatedButtonColor by animateColorAsState(
+                        targetValue = if (currentSet.isCompleted) Color(0xFF00C853) else MaterialTheme.colorScheme.primary,
+                        animationSpec = tween(300),
+                        label = "hud_btn_color"
+                    )
+
                     Button(
                         onClick = {
                             currentSet.isCompleted = true
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            coroutineScope.launch {
+                                buttonScaleAnim.animateTo(
+                                    targetValue = 0.94f,
+                                    animationSpec = tween(70)
+                                )
+                                buttonScaleAnim.animateTo(
+                                    targetValue = 1.04f,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                                )
+                                buttonScaleAnim.animateTo(
+                                    targetValue = 1f,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
+                                )
+                            }
                             val restSeconds = when {
                                 currentSet.rpe >= 9 -> 120
                                 currentSet.rpe == 8 -> 90
@@ -590,10 +620,12 @@ fun WorkoutFocusHud(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp),
+                            .height(54.dp)
+                            .scale(buttonScaleAnim.value)
+                            .testTag("focus_hud_log_set_btn"),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (currentSet.isCompleted) Color(0xFF00C853) else MaterialTheme.colorScheme.primary,
+                            containerColor = animatedButtonColor,
                             contentColor = Color.White
                         )
                     ) {

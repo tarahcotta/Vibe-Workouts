@@ -540,6 +540,7 @@ fun ProgressPhotoComparisonView(
     modifier: Modifier = Modifier
 ) {
     var showPlumbLineGrid by remember { mutableStateOf(true) }
+    var plumbLineXPercent by remember { mutableFloatStateOf(0.5f) }
     val dateFormat = remember { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()) }
 
     val scrollState = rememberScrollState()
@@ -700,7 +701,10 @@ fun ProgressPhotoComparisonView(
                     )
 
                     if (showPlumbLineGrid) {
-                        PostureAlignmentOverlay(modifier = Modifier.fillMaxSize())
+                        PostureAlignmentOverlay(
+                            plumbLineXPercent = plumbLineXPercent,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
 
@@ -753,7 +757,10 @@ fun ProgressPhotoComparisonView(
                     )
 
                     if (showPlumbLineGrid) {
-                        PostureAlignmentOverlay(modifier = Modifier.fillMaxSize())
+                        PostureAlignmentOverlay(
+                            plumbLineXPercent = plumbLineXPercent,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
 
@@ -770,6 +777,73 @@ fun ProgressPhotoComparisonView(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
+        if (showPlumbLineGrid) {
+            Spacer(modifier = Modifier.height(12.dp))
+            // Plumb Line Stepper Adjustment Bar
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Plumb Line Fine-Tune",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { plumbLineXPercent = (plumbLineXPercent - 0.02f).coerceAtLeast(0.15f) },
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Nudge Left", modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Left", fontSize = 11.sp)
+                            }
+
+                            TextButton(
+                                onClick = { plumbLineXPercent = 0.5f },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("Center", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = { plumbLineXPercent = (plumbLineXPercent + 0.02f).coerceAtMost(0.85f) },
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("Right", fontSize = 11.sp)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Nudge Right", modifier = Modifier.size(14.dp))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Landmarks: Top = Shoulders · Middle = Chest/Thoracic Spine · Lower = Pelvis/Hips · Bottom = Knees",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
                     )
                 }
             }
@@ -875,25 +949,29 @@ fun ThumbnailPickerItem(
 }
 
 @Composable
-fun PostureAlignmentOverlay(modifier: Modifier = Modifier) {
+fun PostureAlignmentOverlay(
+    plumbLineXPercent: Float = 0.5f,
+    modifier: Modifier = Modifier
+) {
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
 
         val gridColor = Color(0x664CAF50)
         val plumbLineColor = Color(0xCC00E676)
+        val targetX = width * plumbLineXPercent.coerceIn(0.1f, 0.9f)
 
         // Vertical Plumb line
         drawLine(
             color = plumbLineColor,
-            start = Offset(width / 2f, 0f),
-            end = Offset(width / 2f, height),
-            strokeWidth = 2f,
+            start = Offset(targetX, 0f),
+            end = Offset(targetX, height),
+            strokeWidth = 2.5f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f)
         )
 
         // Horizontal Guide Lines: Shoulders, Torso, Hips, Knees
-        val shoulderY = height * 0.28f
+        val shoulderY = height * 0.26f
         val chestY = height * 0.42f
         val hipY = height * 0.60f
         val kneeY = height * 0.80f

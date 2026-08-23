@@ -1,6 +1,12 @@
 package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -40,14 +46,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.ui.theme.BoneDensityGold
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.BoneDensityGold
 
@@ -74,10 +84,21 @@ fun PersonalBestNotificationBanner(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "banner_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(1000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+
     AnimatedVisibility(
         visible = isVisible,
-        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+        enter = slideInVertically(initialOffsetY = { fullHeight: Int -> -fullHeight }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { fullHeight: Int -> -fullHeight }) + fadeOut(),
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
@@ -109,7 +130,9 @@ fun PersonalBestNotificationBanner(
                     Surface(
                         shape = CircleShape,
                         color = BoneDensityGold,
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier
+                            .size(44.dp)
+                            .scale(pulseScale)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -149,7 +172,7 @@ fun PersonalBestNotificationBanner(
                         )
 
                         Text(
-                            text = if (previousMaxLbs > 0f) "${newWeightLbs.toInt()} lbs (+$${(newWeightLbs - previousMaxLbs).toInt()} lbs progression)" else "${newWeightLbs.toInt()} lbs loaded!",
+                            text = if (previousMaxLbs > 0f) "${newWeightLbs.toInt()} lbs (+${(newWeightLbs - previousMaxLbs).toInt()} lbs progression)" else "${newWeightLbs.toInt()} lbs loaded!",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
