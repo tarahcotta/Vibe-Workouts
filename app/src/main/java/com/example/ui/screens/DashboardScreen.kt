@@ -188,6 +188,8 @@ fun DashboardScreen(
         (boneDensityTrendsList.sumOf { it.osteogenicScore.toDouble() } / boneDensityTrendsList.size).toInt()
     } else 0
 
+    var dashboardTab by remember { mutableIntStateOf(0) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -203,14 +205,19 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Hero Dashboard Header Card
+        // Hero Dashboard Header Card - High-Impact Primary Action
+        val nextRoutine = routines.firstOrNull()
+        val nextRoutineTitle = nextRoutine?.dayName ?: nextRoutine?.title ?: "Full Body Axial Loading (Osteogenic)"
+        val nextRoutineMins = 40
+        val nextRoutineExercises = 4
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("dashboard_hero_card"),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -218,7 +225,7 @@ fun DashboardScreen(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
                                 MaterialTheme.colorScheme.surface
                             )
                         )
@@ -243,7 +250,7 @@ fun DashboardScreen(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                 ) {
                                     Text(
-                                        text = "READINESS • OPTIMAL",
+                                        text = "READINESS • OPTIMAL FOR AXIAL LOAD",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary,
@@ -252,7 +259,7 @@ fun DashboardScreen(
                                 }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = profile?.let { "${it.strengthLevel} Program" } ?: "Strength & Longevity",
+                                    text = profile?.let { "${it.strengthLevel} Longevity Protocol" } ?: "Strength & Bone Longevity",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -283,13 +290,49 @@ fun DashboardScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Text(
-                        text = "Track osteogenic bone remodeling stimulus, training consistency, and progressive resistance trends.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // Next Session Prescription Banner
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "TODAY'S PRESCRIPTION",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "~$nextRoutineMins mins · $nextRoutineExercises exercises",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = nextRoutineTitle,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Target: RPE 7–8 (2–3 Reps in Reserve) for osteogenic bone remodeling without joint strain.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // 4-Column Key Metric Strip
                     Row(
@@ -322,10 +365,9 @@ fun DashboardScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Primary Start Workout Button
-                    val nextRoutineTitle = routines.firstOrNull()?.title ?: "Full Body Axial Loading"
+                    // Primary Start Workout Button (Dominant Hero Action)
                     Button(
                         onClick = {
                             if (routines.isNotEmpty()) {
@@ -335,118 +377,150 @@ fun DashboardScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp)
+                            .height(56.dp)
                             .testTag("start_workout_cta"),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Start Live Workout Session",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Start Live Workout Session",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // =========================================================================
-        // 1. STRENGTH TRAINING FREQUENCY VICO CHART CARD
-        // =========================================================================
-        StrengthTrainingFrequencyVicoChartCard(
-            weeklyFrequencyList = weeklyFrequencyList,
-            targetDaysPerWeek = targetDaysPerWeek,
-            totalSessionsLogged = totalSessionsLogged,
-            onStartWorkout = {
-                if (routines.isNotEmpty()) {
-                    onSelectRoutine(routines.first())
+        // Segmented Tab Row: "Today's Plan & Habit" vs "Clinical Analytics & Trends"
+        TabRow(
+            selectedTabIndex = dashboardTab,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+        ) {
+            Tab(
+                selected = dashboardTab == 0,
+                onClick = { dashboardTab = 0 },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Today's Plan & Habit", fontWeight = FontWeight.Bold)
+                    }
                 }
-                onNavigateToLogger()
-            }
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // =========================================================================
-        // 2. BONE DENSITY IMPROVEMENT TRENDS VICO CHART CARD
-        // =========================================================================
-        BoneDensityTrendsVicoChartCard(
-            boneDensityTrends = boneDensityTrendsList,
-            onNavigateToGuide = onNavigateToGuide
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // =========================================================================
-        // 3. BONE MINERAL DENSITY GOALS & CLINICAL MILESTONES
-        // =========================================================================
-        BoneDensityGoalProgressCard(
-            profile = profile,
-            sessions = sessions,
-            latestBmdScore = latestBmdScore,
-            weeklyAdherence = adherencePercent,
-            onNavigateToGuide = onNavigateToGuide
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Progressive Overload Readiness Card
-        ProgressiveOverloadHighlightCard(
-            overloadList = overloadList,
-            onStartWorkout = {
-                if (routines.isNotEmpty()) {
-                    onSelectRoutine(routines.first())
+            )
+            Tab(
+                selected = dashboardTab == 1,
+                onClick = { dashboardTab = 1 },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Timeline, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Clinical Trends & Charts", fontWeight = FontWeight.Bold)
+                    }
                 }
-                onNavigateToLogger()
-            }
-        )
-
-        if (viewModel != null) {
-            Spacer(modifier = Modifier.height(20.dp))
-            WeightProgressionVicoChartCard(
-                allSessions = sessions,
-                allLoggedSets = allLoggedSets
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Calendar History Card
-        WorkoutCalendarSummaryCard(
-            sessions = sessions,
-            routines = routines,
-            onStartWorkout = { routine ->
-                if (routine != null) {
-                    onSelectRoutine(routine)
-                } else if (routines.isNotEmpty()) {
-                    onSelectRoutine(routines.first())
+        if (dashboardTab == 0) {
+            // TAB 0: TODAY'S PLAN, PROGRESSIVE OVERLOAD, HISTORY & COACHING
+            
+            // Progressive Overload Readiness Card
+            ProgressiveOverloadHighlightCard(
+                overloadList = overloadList,
+                onStartWorkout = {
+                    if (routines.isNotEmpty()) {
+                        onSelectRoutine(routines.first())
+                    }
+                    onNavigateToLogger()
                 }
-                onNavigateToLogger()
-            }
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // AI Recommendations & Science Insights
-        AIRecommendationsCard(
-            sessions = sessions,
-            routines = routines
-        )
-
-        if (viewModel != null) {
-            Spacer(modifier = Modifier.height(20.dp))
-            LocalProgressPhotosMilestoneCard(
-                viewModel = viewModel,
-                onNavigateToPhotos = { onNavigateToProgress?.invoke() }
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Calendar History Card
+            WorkoutCalendarSummaryCard(
+                sessions = sessions,
+                routines = routines,
+                onStartWorkout = { routine ->
+                    if (routine != null) {
+                        onSelectRoutine(routine)
+                    } else if (routines.isNotEmpty()) {
+                        onSelectRoutine(routines.first())
+                    }
+                    onNavigateToLogger()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // AI Recommendations & Science Insights
+            AIRecommendationsCard(
+                sessions = sessions,
+                routines = routines
+            )
+
+            if (viewModel != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                LocalProgressPhotosMilestoneCard(
+                    viewModel = viewModel,
+                    onNavigateToPhotos = { onNavigateToProgress?.invoke() }
+                )
+            }
+        } else {
+            // TAB 1: CLINICAL ANALYTICS & DEEP CHARTS
+            
+            // 1. STRENGTH TRAINING FREQUENCY VICO CHART CARD
+            StrengthTrainingFrequencyVicoChartCard(
+                weeklyFrequencyList = weeklyFrequencyList,
+                targetDaysPerWeek = targetDaysPerWeek,
+                totalSessionsLogged = totalSessionsLogged,
+                onStartWorkout = {
+                    if (routines.isNotEmpty()) {
+                        onSelectRoutine(routines.first())
+                    }
+                    onNavigateToLogger()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 2. BONE DENSITY IMPROVEMENT TRENDS VICO CHART CARD
+            BoneDensityTrendsVicoChartCard(
+                boneDensityTrends = boneDensityTrendsList,
+                onNavigateToGuide = onNavigateToGuide
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 3. BONE MINERAL DENSITY GOALS & CLINICAL MILESTONES
+            BoneDensityGoalProgressCard(
+                profile = profile,
+                sessions = sessions,
+                latestBmdScore = latestBmdScore,
+                weeklyAdherence = adherencePercent,
+                onNavigateToGuide = onNavigateToGuide
+            )
+
+            if (viewModel != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                WeightProgressionVicoChartCard(
+                    allSessions = sessions,
+                    allLoggedSets = allLoggedSets
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))

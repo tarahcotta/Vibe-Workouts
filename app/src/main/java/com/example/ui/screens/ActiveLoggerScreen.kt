@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.Timer
@@ -181,6 +182,7 @@ fun ActiveLoggerScreen(
     var overallFeel by remember { mutableStateOf("Strong & Energized") }
     var notesText by remember { mutableStateOf("") }
     var showCompletionDialog by remember { mutableStateOf(false) }
+    var showIncompleteSetsWarning by remember { mutableStateOf(false) }
     var showRpeInfoDialog by remember { mutableStateOf(false) }
     var activeFormDemoExercise by remember { mutableStateOf<String?>(null) }
     var rpePickerSet by remember { mutableStateOf<Pair<SetLogInput, String>?>(null) }
@@ -222,6 +224,41 @@ fun ActiveLoggerScreen(
     val totalCompletedSets = exerciseLogs.sumOf { log -> log.sets.count { it.isCompleted } }
     val totalPrescribedSets = exerciseLogs.sumOf { log -> log.sets.size }
     val isFinishEnabled = totalCompletedSets > 0
+
+    val executeSaveAndComplete = {
+        val allLoggedSets = mutableListOf<LoggedSetEntity>()
+        exerciseLogs.forEach { log ->
+            log.sets.forEach { setInput ->
+                val w = setInput.weightText.toFloatOrNull() ?: 0f
+                val r = setInput.repsText.toIntOrNull() ?: 0
+                allLoggedSets.add(
+                    LoggedSetEntity(
+                        sessionId = 0,
+                        exerciseName = log.exerciseName,
+                        setNumber = setInput.setNumber,
+                        weightLbs = w,
+                        repsCompleted = r,
+                        rpeActual = setInput.rpe,
+                        jointFeel = setInput.jointFeel
+                    )
+                )
+            }
+        }
+
+        val combinedNotes = buildString {
+            exerciseLogs.forEach { log ->
+                if (log.formNotes.isNotBlank()) {
+                    append("[${log.exerciseName}]: ${log.formNotes}\n")
+                }
+            }
+            if (notesText.isNotBlank()) {
+                append(notesText)
+            }
+        }.trim()
+
+        onSaveSession(routineTitle, allLoggedSets, overallFeel, combinedNotes)
+        showCompletionDialog = true
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -279,38 +316,12 @@ fun ActiveLoggerScreen(
                     if (isFinishEnabled) {
                         Button(
                             onClick = {
-                                val allLoggedSets = mutableListOf<LoggedSetEntity>()
-                                exerciseLogs.forEach { log ->
-                                    log.sets.forEach { setInput ->
-                                        val w = setInput.weightText.toFloatOrNull() ?: 0f
-                                        val r = setInput.repsText.toIntOrNull() ?: 0
-                                        allLoggedSets.add(
-                                            LoggedSetEntity(
-                                                sessionId = 0,
-                                                exerciseName = log.exerciseName,
-                                                setNumber = setInput.setNumber,
-                                                weightLbs = w,
-                                                repsCompleted = r,
-                                                rpeActual = setInput.rpe,
-                                                jointFeel = setInput.jointFeel
-                                            )
-                                        )
-                                    }
+                                val uncompletedCount = exerciseLogs.flatMap { it.sets }.count { !it.isCompleted }
+                                if (uncompletedCount > 0) {
+                                    showIncompleteSetsWarning = true
+                                } else {
+                                    executeSaveAndComplete()
                                 }
-
-                                val combinedNotes = buildString {
-                                    exerciseLogs.forEach { log ->
-                                        if (log.formNotes.isNotBlank()) {
-                                            append("[${log.exerciseName}]: ${log.formNotes}\n")
-                                        }
-                                    }
-                                    if (notesText.isNotBlank()) {
-                                        append(notesText)
-                                    }
-                                }.trim()
-
-                                onSaveSession(routineTitle, allLoggedSets, overallFeel, combinedNotes)
-                                showCompletionDialog = true
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -382,17 +393,16 @@ fun ActiveLoggerScreen(
                 onDismiss = { showPrBanner = false }
             )
 
-            // Built-In Rest Interval Timer Component (Collapsible UX)
+            // Built-In Rest Interval Timer Component (Collapsible UX & Direct Quick Controls)
             var isTimerExpanded by remember { mutableStateOf(false) }
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .clickable { isTimerExpanded = !isTimerExpanded },
+                    .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                 )
             ) {
@@ -402,11 +412,14 @@ fun ActiveLoggerScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.weight(1f).clickable { isTimerExpanded = !isTimerExpanded },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Surface(
                                 shape = CircleShape,
                                 color = if (isTimerRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(34.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
@@ -426,29 +439,79 @@ fun ActiveLoggerScreen(
                                     color = if (isTimerRunning) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = if (isTimerRunning) activeTimerExerciseName.ifBlank { "Next Set Prep" } else "Tap to configure custom countdown",
+                                    text = if (isTimerRunning) activeTimerExerciseName.ifBlank { "Next Set Prep" } else "Auto-adjusts based on set RPE",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (isTimerRunning) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (isTimerExpanded) "Collapse" else "Controls",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Icon(
-                                imageVector = if (isTimerExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Toggle",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
+
+                        if (isTimerRunning) {
+                            // On-the-Fly Direct Rest Timer Adjusters
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                    modifier = Modifier.clickable {
+                                        timerRemainingSeconds = (timerRemainingSeconds - 15).coerceAtLeast(0)
+                                    }
+                                ) {
+                                    Text(
+                                        text = "-15s",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                    modifier = Modifier.clickable {
+                                        timerRemainingSeconds += 30
+                                    }
+                                ) {
+                                    Text(
+                                        text = "+30s",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                                IconButton(
+                                    onClick = {
+                                        timerRemainingSeconds = 0
+                                        isTimerRunning = false
+                                    },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Skip Rest",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { isTimerExpanded = !isTimerExpanded },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isTimerExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Toggle",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
 
-                    AnimatedVisibility(visible = isTimerExpanded || isTimerRunning) {
+                    AnimatedVisibility(visible = isTimerExpanded) {
                         Column {
                             Spacer(modifier = Modifier.height(12.dp))
                             BuiltInIntervalTimerCard(
@@ -543,7 +606,7 @@ fun ActiveLoggerScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Actions & Tags (Form Guide, PR Tag)
+                        // Actions & Tags (Form Guide, PR Tag, Quick Fill)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -578,6 +641,39 @@ fun ActiveLoggerScreen(
                                 currentPrLbs = currentPr,
                                 isReadyForIncrement = currentPr > 0f && logState.sets.all { it.isCompleted && it.rpe <= 8 }
                             )
+
+                            if (currentPr > 0f) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                                    modifier = Modifier.clickable {
+                                        logState.sets.forEach { s ->
+                                            if (!s.isCompleted) {
+                                                s.weightText = "${currentPr.toInt()}"
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(12.dp),
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Fill ${currentPr.toInt()} lbs",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         // Structured Coaching Cue Box
@@ -771,7 +867,12 @@ fun ActiveLoggerScreen(
                                                         s.repsText = setInput.repsText
                                                     }
                                                 }
-                                                startRestTimer(targetRestSeconds, logState.exerciseName)
+                                                val calculatedRest = when {
+                                                    setInput.rpe >= 9 -> 120
+                                                    setInput.rpe == 8 -> 90
+                                                    else -> 60
+                                                }
+                                                startRestTimer(calculatedRest, logState.exerciseName)
                                                 val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
                                                 val previousMax = personalBests[logState.exerciseName] ?: 0f
                                                 if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
@@ -1228,6 +1329,51 @@ fun ActiveLoggerScreen(
             confirmButton = {
                 Button(onClick = { showRpeInfoDialog = false }) {
                     Text("Got It", fontWeight = FontWeight.Bold)
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // Incomplete Sets Warning Dialog
+    if (showIncompleteSetsWarning) {
+        val uncompletedSets = exerciseLogs.flatMap { it.sets }.count { !it.isCompleted }
+        AlertDialog(
+            onDismissRequest = { showIncompleteSetsWarning = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Incomplete Sets",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(
+                    text = "Finish Workout Early?",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Text(
+                    text = "You have $uncompletedSets set(s) left unlogged. Would you like to finish and record your $totalCompletedSets completed set(s), or return to logging?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showIncompleteSetsWarning = false
+                        executeSaveAndComplete()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Finish & Save Completed", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showIncompleteSetsWarning = false }) {
+                    Text("Keep Training", fontWeight = FontWeight.SemiBold)
                 }
             },
             shape = RoundedCornerShape(20.dp)
