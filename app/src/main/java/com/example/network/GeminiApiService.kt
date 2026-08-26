@@ -19,9 +19,15 @@ import com.example.BuildConfig
 
 // --- Common Data Classes ---
 @Serializable
+data class Tool(
+    val googleSearch: JsonObject? = null
+)
+
+@Serializable
 data class GenerateContentRequest(
     val contents: List<Content>,
-    val systemInstruction: Content? = null
+    val systemInstruction: Content? = null,
+    val tools: List<Tool>? = null
 )
 
 @Serializable

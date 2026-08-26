@@ -118,6 +118,7 @@ fun MainContainer(
 
     if (!hasCompletedOnboarding) {
         OnboardingScreen(
+            viewModel = viewModel,
             onCompleteOnboarding = { viewModel.completeOnboarding() },
             modifier = modifier
         )
@@ -374,6 +375,9 @@ fun MainContainer(
                         },
                         onRegenerateProgram = {
                             viewModel.regenerateRoutines()
+                        },
+                        onUpdateNotes = { exerciseId, notes ->
+                            viewModel.updateExerciseNotes(exerciseId, notes)
                         }
                     )
                 }

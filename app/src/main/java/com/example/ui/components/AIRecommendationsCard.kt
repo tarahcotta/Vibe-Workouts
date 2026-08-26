@@ -23,6 +23,8 @@ import com.example.network.Content
 import com.example.network.GenerateContentRequest
 import com.example.network.Part
 import com.example.network.RetrofitClient
+import com.example.network.Tool
+import kotlinx.serialization.json.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -48,7 +50,8 @@ fun AIRecommendationsCard(
                         "Give me a short, 1-sentence motivational recommendation or insight for my next workout."
                 
                 val request = GenerateContentRequest(
-                    contents = listOf(Content(parts = listOf(Part(text = prompt))))
+                    contents = listOf(Content(parts = listOf(Part(text = prompt)))),
+                    tools = listOf(Tool(googleSearch = JsonObject(emptyMap())))
                 )
                 
                 val apiKey = BuildConfig.GEMINI_API_KEY

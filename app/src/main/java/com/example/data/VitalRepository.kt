@@ -17,6 +17,10 @@ class VitalRepository(
         return dao.getExercisesForRoutine(routineId)
     }
 
+    suspend fun updateExerciseNotes(exerciseId: Long, notes: String) {
+        dao.updateExerciseNotes(exerciseId, notes)
+    }
+
 
     val bookmarkedExercises: Flow<List<BookmarkedExerciseEntity>> = dao.getBookmarkedExercises()
     val allProgressPhotos: Flow<List<ProgressPhotoEntity>> = dao.getAllProgressPhotos()

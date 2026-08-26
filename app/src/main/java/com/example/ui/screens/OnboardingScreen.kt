@@ -1,16 +1,10 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.ui.components.CustomFlowRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -19,82 +13,76 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.HealthAndSafety
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.UserProfileEntity
+import com.example.ui.VitalViewModel
 import com.example.ui.components.WomensStrengthLogoIcon
-import com.example.ui.theme.RainbowBrush
 import kotlinx.coroutines.launch
 
-data class OnboardingStepData(
-    val title: String,
-    val subtitle: String,
-    val badge: String,
-    val icon: ImageVector,
-    val primaryColor: Color
-)
-
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
+    viewModel: VitalViewModel,
     onCompleteOnboarding: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val steps = remember {
-        listOf(
-            OnboardingStepData(
-                title = "Strength Built for Life & Longevity",
-                subtitle = "Empowering women across all life stages through science-backed resistance training tailored for bone mineral density, joint resilience, and metabolic health.",
-                badge = "WELCOME TO VITAL STRENGTH",
-                icon = Icons.Default.FitnessCenter,
-                primaryColor = Color(0xFF4FC3F7)
-            ),
-            OnboardingStepData(
-                title = "Progressive Overload & Bone Density",
-                subtitle = "Bones are dynamic living tissue that respond directly to mechanical stress. Gradual weight increases signal osteoblasts to deposit calcium and strengthen bone architecture.",
-                badge = "BONE HEALTH SCIENCE",
-                icon = Icons.Default.Shield,
-                primaryColor = Color(0xFFFFB74D)
-            ),
-            OnboardingStepData(
-                title = "Joint Stability & Cartilage Health",
-                subtitle = "Progressive resistance fortifies tendons, ligaments, and surrounding musculature while circulating nourishing synovial fluid to keep joints pain-free and resilient.",
-                badge = "JOINT & CONNECTIVE TISSUE",
-                icon = Icons.Default.HealthAndSafety,
-                primaryColor = Color(0xFF81C784)
-            ),
-            OnboardingStepData(
-                title = "Smart Micro-Progression",
-                subtitle = "Our live workout engine tracks your volume and guides safe, incremental gains (+2.5 lbs or +1 rep) so you build strength consistently without injury or burnout.",
-                badge = "INTELLIGENT PROGRESSION",
-                icon = Icons.AutoMirrored.Filled.TrendingUp,
-                primaryColor = Color(0xFFB39DDB)
+    val pagerState = rememberPagerState(pageCount = { 5 })
+    val coroutineScope = rememberCoroutineScope()
+
+    // Wizard State variables
+    var selectedGoals by remember {
+        mutableStateOf(
+            setOf(
+                "Bone Mineral Density & Osteogenesis",
+                "Joint & Cartilage Longevity",
+                "Posture & Spinal Health"
             )
         )
     }
 
-    val pagerState = rememberPagerState(pageCount = { steps.size })
-    val coroutineScope = rememberCoroutineScope()
+    var experienceLevel by remember { mutableStateOf("Intermediate") }
+    var selectedAgeGroup by remember { mutableStateOf("51-65") }
+    var mappedAge by remember { mutableIntStateOf(58) }
+
+    val availableGoals = remember {
+        listOf(
+            "Bone Mineral Density & Osteogenesis",
+            "Joint & Cartilage Longevity",
+            "Posture & Spinal Health",
+            "Metabolic Vitality & Glycemic Control",
+            "Sarcopenia & Muscle Mass Preservation",
+            "Balance, Stability & Fall Prevention"
+        )
+    }
+
+    val experienceLevels = remember {
+        listOf(
+            Triple("Beginner / Novice", "New to strength training or returning after a long break. Focus on form and baseline adaptation.", Icons.Default.FitnessCenter),
+            Triple("Intermediate", "Consistent resistance training for 6+ months. Comfortable with basic dumbbells and machines.", Icons.Default.TrendingUp),
+            Triple("Advanced", "Experienced lifter with barbell proficiency, ready for structured progressive overload cycles.", Icons.Default.Shield)
+        )
+    }
+
+    val ageGroups = remember {
+        listOf(
+            Pair("20-35", 28),
+            Pair("36-50", 43),
+            Pair("51-65", 58),
+            Pair("66+", 72)
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -117,13 +105,23 @@ fun OnboardingScreen(
                     )
                 }
 
-                if (pagerState.currentPage < steps.size - 1) {
+                if (pagerState.currentPage < 4) {
                     TextButton(
-                        onClick = onCompleteOnboarding,
+                        onClick = {
+                            // Save default/current selections and complete
+                            viewModel.saveUserProfile(
+                                UserProfileEntity(
+                                    age = mappedAge,
+                                    strengthLevel = experienceLevel,
+                                    fitnessGoals = selectedGoals.joinToString(", ")
+                                )
+                            )
+                            onCompleteOnboarding()
+                        },
                         modifier = Modifier.testTag("onboarding_skip_button")
                     ) {
                         Text(
-                            text = "Skip",
+                            text = "Skip Wizard",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -148,10 +146,10 @@ fun OnboardingScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .padding(bottom = 20.dp)
+                            .padding(bottom = 16.dp)
                             .testTag("onboarding_page_indicator")
                     ) {
-                        repeat(steps.size) { pageIndex ->
+                        repeat(5) { pageIndex ->
                             val isSelected = pagerState.currentPage == pageIndex
                             Box(
                                 modifier = Modifier
@@ -197,11 +195,19 @@ fun OnboardingScreen(
 
                         Button(
                             onClick = {
-                                if (pagerState.currentPage < steps.size - 1) {
+                                if (pagerState.currentPage < 4) {
                                     coroutineScope.launch {
                                         pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                     }
                                 } else {
+                                    // Save profile and finish
+                                    viewModel.saveUserProfile(
+                                        UserProfileEntity(
+                                            age = mappedAge,
+                                            strengthLevel = experienceLevel,
+                                            fitnessGoals = selectedGoals.joinToString(", ")
+                                        )
+                                    )
                                     onCompleteOnboarding()
                                 }
                             },
@@ -216,13 +222,13 @@ fun OnboardingScreen(
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
-                                text = if (pagerState.currentPage == steps.size - 1) "Get Started" else "Next",
+                                text = if (pagerState.currentPage == 4) "Start My Longevity Journey" else "Next Step",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 15.sp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                imageVector = if (pagerState.currentPage == steps.size - 1) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.ArrowForward,
+                                imageVector = if (pagerState.currentPage == 4) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Icon"
                             )
                         }
@@ -238,47 +244,83 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) { pageIndex ->
-            OnboardingPageContent(
-                step = steps[pageIndex],
-                pageIndex = pageIndex
-            )
+            when (pageIndex) {
+                0 -> OnboardingWelcomePage(
+                    onExploreInstantly = {
+                        viewModel.saveUserProfile(
+                            UserProfileEntity(
+                                age = mappedAge,
+                                strengthLevel = experienceLevel,
+                                fitnessGoals = selectedGoals.joinToString(", ")
+                            )
+                        )
+                        onCompleteOnboarding()
+                    }
+                )
+                1 -> OnboardingGoalsPage(
+                    availableGoals = availableGoals,
+                    selectedGoals = selectedGoals,
+                    onToggleGoal = { goal ->
+                        selectedGoals = if (selectedGoals.contains(goal)) {
+                            if (selectedGoals.size > 1) selectedGoals - goal else selectedGoals
+                        } else {
+                            selectedGoals + goal
+                        }
+                    }
+                )
+                2 -> OnboardingExperiencePage(
+                    experienceLevels = experienceLevels,
+                    currentExperience = experienceLevel,
+                    onSelectExperience = { experienceLevel = it }
+                )
+                3 -> OnboardingAgeGroupPage(
+                    ageGroups = ageGroups,
+                    selectedAgeGroup = selectedAgeGroup,
+                    onSelectAgeGroup = { group, age ->
+                        selectedAgeGroup = group
+                        mappedAge = age
+                    }
+                )
+                4 -> OnboardingSummaryPage(
+                    selectedGoals = selectedGoals,
+                    experienceLevel = experienceLevel,
+                    ageGroup = selectedAgeGroup,
+                    age = mappedAge
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun OnboardingPageContent(
-    step: OnboardingStepData,
-    pageIndex: Int
+private fun OnboardingWelcomePage(
+    onExploreInstantly: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 12.dp)
-            .testTag("onboarding_step_$pageIndex"),
+            .padding(24.dp)
+            .testTag("onboarding_step_0"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Badge pill
+        Spacer(modifier = Modifier.height(16.dp))
         Surface(
-            color = step.primaryColor.copy(alpha = 0.12f),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
             shape = CircleShape,
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Text(
-                text = step.badge,
+                text = "WELCOME TO VITAL STRENGTH",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = step.primaryColor,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
             )
         }
 
-        // Title
         Text(
-            text = step.title,
+            text = "Science-Backed Strength for Women's Longevity",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -286,400 +328,513 @@ private fun OnboardingPageContent(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Subtitle
         Text(
-            text = step.subtitle,
+            text = "Designed specifically for women's physiological needs across all life stages, prioritizing bone mineral density preservation, joint resilience, and metabolic vitality.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 24.sp,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 20.dp)
         )
 
-        // Interactive or Visual Content Card according to step
-        when (pageIndex) {
-            0 -> WelcomeStepVisualCard(step = step)
-            1 -> BoneDensityInteractiveCard()
-            2 -> JointHealthVisualCard()
-            3 -> MicroProgressionInteractiveCard()
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun WelcomeStepVisualCard(step: OnboardingStepData) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
+        // Instant Explore / Bypass Setup Button
+        OutlinedButton(
+            onClick = onExploreInstantly,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .height(48.dp)
+                .testTag("explore_instantly_button"),
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(step.primaryColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = step.icon,
-                    contentDescription = "Icon",
-                    tint = step.primaryColor,
-                    modifier = Modifier.size(36.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Key Stats Grid
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatPill(
-                    value = "+1.5%",
-                    label = "Annual Bone Mass Gain",
-                    modifier = Modifier.weight(1f)
-                )
-                StatPill(
-                    value = "3x",
-                    label = "Lower Fracture Risk",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Icon",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Designed specifically for women's physiological needs, including hormonal shifts, bone density preservation, and functional longevity.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BoneDensityInteractiveCard() {
-    var loadLevel by remember { mutableFloatStateOf(2f) } // 0: Light, 1: Moderate, 2: Progressive Overload
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Interactive Bone Remodeling Simulator",
-                style = MaterialTheme.typography.titleSmall,
+                text = "Explore App Instantly (Skip Setup)",
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-            Text(
-                text = "Adjust the mechanical load slider to see how bone osteoblasts respond:",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Load Level Indicator Box
-            val (statusTitle, statusDesc, densityPercent, color) = when (loadLevel.toInt()) {
-                0 -> Quadruple("Sedentary / Light Walk", "Inadequate strain to trigger osteogenesis. Bone mass remains static or slowly degrades.", "75% Baseline Density", Color(0xFFE57373))
-                1 -> Quadruple("Moderate Resistance", "Mild stimulus. Maintains current bone mineral density but limits growth.", "90% Density Maintenance", Color(0xFFFFB74D))
-                else -> Quadruple("Progressive Overload", "Optimal mechanical strain! Triggers osteoblast bone synthesis and trabecular thickening.", "+115% Enhanced Density", Color(0xFF81C784))
-            }
-
-            Surface(
-                color = color.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            ),
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = statusTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = color
-                        )
-                        Text(
-                            text = densityPercent,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = color
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatPill(
+                        value = "+1.5%",
+                        label = "Annual Bone Mass Gain",
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatPill(
+                        value = "3x",
+                        label = "Lower Fracture Risk",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Info",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = statusDesc,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "Or customize your profile in 3 quick steps below.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Slider
-            Text(
-                text = "Mechanical Strain Level",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Slider(
-                value = loadLevel,
-                onValueChange = { loadLevel = it },
-                valueRange = 0f..2f,
-                steps = 1,
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                ),
-                modifier = Modifier.testTag("onboarding_bone_density_slider")
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Low Strain", style = MaterialTheme.typography.labelSmall)
-                Text("Moderate", style = MaterialTheme.typography.labelSmall)
-                Text("Optimal Overload", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF81C784))
-            }
         }
     }
 }
 
 @Composable
-private fun JointHealthVisualCard() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = "Connective Tissue Resilience",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF006C4C)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            JointBenefitItem(
-                icon = Icons.Default.HealthAndSafety,
-                title = "Synovial Fluid Circulation",
-                description = "Weight-bearing movement pumps nutrient-rich fluid directly into cartilage, reducing stiffness."
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            JointBenefitItem(
-                icon = Icons.Default.Shield,
-                title = "Tendon Collagen Thickening",
-                description = "Consistent loading increases collagen fiber cross-linking, making tendons resilient against sprains."
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            JointBenefitItem(
-                icon = Icons.Default.Speed,
-                title = "Postural & Spinal Alignment",
-                description = "Strengthening the posterior chain supports vertebral disc pressure and protects lower back health."
-            )
-        }
-    }
-}
-
-@Composable
-private fun JointBenefitItem(
-    icon: ImageVector,
-    title: String,
-    description: String
+private fun OnboardingGoalsPage(
+    availableGoals: List<String>,
+    selectedGoals: Set<String>,
+    onToggleGoal: (String) -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+            .testTag("onboarding_step_1"),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF006C4C).copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = "Icon",
-                    tint = Color(0xFF006C4C),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MicroProgressionInteractiveCard() {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Surface(
+            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
+            shape = CircleShape,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Text(
-                text = "Live Micro-Progression Preview",
-                style = MaterialTheme.typography.titleSmall,
+                text = "STEP 1 OF 3 • YOUR GOALS",
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth()
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
             )
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "What are your primary fitness goals?",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-            // Mock Progressive Overload Card
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Select all that apply. Your custom routines and progressive overload targets will adapt to prioritize these outcomes.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            availableGoals.forEach { goal ->
+                val isSelected = selectedGoals.contains(goal)
+                Surface(
+                    onClick = { onToggleGoal(goal) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("goal_chip_$goal")
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "Goblet Squat (Bone Density Focus)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = Color(0xFF81C784).copy(alpha = 0.12f),
-                            shape = CircleShape
                         ) {
-                            Text(
-                                text = "READY FOR OVERLOAD",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF81C784),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            Icon(
+                                imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.FitnessCenter,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Previous Target:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("35 lbs × 10 reps", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                        }
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Icon",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1.2f)) {
-                            Text("Recommended Today:", style = MaterialTheme.typography.labelMedium, color = Color(0xFF81C784))
-                            Text("37.5 lbs × 10 reps (+2.5 lbs)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color(0xFF81C784))
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Text(
+                                text = goal,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+@Composable
+private fun OnboardingExperiencePage(
+    experienceLevels: List<Triple<String, String, ImageVector>>,
+    currentExperience: String,
+    onSelectExperience: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+            .testTag("onboarding_step_2"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+            shape = CircleShape,
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
             Text(
-                text = "Small, safe increases add up to massive longevity gains over 6–12 months without risking joint inflammation or overtraining.",
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "STEP 2 OF 3 • EXPERIENCE LEVEL",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
             )
+        }
+
+        Text(
+            text = "What is your current experience level?",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "This helps us calibrate starting weights, RPE intensity guidelines, and exercise complexity.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            experienceLevels.forEach { (title, description, icon) ->
+                val isSelected = currentExperience == title
+                Surface(
+                    onClick = { onSelectExperience(title) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("experience_card_$title")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingAgeGroupPage(
+    ageGroups: List<Pair<String, Int>>,
+    selectedAgeGroup: String,
+    onSelectAgeGroup: (String, Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+            .testTag("onboarding_step_3"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            shape = CircleShape,
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+            Text(
+                text = "STEP 3 OF 3 • LIFE STAGE & AGE",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
+        }
+
+        Text(
+            text = "Select your age group",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "Hormonal shifts across life stages affect bone mineral accretion rates and recovery timelines. We customize recovery windows accordingly.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ageGroups.forEach { (group, ageValue) ->
+                val isSelected = selectedAgeGroup == group
+                Surface(
+                    onClick = { onSelectAgeGroup(group, ageValue) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("age_group_$group")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = "$group Years",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Targeted bone density & recovery pacing",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { onSelectAgeGroup(group, ageValue) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingSummaryPage(
+    selectedGoals: Set<String>,
+    experienceLevel: String,
+    ageGroup: String,
+    age: Int
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp)
+            .testTag("onboarding_step_4"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            color = Color(0xFF006C4C).copy(alpha = 0.12f),
+            shape = CircleShape,
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+            Text(
+                text = "PROFILE READY",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF006C4C),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
+        }
+
+        Text(
+            text = "Your Longevity Blueprint is Configured",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = "Here is a summary of your profile. You can modify these settings anytime in your Account profile.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                SummaryRow(
+                    label = "Age Group",
+                    value = "$ageGroup Years (Target Age: $age)",
+                    icon = Icons.Default.Person
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                SummaryRow(
+                    label = "Experience Level",
+                    value = experienceLevel,
+                    icon = Icons.Default.TrendingUp
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.FitnessCenter, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Primary Goals (${selectedGoals.size})", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    selectedGoals.forEach { goal ->
+                        Text(
+                            text = "• $goal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 28.dp, bottom = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    icon: ImageVector
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -715,5 +870,3 @@ private fun StatPill(
         }
     }
 }
-
-private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

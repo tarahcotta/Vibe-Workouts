@@ -89,6 +89,12 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateExerciseNotes(exerciseId: Long, notes: String) {
+        viewModelScope.launch {
+            repository.updateExerciseNotes(exerciseId, notes)
+        }
+    }
+
     init {
         val dao = VitalDatabase.getDatabase(application).vitalDao()
         val syncManager = com.example.data.FirestoreSyncManager(application)

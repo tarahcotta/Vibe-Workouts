@@ -32,6 +32,9 @@ interface VitalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercises(exercises: List<WorkoutExerciseEntity>)
 
+    @Query("UPDATE workout_exercises SET userNotes = :notes WHERE id = :exerciseId")
+    suspend fun updateExerciseNotes(exerciseId: Long, notes: String)
+
     @Query("DELETE FROM workout_routines")
     suspend fun clearRoutines()
 

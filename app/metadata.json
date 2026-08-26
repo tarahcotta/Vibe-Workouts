@@ -1,0 +1,6 @@
+{
+  "name": "Women's Strength",
+  "description": "Evidence-based strength training and bone density longevity app for women",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

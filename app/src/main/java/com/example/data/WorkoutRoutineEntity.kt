@@ -24,5 +24,6 @@ data class WorkoutExerciseEntity(
     val restPeriod: String, // e.g. "90-120s", "60s"
     val rpe: String, // e.g. "RPE 7-8"
     val coachingCues: String, // e.g. "Push floor away through heels. Keep spine neutral."
-    val orderIndex: Int
+    val orderIndex: Int,
+    val userNotes: String = "" // Optional note-taking field for how they felt, equipment used, or form adjustments
 )

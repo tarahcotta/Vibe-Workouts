@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -47,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -87,6 +90,7 @@ fun RoutineTableScreen(
     onSelectRoutine: (WorkoutRoutineEntity) -> Unit,
     onStartLogging: (WorkoutRoutineEntity) -> Unit,
     onRegenerateProgram: () -> Unit,
+    onUpdateNotes: (Long, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedTabIndex by remember(routines, selectedRoutine) {
@@ -566,7 +570,7 @@ fun RoutineTableScreen(
 
                                         Spacer(modifier = Modifier.height(10.dp))
 
-                                        // Action Row: Form Demo & Rest Timer Launch
+                                         // Action Row: Form Demo & Rest Timer Launch
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -611,6 +615,100 @@ fun RoutineTableScreen(
                                                     style = MaterialTheme.typography.labelMedium,
                                                     fontWeight = FontWeight.Bold
                                                 )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        // Optional Personal Note-Taking Field for Equipment, Feel, or Form
+                                        var isEditingNotes by remember(ex.id) { mutableStateOf(false) }
+                                        var noteInputText by remember(ex.id, ex.userNotes) { mutableStateOf(ex.userNotes) }
+
+                                        if (isEditingNotes) {
+                                            OutlinedTextField(
+                                                value = noteInputText,
+                                                onValueChange = { noteInputText = it },
+                                                label = { Text("Exercise Notes (Equipment, how you felt, form)") },
+                                                placeholder = { Text("e.g. Used 25lb dumbbells, felt great, kept hips square") },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .testTag("exercise_note_input_${ex.id}"),
+                                                shape = RoundedCornerShape(12.dp),
+                                                textStyle = MaterialTheme.typography.bodySmall,
+                                                maxLines = 3
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.End,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                TextButton(
+                                                    onClick = {
+                                                        noteInputText = ex.userNotes
+                                                        isEditingNotes = false
+                                                    }
+                                                ) {
+                                                    Text("Cancel")
+                                                }
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Button(
+                                                    onClick = {
+                                                        onUpdateNotes(ex.id, noteInputText.trim())
+                                                        isEditingNotes = false
+                                                    },
+                                                    modifier = Modifier.testTag("save_exercise_note_${ex.id}"),
+                                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                                ) {
+                                                    Text("Save Note", style = MaterialTheme.typography.labelMedium)
+                                                }
+                                            }
+                                        } else {
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = if (ex.userNotes.isNotBlank()) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { isEditingNotes = true }
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(10.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.weight(1f)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = if (ex.userNotes.isNotBlank()) Icons.Default.Description else Icons.Default.EditNote,
+                                                            contentDescription = null,
+                                                            tint = if (ex.userNotes.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = if (ex.userNotes.isNotBlank()) "Note: ${ex.userNotes}" else "Add personal note (equipment, how you felt, form)...",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = if (ex.userNotes.isNotBlank()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                            maxLines = 2,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                    }
+                                                    TextButton(
+                                                        onClick = { isEditingNotes = true },
+                                                        modifier = Modifier.height(48.dp),
+                                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = if (ex.userNotes.isNotBlank()) "Edit" else "+ Add",
+                                                            style = MaterialTheme.typography.labelMedium,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
