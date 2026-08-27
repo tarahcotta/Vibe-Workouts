@@ -29,9 +29,13 @@ import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -92,7 +96,7 @@ enum class NavDestination(
     PLATE_CALC("plate_calc", "Plate Calc", Icons.Filled.FitnessCenter, Icons.Outlined.FitnessCenter),
     GUIDE("guide", "Science Guide", Icons.Filled.HealthAndSafety, Icons.Outlined.HealthAndSafety),
     ASSESSMENT("assessment", "Assessment", Icons.AutoMirrored.Filled.Assignment, Icons.AutoMirrored.Outlined.Assignment),
-    PROFILE_SETUP("profile_setup", "Profile Setup", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
+    PROFILE_SETUP("profile_setup", "Profile", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,6 +105,7 @@ fun MainContainer(
     viewModel: VitalViewModel,
     modifier: Modifier = Modifier
 ) {
+    var isSessionActive by remember { mutableStateOf(false) }
     var currentDestination by remember { mutableStateOf(NavDestination.HOME) }
     var customExercisesForSession by remember { mutableStateOf<List<com.example.data.WorkoutExerciseEntity>>(emptyList()) }
     var showThemeMenu by remember { mutableStateOf(false) }
@@ -129,8 +134,7 @@ fun MainContainer(
         NavDestination.HOME,
         NavDestination.LIBRARY,
         NavDestination.TABLE,
-        NavDestination.LOGGER,
-        NavDestination.PROGRESS
+        NavDestination.PROFILE_SETUP
     )
 
     Scaffold(
@@ -140,20 +144,30 @@ fun MainContainer(
                     androidx.compose.foundation.layout.Row(
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {
-                        WomensStrengthLogoIcon(size = 28.dp)
-                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 10.dp))
+                        if (currentDestination == NavDestination.LOGGER) {
+                            Icon(
+                                imageVector = Icons.Default.FitnessCenter,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 8.dp))
+                        } else {
+                            WomensStrengthLogoIcon(size = 28.dp)
+                            androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 10.dp))
+                        }
                         Text(
                             text = when (currentDestination) {
                                 NavDestination.HOME -> "Strength & Longevity"
                                 NavDestination.LIBRARY -> "Strength Exercise Library"
                                 NavDestination.ACTIVITY -> "Recent Workout Activity"
                                 NavDestination.TABLE -> "Program"
-                                NavDestination.LOGGER -> "Live Workout Logger"
+                                NavDestination.LOGGER -> "Live Session"
                                 NavDestination.PROGRESS -> "Analytics"
-                                NavDestination.PLATE_CALC -> "Barbell Plate Calculator"
-                                NavDestination.GUIDE -> "Longevity & Health Science"
-                                NavDestination.ASSESSMENT -> "Strength & Health Assessment"
-                                NavDestination.PROFILE_SETUP -> "Account & Profile"
+                                NavDestination.PLATE_CALC -> "Plate Calc"
+                                NavDestination.GUIDE -> "Longevity Guide"
+                                NavDestination.ASSESSMENT -> "Assessment"
+                                NavDestination.PROFILE_SETUP -> "Account"
                             },
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
@@ -164,80 +178,87 @@ fun MainContainer(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { viewModel.replayOnboarding() },
-                        modifier = Modifier.testTag("onboarding_replay_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                            contentDescription = "Replay Progressive Overload Science Onboarding",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { currentDestination = NavDestination.PROFILE_SETUP },
-                        modifier = Modifier.testTag("auth_dialog_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Account & Profile",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Box {
+                    if (currentDestination != NavDestination.LOGGER) {
                         IconButton(
-                            onClick = { showThemeMenu = true },
-                            modifier = Modifier.testTag("theme_toggle_button")
+                            onClick = { viewModel.replayOnboarding() },
+                            modifier = Modifier.testTag("onboarding_replay_button")
                         ) {
                             Icon(
-                                imageVector = when (themeMode) {
-                                    ThemeMode.LIGHT -> Icons.Default.LightMode
-                                    ThemeMode.DARK -> Icons.Default.DarkMode
-                                    ThemeMode.SYSTEM -> Icons.Default.SettingsBrightness
-                                },
-                                contentDescription = "Toggle Theme Mode"
+                                imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                                contentDescription = "Replay Progressive Overload Science Onboarding",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
 
-                        DropdownMenu(
-                            expanded = showThemeMenu,
-                            onDismissRequest = { showThemeMenu = false }
+                        IconButton(
+                            onClick = { currentDestination = NavDestination.PROFILE_SETUP },
+                            modifier = Modifier.testTag("auth_dialog_button")
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("Light Mode") },
-                                onClick = {
-                                    viewModel.setThemeMode(ThemeMode.LIGHT)
-                                    showThemeMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.LightMode, contentDescription = "Icon")
-                                },
-                                modifier = Modifier.testTag("theme_option_light")
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Account & Profile",
+                                tint = MaterialTheme.colorScheme.primary
                             )
-                            DropdownMenuItem(
-                                text = { Text("Dark Mode") },
-                                onClick = {
-                                    viewModel.setThemeMode(ThemeMode.DARK)
-                                    showThemeMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.DarkMode, contentDescription = "Icon")
-                                },
-                                modifier = Modifier.testTag("theme_option_dark")
-                            )
-                            DropdownMenuItem(
-                                text = { Text("System Default") },
-                                onClick = {
-                                    viewModel.setThemeMode(ThemeMode.SYSTEM)
-                                    showThemeMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.SettingsBrightness, contentDescription = "Icon")
-                                },
-                                modifier = Modifier.testTag("theme_option_system")
-                            )
+                        }
+
+                        Box {
+                            IconButton(
+                                onClick = { showThemeMenu = true },
+                                modifier = Modifier.testTag("theme_toggle_button")
+                            ) {
+                                Icon(
+                                    imageVector = when (themeMode) {
+                                        ThemeMode.LIGHT -> Icons.Default.LightMode
+                                        ThemeMode.DARK -> Icons.Default.DarkMode
+                                        ThemeMode.SYSTEM -> Icons.Default.SettingsBrightness
+                                    },
+                                    contentDescription = "Toggle Theme Mode"
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showThemeMenu,
+                                onDismissRequest = { showThemeMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Light Mode") },
+                                    onClick = {
+                                        viewModel.setThemeMode(ThemeMode.LIGHT)
+                                        showThemeMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.LightMode, contentDescription = "Icon")
+                                    },
+                                    modifier = Modifier.testTag("theme_option_light")
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Dark Mode") },
+                                    onClick = {
+                                        viewModel.setThemeMode(ThemeMode.DARK)
+                                        showThemeMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.DarkMode, contentDescription = "Icon")
+                                    },
+                                    modifier = Modifier.testTag("theme_option_dark")
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("System Default") },
+                                    onClick = {
+                                        viewModel.setThemeMode(ThemeMode.SYSTEM)
+                                        showThemeMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.SettingsBrightness, contentDescription = "Icon")
+                                    },
+                                    modifier = Modifier.testTag("theme_option_system")
+                                )
+                            }
+                        }
+                    } else {
+                        // Special Actions for Logger (e.g. Plate Calc shortcut)
+                        IconButton(onClick = { currentDestination = NavDestination.PLATE_CALC }) {
+                            Icon(Icons.Default.Calculate, contentDescription = "Quick Plate Calculator", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 },
@@ -307,6 +328,7 @@ fun MainContainer(
                         routines = routines,
                         sessions = sessions,
                         overloadList = overloadList,
+                        isSessionActive = isSessionActive,
                         viewModel = viewModel,
                         onOpenAuthDialog = { showAuthDialog = true },
                         onSelectRoutine = { routine ->
@@ -314,7 +336,10 @@ fun MainContainer(
                             currentDestination = NavDestination.TABLE
                         },
                         onNavigateToAssessment = { currentDestination = NavDestination.ASSESSMENT },
-                        onNavigateToLogger = { currentDestination = NavDestination.LOGGER },
+                        onNavigateToLogger = { 
+                            isSessionActive = true
+                            currentDestination = NavDestination.LOGGER 
+                        },
                         onNavigateToGuide = { currentDestination = NavDestination.GUIDE },
                         onNavigateToActivity = { currentDestination = NavDestination.ACTIVITY },
                         onNavigateToProgress = { currentDestination = NavDestination.PROGRESS }
@@ -325,6 +350,7 @@ fun MainContainer(
                     ExerciseLibraryScreen(
                         viewModel = viewModel,
                         onSelectExerciseForWorkout = { exercise ->
+                            isSessionActive = true
                             if (routines.isNotEmpty() && selectedRoutine == null) {
                                 viewModel.selectRoutine(routines.first())
                             }
@@ -370,6 +396,7 @@ fun MainContainer(
                         personalBests = personalBests,
                         onSelectRoutine = { viewModel.selectRoutine(it) },
                         onStartLogging = { routine ->
+                            isSessionActive = true
                             viewModel.selectRoutine(routine)
                             currentDestination = NavDestination.LOGGER
                         },
@@ -387,12 +414,15 @@ fun MainContainer(
                         routine = selectedRoutine ?: routines.firstOrNull(),
                         exercises = exercises + customExercisesForSession,
                         personalBests = personalBests,
+                        userProfile = profile,
                         onSaveSession = { title, loggedSets, feel, notes ->
+                            isSessionActive = false
                             viewModel.logWorkoutSession(title, loggedSets, feel, notes)
                             customExercisesForSession = emptyList()
                             currentDestination = NavDestination.HOME
                         },
                         onCancel = { 
+                            isSessionActive = false
                             currentDestination = NavDestination.HOME
                             customExercisesForSession = emptyList()
                         }

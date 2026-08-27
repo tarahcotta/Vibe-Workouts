@@ -350,40 +350,52 @@ fun ExerciseLibraryScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+                    .padding(vertical = 48.dp, horizontal = 24.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = "Icon",
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        modifier = Modifier.size(72.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
-                        text = "No matching exercises found",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = "No Protocols Found",
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Try broadening your search query or selecting 'All Focuses'",
+                        text = "We couldn't find any exercises matching your current filters. Try broadening your query or Muscle Group selection.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     OutlinedButton(
                         onClick = {
                             searchQuery = ""
                             selectedCategory = HealthFocusCategory.ALL
                             selectedEquipment = "All"
                             showOnlySaved = false
-                        }
+                        },
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Clear All Filters")
+                        Icon(imageVector = Icons.Default.FilterList, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Reset All Filters")
                     }
                 }
             }

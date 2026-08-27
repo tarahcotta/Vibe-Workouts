@@ -15,7 +15,7 @@ import androidx.room.RoomDatabase
         BookmarkedExerciseEntity::class,
         ProgressPhotoEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class VitalDatabase : RoomDatabase() {

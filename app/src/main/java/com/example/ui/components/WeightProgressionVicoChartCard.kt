@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -81,6 +82,12 @@ data class WeightProgressDataPoint(
     val jointFeel: String
 )
 
+enum class ProgressionMetric(val label: String, val unit: String) {
+    PEAK_WEIGHT("Peak Weight", "lbs"),
+    ESTIMATED_1RM("Est. 1RM", "lbs"),
+    VOLUME_LOAD("Volume Load", "lbs")
+}
+
 @Composable
 fun WeightProgressionVicoChartCard(
     allSessions: List<LoggedWorkoutSessionEntity>,
@@ -88,6 +95,7 @@ fun WeightProgressionVicoChartCard(
     modifier: Modifier = Modifier
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM d", Locale.getDefault()) }
+    var selectedMetric by remember { mutableStateOf(ProgressionMetric.ESTIMATED_1RM) }
 
     // Map sessionId to session dateTimestamp
     val sessionDateMap = remember(allSessions) {
@@ -106,34 +114,53 @@ fun WeightProgressionVicoChartCard(
     var showAccessibleDataTable by remember { mutableStateOf(false) }
 
     // Filter sets based on exercise selection and map to data points sorted chronologically
-    val progressionPoints = remember(allLoggedSets, sessionDateMap, selectedExercise) {
+    val progressionPoints = remember(allLoggedSets, sessionDateMap, selectedExercise, selectedMetric) {
         val filtered = if (selectedExercise == "All Lifts") {
             allLoggedSets
         } else {
             allLoggedSets.filter { it.exerciseName.equals(selectedExercise, ignoreCase = true) }
         }
 
-        // Group by session to get peak weight logged per session for selected filter
+        // Group by session to get the metric value per session for selected filter
         filtered.groupBy { it.sessionId }
             .mapNotNull { (sessionId, sets) ->
-                val dateTimestamp = sessionDateMap[sessionId] ?: System.currentTimeMillis()
-                val maxWeightSet = sets.maxByOrNull { it.weightLbs } ?: return@mapNotNull null
+                val dateTimestamp = sessionDateMap[sessionId] ?: return@mapNotNull null
+                
+                val value = when (selectedMetric) {
+                    ProgressionMetric.PEAK_WEIGHT -> {
+                        sets.maxOfOrNull { it.weightLbs } ?: 0f
+                    }
+                    ProgressionMetric.ESTIMATED_1RM -> {
+                        // Brzycki Formula: Weight / (1.0278 - (0.0278 * Reps))
+                        sets.map { set ->
+                            if (set.repsCompleted > 0) {
+                                set.weightLbs / (1.0278f - (0.0278f * set.repsCompleted))
+                            } else 0f
+                        }.maxOrNull() ?: 0f
+                    }
+                    ProgressionMetric.VOLUME_LOAD -> {
+                        sets.sumOf { (it.weightLbs * it.repsCompleted).toDouble() }.toFloat()
+                    }
+                }
+
+                val representativeSet = sets.maxByOrNull { it.weightLbs } ?: return@mapNotNull null
+
                 WeightProgressDataPoint(
                     dateTimestamp = dateTimestamp,
-                    exerciseName = maxWeightSet.exerciseName,
-                    weightLbs = maxWeightSet.weightLbs,
-                    repsCompleted = maxWeightSet.repsCompleted,
-                    rpeActual = maxWeightSet.rpeActual,
-                    jointFeel = maxWeightSet.jointFeel
+                    exerciseName = representativeSet.exerciseName,
+                    weightLbs = value, // Overloading this field for the chart
+                    repsCompleted = representativeSet.repsCompleted,
+                    rpeActual = representativeSet.rpeActual,
+                    jointFeel = representativeSet.jointFeel
                 )
             }
             .sortedBy { it.dateTimestamp }
     }
 
     // Accessible Natural-Language Trend Summary for Screen Readers (TalkBack)
-    val accessibleChartSummary = remember(progressionPoints, selectedExercise) {
+    val accessibleChartSummary = remember(progressionPoints, selectedExercise, selectedMetric) {
         if (progressionPoints.isEmpty()) {
-            "Weight progression chart for $selectedExercise. No workout sessions logged yet. Log workouts to generate trend analytics."
+            "Progressive overload chart for $selectedExercise. No workout sessions logged yet. Log workouts to generate trend analytics."
         } else {
             val start = progressionPoints.first()
             val peak = progressionPoints.maxByOrNull { it.weightLbs } ?: start
@@ -141,14 +168,13 @@ fun WeightProgressionVicoChartCard(
             val delta = latest.weightLbs - start.weightLbs
             val pct = if (start.weightLbs > 0f) ((delta / start.weightLbs) * 100).toInt() else 0
             val trendDescription = when {
-                delta > 0 -> "an upward progression gaining ${delta.toInt()} pounds (a $pct percent increase)"
-                delta < 0 -> "a load reduction of ${(-delta).toInt()} pounds"
+                delta > 0 -> "an upward progression gaining ${delta.toInt()} ${selectedMetric.unit} (a $pct percent increase)"
+                delta < 0 -> "a load reduction of ${(-delta).toInt()} ${selectedMetric.unit}"
                 else -> "a stable baseline maintenance load"
             }
             val startDateStr = dateFormat.format(Date(start.dateTimestamp))
             val latestDateStr = dateFormat.format(Date(latest.dateTimestamp))
-            val peakDateStr = dateFormat.format(Date(peak.dateTimestamp))
-            "Strength and Weight Progression line chart for $selectedExercise across ${progressionPoints.size} recorded sessions from $startDateStr to $latestDateStr. Starting weight was ${start.weightLbs.toInt()} pounds. Peak personal record reached ${peak.weightLbs.toInt()} pounds on $peakDateStr. Overall trend demonstrates $trendDescription. Latest logged session on $latestDateStr: ${latest.exerciseName} at ${latest.weightLbs.toInt()} pounds for ${latest.repsCompleted} repetitions, Rate of Perceived Exertion ${latest.rpeActual} out of 10, joint feel: ${latest.jointFeel}."
+            "Strength and ${selectedMetric.label} progression for $selectedExercise across ${progressionPoints.size} recorded sessions. Overall trend demonstrates $trendDescription."
         }
     }
 
@@ -191,42 +217,15 @@ fun WeightProgressionVicoChartCard(
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Strength & Weight Progression",
+                            text = "Progressive Overload Trends",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Track progressive overload and working weight over time",
+                            text = "Visualizing ${selectedMetric.label} over time",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    modifier = Modifier.semantics {
-                        contentDescription = "Overload Trend indicator badge"
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccessibilityNew,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Overload Trend",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                 }
@@ -234,7 +233,40 @@ fun WeightProgressionVicoChartCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Filter Chips Row
+            // Metric Selector Toggles
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                ProgressionMetric.values().forEach { metric ->
+                    val isSelected = selectedMetric == metric
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { selectedMetric = metric },
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    ) {
+                        Text(
+                            text = metric.label,
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Exercise Filter Chips Row
             if (availableExercises.size > 1) {
                 Row(
                     modifier = Modifier
@@ -247,19 +279,7 @@ fun WeightProgressionVicoChartCard(
                             selected = (selectedExercise == ex),
                             onClick = { selectedExercise = ex },
                             label = { Text(ex, fontSize = 12.sp) },
-                            leadingIcon = if (selectedExercise == ex) {
-                                {
-                                    Icon(
-                                        imageVector = Icons.Default.FitnessCenter,
-                                        contentDescription = "Selected exercise filter: $ex",
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                            } else null,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.semantics {
-                                stateDescription = if (selectedExercise == ex) "Selected filter $ex" else "Filter by $ex"
-                            }
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }

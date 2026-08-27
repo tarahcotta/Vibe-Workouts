@@ -45,9 +45,9 @@ fun OnboardingScreen(
     var selectedGoals by remember {
         mutableStateOf(
             setOf(
-                "Bone Mineral Density & Osteogenesis",
-                "Joint & Cartilage Longevity",
-                "Posture & Spinal Health"
+                "Bone Density & Strength",
+                "Joint Health & Mobility",
+                "Posture & Core Stability"
             )
         )
     }
@@ -58,20 +58,20 @@ fun OnboardingScreen(
 
     val availableGoals = remember {
         listOf(
-            "Bone Mineral Density & Osteogenesis",
-            "Joint & Cartilage Longevity",
-            "Posture & Spinal Health",
-            "Metabolic Vitality & Glycemic Control",
-            "Sarcopenia & Muscle Mass Preservation",
-            "Balance, Stability & Fall Prevention"
+            "Bone Density & Strength",
+            "Joint Health & Mobility",
+            "Posture & Core Stability",
+            "Metabolic Health",
+            "Muscle Mass Maintenance",
+            "Balance & Stability"
         )
     }
 
     val experienceLevels = remember {
         listOf(
-            Triple("Beginner / Novice", "New to strength training or returning after a long break. Focus on form and baseline adaptation.", Icons.Default.FitnessCenter),
-            Triple("Intermediate", "Consistent resistance training for 6+ months. Comfortable with basic dumbbells and machines.", Icons.Default.TrendingUp),
-            Triple("Advanced", "Experienced lifter with barbell proficiency, ready for structured progressive overload cycles.", Icons.Default.Shield)
+            Triple("Beginner / Novice", "New to strength training. Focus on form and baseline adaptation.", Icons.Default.FitnessCenter),
+            Triple("Intermediate", "Training for 6+ months. Comfortable with weights and machines.", Icons.Default.TrendingUp),
+            Triple("Advanced", "Experienced lifter. Ready for structured intensity cycles.", Icons.Default.Shield)
         )
     }
 
@@ -329,7 +329,7 @@ private fun OnboardingWelcomePage(
         )
 
         Text(
-            text = "Designed specifically for women's physiological needs across all life stages, prioritizing bone mineral density preservation, joint resilience, and metabolic vitality.",
+            text = "Build lasting strength and bone density with a protocol designed for your physiology.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -451,7 +451,7 @@ private fun OnboardingGoalsPage(
         )
 
         Text(
-            text = "Select all that apply. Your custom routines and progressive overload targets will adapt to prioritize these outcomes.",
+            text = "We'll customize your routines and progressive overload targets based on these priorities.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -546,7 +546,7 @@ private fun OnboardingExperiencePage(
         )
 
         Text(
-            text = "This helps us calibrate starting weights, RPE intensity guidelines, and exercise complexity.",
+            text = "Calibrating your starting weights, intensity guidelines, and exercise complexity.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -651,7 +651,7 @@ private fun OnboardingAgeGroupPage(
         )
 
         Text(
-            text = "Hormonal shifts across life stages affect bone mineral accretion rates and recovery timelines. We customize recovery windows accordingly.",
+            text = "Recovery needs change across life stages. We customize your training and rest windows accordingly.",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

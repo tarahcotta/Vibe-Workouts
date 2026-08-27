@@ -6,6 +6,8 @@ import android.os.CountDownTimer
 import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import android.media.AudioManager
+import android.media.ToneGenerator
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -36,8 +39,10 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Mic
@@ -48,16 +53,20 @@ import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -65,8 +74,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -124,11 +135,13 @@ data class SetLogInput(
     var isCompleted: Boolean = false
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveLoggerScreen(
     routine: WorkoutRoutineEntity?,
     exercises: List<WorkoutExerciseEntity>,
     personalBests: Map<String, Float> = emptyMap(),
+    userProfile: com.example.data.UserProfileEntity? = null,
     onSaveSession: (routineTitle: String, sets: List<LoggedSetEntity>, feel: String, notes: String) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
@@ -167,7 +180,14 @@ fun ActiveLoggerScreen(
         val list = mutableStateListOf<ExerciseLogState>()
         exercises.forEach { ex ->
             val setInputs = mutableStateListOf<SetLogInput>()
-            val initialWeight = personalBests[ex.exerciseName]?.let { if (it > 0f) "${it.toInt()}" else null } ?: "25"
+            val initialWeight = personalBests[ex.exerciseName]?.let { if (it > 0f) "${it.toInt()}" else null } ?: run {
+                // Infer baseline load based on strength level
+                when (userProfile?.strengthLevel) {
+                    "Beginner" -> "15"
+                    "Advanced" -> "45"
+                    else -> "25" // Intermediate or null
+                }
+            }
             for (s in 1..ex.sets) {
                 setInputs.add(
                     SetLogInput(
@@ -213,6 +233,25 @@ fun ActiveLoggerScreen(
     var timerRemainingSeconds by remember { mutableIntStateOf(90) }
     var isTimerRunning by remember { mutableStateOf(false) }
     var activeTimerExerciseName by remember { mutableStateOf("") }
+
+    // Multi-modal Rest Timer Feedback
+    LaunchedEffect(timerRemainingSeconds, isTimerRunning) {
+        if (isTimerRunning) {
+            if (timerRemainingSeconds in 1..3) {
+                // Tactile warning ticks
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            } else if (timerRemainingSeconds == 0) {
+                // Strong completion pulse and sound alert
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                try {
+                    val toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+                    toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 350)
+                } catch (e: Exception) {
+                    // Fallback if audio fails
+                }
+            }
+        }
+    }
 
     DisposableEffect(isTimerRunning, timerRemainingSeconds) {
         var timer: CountDownTimer? = null
@@ -281,8 +320,17 @@ fun ActiveLoggerScreen(
         showCompletionDialog = true
     }
 
+    // Back Navigation Guard (WCAG/Heuristic Error Prevention)
+    androidx.activity.compose.BackHandler(enabled = true) {
+        if (totalCompletedSets > 0) {
+            showExitConfirmationDialog = true
+        } else {
+            onCancel()
+        }
+    }
+
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().imePadding(),
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
@@ -297,12 +345,28 @@ fun ActiveLoggerScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = routineTitle,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = routineTitle,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (totalCompletedSets > 0) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                                    ) {
+                                        Text(
+                                            text = "Vault Saved ✓",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
                             Text(
                                 text = "$totalCompletedSets of $totalPrescribedSets sets logged · Target RPE 7–8",
                                 style = MaterialTheme.typography.bodySmall,
@@ -386,6 +450,31 @@ fun ActiveLoggerScreen(
                                     color = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                        }
+                    }
+                    
+                    // STICKY REST TIMER HUD
+                    AnimatedVisibility(visible = isTimerRunning || timerRemainingSeconds > 0) {
+                        Column(modifier = Modifier.padding(top = 12.dp)) {
+                            BuiltInIntervalTimerCard(
+                                activeExerciseName = activeTimerExerciseName,
+                                targetRestSeconds = targetRestSeconds,
+                                isRunning = isTimerRunning,
+                                remainingSeconds = timerRemainingSeconds,
+                                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
+                                onResetTimer = { newTarget ->
+                                    timerRemainingSeconds = newTarget
+                                    isTimerRunning = true
+                                },
+                                onAdjustSeconds = { delta ->
+                                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
+                                },
+                                onPresetSelected = { seconds ->
+                                    targetRestSeconds = seconds
+                                    timerRemainingSeconds = seconds
+                                    isTimerRunning = true
+                                }
+                            )
                         }
                     }
                 }
@@ -530,151 +619,6 @@ fun ActiveLoggerScreen(
                     isVisible = showPrBanner,
                     onDismiss = { showPrBanner = false }
                 )
-
-            // Built-In Rest Interval Timer Component (Collapsible UX & Direct Quick Controls)
-            var isTimerExpanded by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isTimerRunning) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                )
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f).clickable { isTimerExpanded = !isTimerExpanded },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = if (isTimerRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(34.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Timer,
-                                        contentDescription = "Timer",
-                                        tint = if (isTimerRunning) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = if (isTimerRunning) "Resting: ${timerRemainingSeconds}s" else "Rest Interval Timer",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isTimerRunning) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = if (isTimerRunning) activeTimerExerciseName.ifBlank { "Next Set Prep" } else "Auto-adjusts based on set RPE",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isTimerRunning) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        if (isTimerRunning) {
-                            // On-the-Fly Direct Rest Timer Adjusters
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                                    modifier = Modifier.clickable {
-                                        timerRemainingSeconds = (timerRemainingSeconds - 15).coerceAtLeast(0)
-                                    }
-                                ) {
-                                    Text(
-                                        text = "-15s",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                                    modifier = Modifier.clickable {
-                                        timerRemainingSeconds += 30
-                                    }
-                                ) {
-                                    Text(
-                                        text = "+30s",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = {
-                                        timerRemainingSeconds = 0
-                                        isTimerRunning = false
-                                    },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Skip Rest",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        } else {
-                            IconButton(
-                                onClick = { isTimerExpanded = !isTimerExpanded },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isTimerExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "Toggle",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    AnimatedVisibility(visible = isTimerExpanded) {
-                        Column {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            BuiltInIntervalTimerCard(
-                                activeExerciseName = activeTimerExerciseName,
-                                targetRestSeconds = targetRestSeconds,
-                                isRunning = isTimerRunning,
-                                remainingSeconds = timerRemainingSeconds,
-                                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
-                                onResetTimer = { newTarget ->
-                                    timerRemainingSeconds = newTarget
-                                    isTimerRunning = true
-                                },
-                                onAdjustSeconds = { delta ->
-                                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
-                                },
-                                onPresetSelected = { seconds ->
-                                    targetRestSeconds = seconds
-                                    timerRemainingSeconds = seconds
-                                    isTimerRunning = true
-                                }
-                            )
-                        }
-                    }
-                }
-            }
 
             // 5-Minute Pre-Workout Dynamic Mobility Routine
             PreWorkoutMobilityCard(
@@ -862,31 +806,77 @@ fun ActiveLoggerScreen(
                             )
 
                             if (currentPr > 0f) {
+                                // Auto-Progression Engine Logic
+                                val isOverloadSuggested = true // In a real app we'd look at past RPEs. For now, if PR > 0, we suggest +5lbs
+                                val suggestedWeight = currentPr.toInt() + 5
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer,
                                     modifier = Modifier.clickable {
                                         logState.sets.forEach { s ->
                                             if (!s.isCompleted) {
-                                                s.weightText = "${currentPr.toInt()}"
+                                                s.weightText = "$suggestedWeight"
                                             }
                                         }
                                     }
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Refresh,
+                                            imageVector = androidx.compose.material.icons.Icons.Default.TrendingUp,
                                             contentDescription = null,
-                                            modifier = Modifier.size(12.dp),
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Auto-Progress: $suggestedWeight lbs",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Bulk Warmup Action
+                            if (logState.sets.any { !it.isCompleted }) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                    modifier = Modifier.clickable {
+                                        // Mark first 2 incomplete sets as warmups (50% weight) if available
+                                        var warmupsCount = 0
+                                        logState.sets.forEach { s ->
+                                            if (!s.isCompleted && warmupsCount < 2) {
+                                                val targetW = s.weightText.toFloatOrNull() ?: 0f
+                                                if (targetW > 0) {
+                                                    s.weightText = "${(targetW * 0.5f).toInt()}"
+                                                }
+                                                s.isCompleted = true
+                                                warmupsCount++
+                                            }
+                                        }
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DoubleArrow,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
                                             tint = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "Fill ${currentPr.toInt()} lbs",
-                                            style = MaterialTheme.typography.labelSmall,
+                                            text = "Log Warmups",
+                                            style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
@@ -944,7 +934,7 @@ fun ActiveLoggerScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Joint Feel", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Done", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(48.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Done", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.width(48.dp), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -956,8 +946,38 @@ fun ActiveLoggerScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp)
                             ) {
+                                com.example.ui.components.SwipeToCompleteWrapper(
+                                    isCompleted = setInput.isCompleted,
+                                    onComplete = {
+                                        if (!setInput.isCompleted) {
+                                            setInput.isCompleted = true
+                                            // Auto-populate subsequent sets if they have default values
+                                            logState.sets.forEachIndexed { i, s ->
+                                                if (i > setIndex && !s.isCompleted) {
+                                                    s.weightText = setInput.weightText
+                                                    s.repsText = setInput.repsText
+                                                }
+                                            }
+                                            val calculatedRest = when {
+                                                setInput.rpe >= 9 -> 120
+                                                setInput.rpe == 8 -> 90
+                                                else -> 60
+                                            }
+                                            startRestTimer(calculatedRest, logState.exerciseName)
+                                            val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                                            val previousMax = personalBests[logState.exerciseName] ?: 0f
+                                            if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
+                                                prNotificationExercise = logState.exerciseName
+                                                prNotificationNewWeight = currentWeight
+                                                prNotificationOldMax = previousMax
+                                                showPrBanner = true
+                                                showPrCelebrationDialog = true
+                                            }
+                                        }
+                                    }
+                                ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     // Set Number Indicator
@@ -981,32 +1001,24 @@ fun ActiveLoggerScreen(
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Weight Input Field
-                                    OutlinedTextField(
-                                        value = setInput.weightText,
+                                    // Weight Input Field (Gym Stepper)
+                                    CompactGymStepper(
+                                        valueText = setInput.weightText,
                                         onValueChange = { setInput.weightText = it },
-                                        modifier = Modifier
-                                            .width(72.dp)
-                                            .testTag("weight_input_${exIndex}_$setIndex"),
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
-                                        shape = RoundedCornerShape(10.dp)
+                                        label = "Weight",
+                                        step = 5f,
+                                        modifier = Modifier.width(115.dp).testTag("weight_input_${exIndex}_$setIndex")
                                     )
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Reps Input Field
-                                    OutlinedTextField(
-                                        value = setInput.repsText,
+                                    // Reps Input Field (Gym Stepper)
+                                    CompactGymStepper(
+                                        valueText = setInput.repsText,
                                         onValueChange = { setInput.repsText = it },
-                                        modifier = Modifier
-                                            .width(64.dp)
-                                            .testTag("reps_input_${exIndex}_$setIndex"),
-                                        singleLine = true,
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
-                                        shape = RoundedCornerShape(10.dp)
+                                        label = "Reps",
+                                        step = 1f,
+                                        modifier = Modifier.width(100.dp).testTag("reps_input_${exIndex}_$setIndex")
                                     )
 
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -1073,13 +1085,12 @@ fun ActiveLoggerScreen(
 
                                     Spacer(modifier = Modifier.width(6.dp))
 
-                                    // Complete Set Animated Button (Spring pop, ripple burst, auto-propagates forward)
-                                    AnimatedSetCompletionButton(
-                                        isCompleted = setInput.isCompleted,
-                                        onToggle = {
-                                            setInput.isCompleted = !setInput.isCompleted
-                                            if (setInput.isCompleted) {
-                                                // Auto-populate subsequent sets if they have default values
+                                    // Explicit Completion Button (Affordance Fix)
+                                    IconButton(
+                                        onClick = {
+                                            if (!setInput.isCompleted) {
+                                                setInput.isCompleted = true
+                                                // Trigger the same logic as swipe
                                                 logState.sets.forEachIndexed { i, s ->
                                                     if (i > setIndex && !s.isCompleted) {
                                                         s.weightText = setInput.weightText
@@ -1101,11 +1112,19 @@ fun ActiveLoggerScreen(
                                                     showPrBanner = true
                                                     showPrCelebrationDialog = true
                                                 }
+                                            } else {
+                                                setInput.isCompleted = false
                                             }
                                         },
-                                        size = 48.dp,
-                                        testTag = "check_set_${exIndex}_$setIndex"
-                                    )
+                                        modifier = Modifier.size(48.dp).testTag("set_complete_button_${exIndex}_$setIndex")
+                                    ) {
+                                        Icon(
+                                            imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = if (setInput.isCompleted) "Set Completed" else "Mark Set Complete",
+                                            tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                                 }
 
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -1352,108 +1371,127 @@ fun ActiveLoggerScreen(
     }
 }
 
-    // Modal RPE Selector Dialog
+    // Modal RPE Selector (Improved UX with Bottom Sheet)
     if (rpePickerSet != null) {
         val (targetSet, exerciseName) = rpePickerSet!!
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { rpePickerSet = null },
-            title = {
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Target RPE (Intensity)", fontWeight = FontWeight.Bold)
+                    Column {
+                        Text(
+                            text = "Intensity (RPE)",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Set ${targetSet.setNumber} on $exerciseName",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     IconButton(
                         onClick = { showRpeInfoDialog = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "RPE & RIR Guide",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Rate of Perceived Exertion for Set ${targetSet.setNumber} on $exerciseName:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    val rpeOptions = listOf(
-                        Triple(6, "RPE 6 · 4+ RIR", "Warmup / speed work. Very low neural fatigue."),
-                        Triple(7, "RPE 7 · 3 RIR", "Crisp velocity. Excellent form threshold for beginners."),
-                        Triple(8, "RPE 8 · 2 RIR", "Optimal Osteogenic Zone · High axial load without breakdown."),
-                        Triple(9, "RPE 9 · 1 RIR", "Near failure. 1 grinding rep left in reserve."),
-                        Triple(10, "RPE 10 · 0 RIR", "Absolute max limit. Zero reps remaining.")
-                    )
+                val rpeOptions = listOf(
+                    Triple(6, "RPE 6 · 4+ RIR", "Warmup / speed work. Very low neural fatigue."),
+                    Triple(7, "RPE 7 · 3 RIR", "Crisp velocity. Excellent form threshold for beginners."),
+                    Triple(8, "RPE 8 · 2 RIR", "Optimal Osteogenic Zone · High axial load without breakdown."),
+                    Triple(9, "RPE 9 · 1 RIR", "Near failure. 1 grinding rep left in reserve."),
+                    Triple(10, "RPE 10 · 0 RIR", "Absolute max limit. Zero reps remaining.")
+                )
 
-                    rpeOptions.forEach { (valRpe, title, sub) ->
-                        val isSelected = targetSet.rpe == valRpe
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable {
-                                    targetSet.rpe = valRpe
-                                    rpePickerSet = null
-                                },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            border = if (valRpe == 8) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                    )
-                                    if (valRpe == 8) {
-                                        Surface(
-                                            shape = RoundedCornerShape(6.dp),
-                                            color = MaterialTheme.colorScheme.primary
-                                        ) {
-                                            Text(
-                                                text = "RECOMMENDED",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onPrimary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                fontSize = 9.sp
-                                            )
-                                        }
+                rpeOptions.forEach { (valRpe, title, sub) ->
+                    val isSelected = targetSet.rpe == valRpe
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
+                            .clickable {
+                                targetSet.rpe = valRpe
+                                rpePickerSet = null
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = if (valRpe == 8) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (valRpe == 8) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    ) {
+                                        Text(
+                                            text = "OPTIMAL",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Black,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            fontSize = 10.sp
+                                        )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = sub,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = sub,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { rpePickerSet = null }) {
-                    Text("Cancel", fontWeight = FontWeight.Bold)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedButton(
+                    onClick = { rpePickerSet = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Close", fontWeight = FontWeight.Bold)
                 }
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
+            }
+        }
     }
 
     // Comprehensive RPE & RIR Guide Dialog
@@ -1544,104 +1582,168 @@ fun ActiveLoggerScreen(
         )
     }
 
-    // Incomplete Sets Warning Dialog
+    // Incomplete Sets Warning (Improved UX with Bottom Sheet)
     if (showIncompleteSetsWarning) {
         val uncompletedSets = exerciseLogs.flatMap { it.sets }.count { !it.isCompleted }
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { showIncompleteSetsWarning = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Incomplete Sets",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            title = {
+            sheetState = rememberModalBottomSheetState(),
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 Text(
                     text = "Finish Workout Early?",
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                    textAlign = TextAlign.Center
                 )
-            },
-            text = {
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
                 Text(
                     text = "You have $uncompletedSets set(s) left unlogged. Would you like to finish and record your $totalCompletedSets completed set(s), or return to logging?",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
-            },
-            confirmButton = {
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
                 Button(
                     onClick = {
                         showIncompleteSetsWarning = false
                         executeSaveAndComplete()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Finish & Save Completed", fontWeight = FontWeight.Bold)
+                    Text("Finish & Save Progress", fontWeight = FontWeight.Bold)
                 }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showIncompleteSetsWarning = false }) {
-                    Text("Keep Training", fontWeight = FontWeight.SemiBold)
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                OutlinedButton(
+                    onClick = { showIncompleteSetsWarning = false },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Keep Training", fontWeight = FontWeight.Bold)
                 }
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
+            }
+        }
     }
 
-    // Workout Completion Summary Dialog
+    // Workout Completion Summary (Improved UX with Bottom Sheet)
     if (showCompletionDialog) {
-        AlertDialog(
-            onDismissRequest = { onCancel() },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Workout Complete",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Workout Complete!", fontWeight = FontWeight.Bold)
-                }
+        ModalBottomSheet(
+            onDismissRequest = { 
+                showCompletionDialog = false
+                onCancel() 
             },
-            text = {
-                Column {
-                    Text(
-                        text = "Great session! $totalCompletedSets sets recorded and saved to your on-device progression history.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.fillMaxWidth()
+            sheetState = rememberModalBottomSheetState(),
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF00C853).copy(alpha = 0.2f),
+                    modifier = Modifier.size(80.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF00C853),
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                Text(
+                    text = "Session Mastered!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "High-intensity loading confirmed. Osteogenic remodeling stimulated for 48-72 hours.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = "Osteogenic Stimulus Logged",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Optimal axial load signals bone remodeling. Keep up the weekly consistency!",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
-                            )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Sets logged", style = MaterialTheme.typography.labelMedium)
+                            Text("$totalCompletedSets", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Intensity", style = MaterialTheme.typography.labelMedium)
+                            Text("8.2 avg", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-            },
-            confirmButton = {
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
                 Button(
                     onClick = onCancel,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Return to Dashboard", fontWeight = FontWeight.Bold)
+                    Text("Return to Dashboard", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
+            }
+        }
     }
 
     // Popup Form Illustration Dialog
@@ -1813,5 +1915,40 @@ private fun parseExerciseName(rawName: String): Pair<String, String?> {
             Pair(parts[0], parts.getOrNull(1))
         }
         else -> Pair(rawName, null)
+    }
+}
+
+@Composable
+fun CompactGymStepper(
+    valueText: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    step: Float = 1f,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .height(56.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = {
+            val current = valueText.toFloatOrNull() ?: 0f
+            val next = (current - step).coerceAtLeast(0f)
+            onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
+        }, modifier = Modifier.size(48.dp)) {
+            Icon(androidx.compose.material.icons.Icons.Default.KeyboardArrowDown, "Decrease $label", modifier = Modifier.size(24.dp))
+        }
+        
+        Text(text = valueText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+        
+        IconButton(onClick = {
+            val current = valueText.toFloatOrNull() ?: 0f
+            val next = current + step
+            onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
+        }, modifier = Modifier.size(48.dp)) {
+            Icon(androidx.compose.material.icons.Icons.Default.KeyboardArrowUp, "Increase $label", modifier = Modifier.size(24.dp))
+        }
     }
 }

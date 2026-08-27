@@ -37,6 +37,12 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoCamera
 import coil.compose.AsyncImage
@@ -104,9 +110,19 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
+import java.util.Calendar
 import java.util.Locale
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.filled.Refresh
+import com.example.ui.components.LoadBearingVolumeChart
+
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Data model representing calculated weekly strength training habit frequency from Room database.
@@ -142,6 +158,7 @@ fun DashboardScreen(
     routines: List<WorkoutRoutineEntity>,
     sessions: List<LoggedWorkoutSessionEntity>,
     overloadList: List<ProgressiveOverloadInfo> = emptyList(),
+    isSessionActive: Boolean = false,
     viewModel: VitalViewModel? = null,
     onOpenAuthDialog: () -> Unit = {},
     onSelectRoutine: (WorkoutRoutineEntity) -> Unit,
@@ -190,7 +207,8 @@ fun DashboardScreen(
         (boneDensityTrendsList.sumOf { it.osteogenicScore.toDouble() } / boneDensityTrendsList.size).toInt()
     } else 0
 
-    var dashboardTab by remember { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = modifier
@@ -200,16 +218,70 @@ fun DashboardScreen(
             .padding(16.dp)
     ) {
         if (viewModel != null) {
-            AuthSyncCard(
-                viewModel = viewModel,
-                onOpenAuthDialog = onOpenAuthDialog
-            )
+            var showConflictDialog by remember { mutableStateOf(false) }
+            if (showConflictDialog) {
+                com.example.ui.components.SyncConflictDialog(
+                    onKeepLocal = { showConflictDialog = false },
+                    onKeepCloud = { showConflictDialog = false },
+                    onDismiss = { showConflictDialog = false }
+                )
+            }
+            Box(modifier = Modifier.clickable { if (viewModel.userProfile.value != null) showConflictDialog = true }) {
+                AuthSyncCard(
+                    viewModel = viewModel,
+                    onOpenAuthDialog = onOpenAuthDialog
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (isSessionActive) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .clickable { onNavigateToLogger() }
+                    .testTag("active_session_resume_banner"),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Workout in Progress",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "Tap to resume your current session",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
 
         // Hero Dashboard Header Card - High-Impact Primary Action
         val nextRoutine = routines.firstOrNull()
-        val nextRoutineTitle = nextRoutine?.dayName ?: nextRoutine?.title ?: "Full Body Axial Loading (Osteogenic)"
+        val nextRoutineTitle = nextRoutine?.dayName ?: nextRoutine?.title ?: "Full Body Axial Loading"
         val nextRoutineMins = 40
         val nextRoutineExercises = 4
 
@@ -217,341 +289,345 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("dashboard_hero_card"),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
-                                MaterialTheme.colorScheme.surface
-                            )
-                        )
-                    )
                     .padding(20.dp)
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            WomensStrengthLogoIcon(size = 44.dp)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                ) {
-                                    Text(
-                                        text = "READINESS • OPTIMAL FOR AXIAL LOAD",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = profile?.let { "${it.strengthLevel} Longevity Protocol" } ?: "Strength & Bone Longevity",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        IconButton(
-                            onClick = onNavigateToAssessment,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.surface,
-                                    CircleShape
-                                )
-                                .testTag("edit_assessment_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Profile & Goals",
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Next Session Prescription Banner
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "TODAY'S PRESCRIPTION",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "~$nextRoutineMins mins · $nextRoutineExercises exercises",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = nextRoutineTitle,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Target: RPE 7–8 (2–3 Reps in Reserve) for osteogenic bone remodeling without joint strain.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // 4-Column Key Metric Strip
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        DashboardHeaderMetric(
-                            label = "Habit Goal",
-                            value = "$currentWeekSessionCount/$targetDaysPerWeek",
-                            subtext = "This Wk"
-                        )
-                        DashboardHeaderMetric(
-                            label = "Bone Stimulus",
-                            value = if (latestBmdScore > 0) "${latestBmdScore / 1000}.${(latestBmdScore % 1000) / 100}k" else "--",
-                            subtext = if (latestBmdScore >= 3000) "Optimal" else "Active"
-                        )
-                        DashboardHeaderMetric(
-                            label = "Workouts",
-                            value = "$totalSessionsLogged",
-                            subtext = "Total Logged"
-                        )
-                        DashboardHeaderMetric(
-                            label = "Lifetime Load",
-                            value = "${totalVolumeAllTime / 1000}k",
-                            subtext = "lbs lifted"
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Primary Start Workout Button (Dominant Hero Action)
-                    Button(
-                        onClick = {
-                            if (routines.isNotEmpty()) {
-                                onSelectRoutine(routines.first())
-                            }
-                            onNavigateToLogger()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .testTag("start_workout_cta"),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Start Live Workout Session",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = "NEXT SESSION",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 1.sp
+                        )
+                        val displayTitle = if (nextRoutineTitle.contains("Axial Loading")) "Full Body Strength" else nextRoutineTitle
+                        Text(
+                            text = displayTitle,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
+                    
+                    WomensStrengthLogoIcon(size = 56.dp)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Primary Start Workout Button (Dominant Hero Action)
+                Button(
+                    onClick = {
+                        if (routines.isNotEmpty()) {
+                            onSelectRoutine(routines.first())
+                        }
+                        onNavigateToLogger()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .testTag("start_workout_cta"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    Icon(imageVector = if (isSessionActive) Icons.Default.Refresh else Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(28.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = if (isSessionActive) "RESUME SESSION" else "START WORKOUT NOW",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ClinicalInsightPill(
+                        icon = Icons.Default.Timer,
+                        text = "$nextRoutineMins Min Session",
+                        modifier = Modifier.weight(1f)
+                    )
+                    ClinicalInsightPill(
+                        icon = Icons.Default.Bolt,
+                        text = "RPE 7-8 Target",
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 2x2 Key Metric Grid
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    DashboardHeaderMetric(
+                        label = "Habit",
+                        value = "$currentWeekSessionCount/$targetDaysPerWeek",
+                        subtext = "This Week",
+                        statusColor = if (adherencePercent >= 100) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                        progress = (currentWeekSessionCount.toFloat() / targetDaysPerWeek.toFloat()).coerceAtMost(1f),
+                        modifier = Modifier.weight(1f)
+                    )
+                    DashboardHeaderMetric(
+                        label = "Stimulus",
+                        value = if (latestBmdScore > 0) "${latestBmdScore / 1000}.${(latestBmdScore % 1000) / 100}k" else "--",
+                        subtext = if (latestBmdScore >= 3000) "Optimal" else "Active",
+                        statusColor = if (latestBmdScore >= 3000) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+                        progress = (latestBmdScore.toFloat() / 3000f).coerceAtMost(1f),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    DashboardHeaderMetric(
+                        label = "Sessions",
+                        value = "$totalSessionsLogged",
+                        subtext = "Total",
+                        statusColor = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DashboardHeaderMetric(
+                        label = "Total Load",
+                        value = "${totalVolumeAllTime / 1000}k",
+                        subtext = "lbs",
+                        statusColor = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Segmented Tab Row: "Today's Plan & Habit" vs "Clinical Analytics & Trends"
         TabRow(
-            selectedTabIndex = dashboardTab,
-            containerColor = MaterialTheme.colorScheme.surface,
+            selectedTabIndex = pagerState.currentPage,
+            containerColor = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            divider = {},
+            modifier = Modifier.fillMaxWidth()
         ) {
             Tab(
-                selected = dashboardTab == 0,
-                onClick = { dashboardTab = 0 },
+                selected = pagerState.currentPage == 0,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
                 text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Today's Plan & Habit", fontWeight = FontWeight.Bold)
-                    }
+                    Text("My Active Plan", fontWeight = if (pagerState.currentPage == 0) FontWeight.Black else FontWeight.Medium)
                 }
             )
             Tab(
-                selected = dashboardTab == 1,
-                onClick = { dashboardTab = 1 },
+                selected = pagerState.currentPage == 1,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
                 text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Timeline, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Clinical Trends & Charts", fontWeight = FontWeight.Bold)
-                    }
+                    Text("Clinical Insights", fontWeight = if (pagerState.currentPage == 1) FontWeight.Black else FontWeight.Medium)
                 }
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (dashboardTab == 0) {
-            // TAB 0: TODAY'S PLAN, PROGRESSIVE OVERLOAD, HISTORY & COACHING
-            
-            // Empty state interactive guide for new users
-            if (sessions.isEmpty()) {
-                FirstWorkoutOnboardingCard(
-                    onStartWorkout = {
-                        if (routines.isNotEmpty()) {
-                            onSelectRoutine(routines.first())
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) { page ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (page == 0) {
+                    // TAB 0: MY ACTIVE PLAN
+                    if (sessions.isEmpty()) {
+                        FirstWorkoutOnboardingCard(
+                            onStartWorkout = {
+                                if (routines.isNotEmpty()) {
+                                    onSelectRoutine(routines.first())
+                                }
+                                onNavigateToLogger()
+                            }
+                        )
+                    } else {
+                        TodayRoutineFocusCard(
+                            routine = nextRoutine,
+                            onStartWorkout = {
+                                if (routines.isNotEmpty()) {
+                                    onSelectRoutine(routines.first())
+                                }
+                                onNavigateToLogger()
+                            }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        BoneDensityGoalProgressCard(
+                            profile = profile,
+                            sessions = sessions,
+                            latestBmdScore = latestBmdScore,
+                            weeklyAdherence = adherencePercent,
+                            onNavigateToGuide = onNavigateToGuide
+                        )
+                    }
+                } else {
+                    // TAB 1: CLINICAL INSIGHTS
+                    if (sessions.isEmpty()) {
+                        DashboardEmptyState(
+                            onStartWorkoutClick = {
+                                if (routines.isNotEmpty()) {
+                                    onSelectRoutine(routines.first())
+                                }
+                                onNavigateToLogger()
+                            }
+                        )
+                    } else {
+                        var insightsCategoryFilter by remember { mutableStateOf("All") }
+                        val categories = listOf("All", "Load & Volume", "Bone Density", "History & Readiness")
+
+                        // Segmented Filter Chips Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            categories.forEach { cat ->
+                                FilterChip(
+                                    selected = insightsCategoryFilter == cat,
+                                    onClick = { insightsCategoryFilter = cat },
+                                    label = { Text(cat, fontSize = 12.sp, fontWeight = if (insightsCategoryFilter == cat) FontWeight.Bold else FontWeight.Medium) }
+                                )
+                            }
                         }
-                        onNavigateToLogger()
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
-            // Progressive Overload Readiness Card
-            ProgressiveOverloadHighlightCard(
-                overloadList = overloadList,
-                onStartWorkout = {
-                    if (routines.isNotEmpty()) {
-                        onSelectRoutine(routines.first())
-                    }
-                    onNavigateToLogger()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Calendar History Card
-            WorkoutCalendarSummaryCard(
-                sessions = sessions,
-                routines = routines,
-                onStartWorkout = { routine ->
-                    if (routine != null) {
-                        onSelectRoutine(routine)
-                    } else if (routines.isNotEmpty()) {
-                        onSelectRoutine(routines.first())
-                    }
-                    onNavigateToLogger()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // AI Recommendations & Science Insights
-            AIRecommendationsCard(
-                sessions = sessions,
-                routines = routines
-            )
-
-            if (viewModel != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                LocalProgressPhotosMilestoneCard(
-                    viewModel = viewModel,
-                    onNavigateToPhotos = { onNavigateToProgress?.invoke() }
-                )
-            }
-        } else {
-            // TAB 1: CLINICAL ANALYTICS & DEEP CHARTS
-            
-            if (sessions.isEmpty()) {
-                FirstWorkoutOnboardingCard(
-                    onStartWorkout = {
-                        if (routines.isNotEmpty()) {
-                            onSelectRoutine(routines.first())
+                        // Consistency Chart (History & Readiness)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "History & Readiness") {
+                            StrengthTrainingFrequencyVicoChartCard(
+                                weeklyFrequencyList = weeklyFrequencyList,
+                                targetDaysPerWeek = targetDaysPerWeek,
+                                totalSessionsLogged = totalSessionsLogged,
+                                onStartWorkout = {
+                                    if (routines.isNotEmpty()) {
+                                        onSelectRoutine(routines.first())
+                                    }
+                                    onNavigateToLogger()
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-                        onNavigateToLogger()
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
-            // 1. STRENGTH TRAINING FREQUENCY VICO CHART CARD
-            StrengthTrainingFrequencyVicoChartCard(
-                weeklyFrequencyList = weeklyFrequencyList,
-                targetDaysPerWeek = targetDaysPerWeek,
-                totalSessionsLogged = totalSessionsLogged,
-                onStartWorkout = {
-                    if (routines.isNotEmpty()) {
-                        onSelectRoutine(routines.first())
+                        // Bone Trends (Bone Density)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "Bone Density") {
+                            BoneDensityTrendsVicoChartCard(
+                                boneDensityTrends = boneDensityTrendsList,
+                                onNavigateToGuide = onNavigateToGuide
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // Load Bearing Volume Chart (Load & Volume)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "Load & Volume") {
+                            LoadBearingVolumeChart(sessions = sessions)
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // Readiness & AI Recommendations (History & Readiness)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "History & Readiness") {
+                            AIRecommendationsCard(
+                                sessions = sessions,
+                                routines = routines
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // Progressive Overload Highlight Card (Load & Volume)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "Load & Volume") {
+                            ProgressiveOverloadHighlightCard(
+                                overloadList = overloadList,
+                                onStartWorkout = {
+                                    if (routines.isNotEmpty()) {
+                                        onSelectRoutine(routines.first())
+                                    }
+                                    onNavigateToLogger()
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // DXA Simulator (Bone Density)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "Bone Density") {
+                            BoneDensityDxaSimulatorCard()
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        if (viewModel != null && (insightsCategoryFilter == "All" || insightsCategoryFilter == "Load & Volume")) {
+                            WeightProgressionVicoChartCard(
+                                allSessions = sessions,
+                                allLoggedSets = allLoggedSets
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        // Calendar History Card (History & Readiness)
+                        if (insightsCategoryFilter == "All" || insightsCategoryFilter == "History & Readiness") {
+                            WorkoutCalendarSummaryCard(
+                                sessions = sessions,
+                                routines = routines,
+                                onStartWorkout = { routine ->
+                                    if (routine != null) {
+                                        onSelectRoutine(routine)
+                                    } else if (routines.isNotEmpty()) {
+                                        onSelectRoutine(routines.first())
+                                    }
+                                    onNavigateToLogger()
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+                        if (viewModel != null && (insightsCategoryFilter == "All" || insightsCategoryFilter == "History & Readiness")) {
+                            LocalProgressPhotosMilestoneCard(
+                                viewModel = viewModel,
+                                onNavigateToPhotos = { onNavigateToProgress?.invoke() }
+                            )
+                        }
                     }
-                    onNavigateToLogger()
                 }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 2. BONE DENSITY IMPROVEMENT TRENDS VICO CHART CARD
-            BoneDensityTrendsVicoChartCard(
-                boneDensityTrends = boneDensityTrendsList,
-                onNavigateToGuide = onNavigateToGuide
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 3. BONE MINERAL DENSITY GOALS & CLINICAL MILESTONES
-            BoneDensityGoalProgressCard(
-                profile = profile,
-                sessions = sessions,
-                latestBmdScore = latestBmdScore,
-                weeklyAdherence = adherencePercent,
-                onNavigateToGuide = onNavigateToGuide
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 4. LIFTMOR TRIAL CLINICAL DXA DENSITY SIMULATOR
-            BoneDensityDxaSimulatorCard()
-
-            if (viewModel != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                WeightProgressionVicoChartCard(
-                    allSessions = sessions,
-                    allLoggedSets = allLoggedSets
-                )
             }
         }
 
@@ -1305,24 +1381,50 @@ fun BmdGoalProgressItem(
 }
 
 @Composable
-fun DashboardHeaderMetric(label: String, value: String, subtext: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun DashboardHeaderMetric(
+    label: String,
+    value: String,
+    subtext: String,
+    statusColor: Color = Color.Unspecified,
+    progress: Float? = null,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            letterSpacing = 0.5.sp
+        )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Black,
+            color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary
         )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        
+        if (progress != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(100.dp)),
+                color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary,
+                trackColor = (if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary).copy(alpha = 0.15f)
+            )
+        }
+
         Text(
             text = subtext,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
         )
     }
 }
@@ -1638,3 +1740,154 @@ fun LocalProgressPhotosMilestoneCard(
     }
 }
 
+
+@Composable
+fun DashboardEmptyState(onStartWorkoutClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("dashboard_empty_state_card"),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 40.dp, horizontal = 24.dp).fillMaxWidth()
+        ) {
+            Surface(
+                modifier = Modifier.size(80.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Your Journey Begins Here",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "Complete your first longevity workout to generate your baseline bone density and axial load metrics.",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onStartWorkoutClick,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+            ) {
+                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("START RECOMMENDED ROUTINE", fontWeight = FontWeight.Black)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayRoutineFocusCard(
+    routine: WorkoutRoutineEntity?,
+    onStartWorkout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "ACTIVE PROTOCOL",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Text(
+                text = routine?.title ?: "Recovery & Mobility Flow",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = "Focused on maximizing strength and bone density preservation through targeted resistance.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Next scheduled session for your longevity protocol.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClinicalInsightPill(
+    icon: ImageVector,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}

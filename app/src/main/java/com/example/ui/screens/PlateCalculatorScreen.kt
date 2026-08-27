@@ -439,11 +439,50 @@ fun PlateCalculatorScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 if (targetWeight < selectedEquipment.tareWeightLbs) {
-                    Text(
-                        text = "Target load is less than empty implement weight (${selectedEquipment.tareWeightLbs} lbs).",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Target load is less than empty implement weight (${selectedEquipment.tareWeightLbs} lbs).",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Text(
+                            text = "Suggestions:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val suggestion = if (selectedCategory == EquipmentCategory.OLYMPIC_BARBELL) {
+                                equipmentList.find { it.category == EquipmentCategory.OLYMPIC_BARBELL && it.tareWeightLbs <= targetWeight }
+                            } else null
+
+                            if (suggestion != null) {
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { selectedEquipment = suggestion },
+                                    label = { Text("Use ${suggestion.name}") },
+                                    leadingIcon = { Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                )
+                            }
+                            
+                            FilterChip(
+                                selected = false,
+                                onClick = { selectedCategory = EquipmentCategory.DUMBBELLS },
+                                label = { Text("Switch to Dumbbells") },
+                                leadingIcon = { Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            )
+                        }
+                    }
                 } else if (netWeight == 0.0) {
                     Text(
                         text = "Empty Implement (${selectedEquipment.tareWeightLbs} lbs). No plates needed!",
@@ -602,6 +641,99 @@ fun PlateCalculatorScreen(
                                     text = "Note: $unallocatedRemainder lbs remainder unallocated per side. Micro-plates or 1.25 lb fractional collars recommended.",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun VisualBarbell(plateBreakdown: List<PlateCount>, modifier: Modifier = Modifier) {
+    // Standard plate widths and heights
+    val barHeight = 16.dp
+    val sleeveLength = 140.dp
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(140.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Draw the Barbell shaft and sleeve
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // Shaft
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(barHeight)
+                    .background(Color.DarkGray)
+            )
+            // Sleeve Collar
+            Box(
+                modifier = Modifier
+                    .width(12.dp)
+                    .height(barHeight + 10.dp)
+                    .background(Color.Gray, RoundedCornerShape(2.dp))
+            )
+            // Sleeve with Plates
+            Box(
+                modifier = Modifier
+                    .width(sleeveLength)
+                    .height(140.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                // Sleeve background
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(barHeight)
+                        .background(Color.LightGray)
+                )
+                
+                // Plates stacked
+                Row(
+                    modifier = Modifier.padding(start = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    plateBreakdown.forEach { plateCount ->
+                        repeat(plateCount.count) {
+                            val plateHeight = when (plateCount.plateWeight) {
+                                55.0, 45.0 -> 120.dp
+                                35.0 -> 100.dp
+                                25.0 -> 80.dp
+                                10.0 -> 60.dp
+                                5.0 -> 40.dp
+                                2.5 -> 30.dp
+                                else -> 50.dp
+                            }
+                            val plateWidth = when (plateCount.plateWeight) {
+                                55.0, 45.0, 35.0, 25.0 -> 16.dp
+                                else -> 10.dp
+                            }
+                            
+                            Box(
+                                modifier = Modifier
+                                    .width(plateWidth)
+                                    .height(plateHeight)
+                                    .background(plateCount.color, RoundedCornerShape(2.dp))
+                                    .border(1.dp, Color.Black.copy(alpha=0.2f), RoundedCornerShape(2.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = plateCount.plateWeight.toInt().toString(),
+                                    color = Color.White,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(1.dp)
                                 )
                             }
                         }

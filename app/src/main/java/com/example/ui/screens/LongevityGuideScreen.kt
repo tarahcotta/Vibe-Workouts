@@ -150,7 +150,52 @@ fun LongevityGuideScreen(modifier: Modifier = Modifier) {
             content = "RPE (Rate of Perceived Exertion) ensures you leave 2-3 reps in reserve while maintaining sufficient load stimulus. If joint strain occurs (pain >3/10), scale range of motion (e.g. Box Squats), shift to neutral grip, or swap to chest-supported variations during deload weeks."
         )
 
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Plain English Clinical Glossary (UX Fix: Unsafe Assumption #2 - Clinical Jargon Alienation)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Text(
+                        text = "Plain English Jargon Translator",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                GlossaryTermRow(term = "Axial Loading", definition = "Heavy exercises like squats or deadlifts that press down along your spine and hips, signaling bones to become denser.")
+                Spacer(modifier = Modifier.height(8.dp))
+                GlossaryTermRow(term = "Osteogenic Score", definition = "A measure of how effectively your workout stimulated bone mineral remodeling (Target: 3,000+ lbs volume).")
+                Spacer(modifier = Modifier.height(8.dp))
+                GlossaryTermRow(term = "T-Score", definition = "Your bone density compared to a healthy 30-year-old adult (-1.0 or higher is normal).")
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+fun GlossaryTermRow(term: String, definition: String) {
+    Column {
+        Text(
+            text = term,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = definition,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

@@ -53,6 +53,10 @@ fun ProfileSetupScreen(
         mutableStateOf(currentProfile?.age?.toString() ?: "45")
     }
 
+    var weightInput by remember(currentProfile) {
+        mutableStateOf(currentProfile?.weightLbs?.toString() ?: "165")
+    }
+
     val availableFitnessGoals = remember {
         listOf(
             "Bone Mineral Density & Osteogenesis",
@@ -64,9 +68,25 @@ fun ProfileSetupScreen(
         )
     }
 
+    val availableRecoveryGoals = remember {
+        listOf(
+            "Optimal Sleep & Circadian Alignment",
+            "CNS Support & Nervous System Recovery",
+            "Myofascial Release & Mobility",
+            "Nutrient Timing & Metabolic Support",
+            "Hydration & Electrolyte Homeostasis"
+        )
+    }
+
     val selectedGoals = remember(currentProfile) {
         val initial = currentProfile?.fitnessGoals?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
             ?: listOf("Bone Mineral Density & Osteogenesis", "Joint & Cartilage Longevity", "Posture & Spinal Health")
+        mutableStateOf(initial.toSet())
+    }
+
+    val selectedRecoveryGoals = remember(currentProfile) {
+        val initial = currentProfile?.recoveryGoals?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+            ?: listOf("Optimal Sleep & Circadian Alignment", "Myofascial Release & Mobility")
         mutableStateOf(initial.toSet())
     }
 
@@ -224,7 +244,7 @@ fun ProfileSetupScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Age Input Card
+        // Age & Weight Input Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -233,35 +253,75 @@ fun ProfileSetupScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Your Age",
+                    text = "Personal Metrics",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Age influences bone mineral density recovery rates and joint loading prescriptions.",
+                    text = "Metrics influence bone recovery rates and individualized loading prescriptions.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
-                    value = ageInput,
-                    onValueChange = { ageInput = it.filter { char -> char.isDigit() } },
-                    label = { Text("Age (Years)") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("profile_age_input")
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = ageInput,
+                        onValueChange = { ageInput = it.filter { char -> char.isDigit() } },
+                        label = { Text("Age") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("profile_age_input")
+                    )
+
+                    OutlinedTextField(
+                        value = weightInput,
+                        onValueChange = { weightInput = it.filter { char -> char.isDigit() || char == '.' } },
+                        label = { Text("Weight (lbs)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("profile_weight_input")
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Fitness Goals Selection Card
+        // DXA T-Score & Bone Density Guidance Card (UX Fix: Onboarding Guidance)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Text(
+                        text = "Where to find your DXA T-Score",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "If you've had a bone density scan (DXA), check your report for the 'T-Score' of the lumbar spine or femoral neck. Normal is ≥ -1.0. Osteopenia is -1.0 to -2.5. If you don't have a scan, Vital Strength will estimate your baseline based on age and training history.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -316,6 +376,69 @@ fun ProfileSetupScreen(
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ),
                             modifier = Modifier.testTag("goal_chip_${goal.take(10)}")
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Recovery Goals Selection Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Recovery & Lifestyle Optimization",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Personalize your recovery protocols to ensure optimal adaptation to axial loading:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                CustomFlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalSpacing = 8.dp,
+                    verticalSpacing = 8.dp
+                ) {
+                    availableRecoveryGoals.forEach { goal ->
+                        val isSelected = selectedRecoveryGoals.value.contains(goal)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                val currentSet = selectedRecoveryGoals.value.toMutableSet()
+                                if (isSelected) {
+                                    if (currentSet.size > 1) currentSet.remove(goal)
+                                } else {
+                                    currentSet.add(goal)
+                                }
+                                selectedRecoveryGoals.value = currentSet
+                            },
+                            label = { Text(goal, fontSize = 13.sp) },
+                            leadingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Icon",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            modifier = Modifier.testTag("recovery_goal_chip_${goal.take(10)}")
                         )
                     }
                 }
@@ -381,14 +504,17 @@ fun ProfileSetupScreen(
         Button(
             onClick = {
                 val parsedAge = ageInput.toIntOrNull() ?: 45
+                val parsedWeight = weightInput.toFloatOrNull() ?: 165f
                 val updated = UserProfileEntity(
                     id = 1,
                     age = parsedAge,
+                    weightLbs = parsedWeight,
                     strengthLevel = strengthLevel,
                     availableEquipment = equipment,
                     scheduleDaysPerWeek = scheduleDays,
                     fitnessGoals = selectedGoals.value.joinToString(", "),
                     focusAreas = selectedGoals.value.joinToString(", "),
+                    recoveryGoals = selectedRecoveryGoals.value.joinToString(", "),
                     updatedAt = System.currentTimeMillis()
                 )
                 viewModel.saveUserProfile(updated)
