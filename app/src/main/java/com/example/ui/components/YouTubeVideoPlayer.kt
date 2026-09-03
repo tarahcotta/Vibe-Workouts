@@ -1,55 +1,47 @@
 package com.example.ui.components
 
-import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import com.example.data.musclewiki.MuscleWikiRepository
 
+/**
+ * Universal Exercise Video Player component.
+ * Plays direct MuscleWiki exercise form videos with auto-loop, gesture seeking, and speed controls.
+ */
+@Composable
+fun ExerciseVideoPlayer(
+    videoUrl: String,
+    modifier: Modifier = Modifier,
+    exerciseName: String? = null
+) {
+    val resolvedUrl = if (videoUrl.isNotBlank() && (videoUrl.endsWith(".mp4") || videoUrl.startsWith("http"))) {
+        if (videoUrl.contains("youtube.com") && exerciseName != null) {
+            MuscleWikiRepository.getVideoUrlForExercise(exerciseName)
+        } else {
+            videoUrl
+        }
+    } else if (exerciseName != null) {
+        MuscleWikiRepository.getVideoUrlForExercise(exerciseName)
+    } else {
+        "https://media.musclewiki.com/media/uploads/videos/branded/male-barbell-squat-front.mp4"
+    }
+
+    MuscleWikiVideoPlayer(
+        videoUrl = resolvedUrl,
+        modifier = modifier
+    )
+}
+
+/**
+ * Backwards-compatibility alias for YouTubeVideoPlayer that now renders high performance MuscleWiki streams.
+ */
 @Composable
 fun YouTubeVideoPlayer(
     videoUrl: String,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        factory = { context ->
-            WebView(context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                settings.javaScriptEnabled = true
-                webChromeClient = WebChromeClient()
-                webViewClient = WebViewClient()
-                
-                // Load the HTML with the iframe
-                val html = """
-                    <html>
-                    <body style="margin:0;padding:0;">
-                        <iframe width="100%" height="100%" src="$videoUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </body>
-                    </html>
-                """.trimIndent()
-                loadData(html, "text/html", "utf-8")
-            }
-        },
-        update = { webView ->
-            val html = """
-                    <html>
-                    <body style="margin:0;padding:0;">
-                        <iframe width="100%" height="100%" src="$videoUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </body>
-                    </html>
-                """.trimIndent()
-            webView.loadData(html, "text/html", "utf-8")
-        },
+    ExerciseVideoPlayer(
+        videoUrl = videoUrl,
         modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
     )
 }

@@ -25,6 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -82,6 +85,8 @@ fun BuiltInIntervalTimerCard(
     targetRestSeconds: Int = 90,
     isRunning: Boolean = false,
     remainingSeconds: Int = 90,
+    alertMode: String = "Sound + Vibrate",
+    onAlertModeChange: (String) -> Unit = {},
     onTogglePlayPause: () -> Unit = {},
     onResetTimer: (Int) -> Unit = {},
     onAdjustSeconds: (Int) -> Unit = {},
@@ -145,20 +150,68 @@ fun BuiltInIntervalTimerCard(
                     }
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.clickable {
-                        mode = if (mode == TimerMode.COUNTDOWN) TimerMode.STOPWATCH else TimerMode.COUNTDOWN
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Alert Mode Toggle (Sound+Vibrate -> Vibrate Only -> Mute)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.clickable {
+                            val nextMode = when (alertMode) {
+                                "Sound + Vibrate" -> "Vibrate Only"
+                                "Vibrate Only" -> "Silent"
+                                else -> "Sound + Vibrate"
+                            }
+                            onAlertModeChange(nextMode)
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = when (alertMode) {
+                                    "Sound + Vibrate" -> Icons.Default.VolumeUp
+                                    "Vibrate Only" -> Icons.Default.Vibration
+                                    else -> Icons.Default.VolumeOff
+                                },
+                                contentDescription = "Alert Mode: $alertMode",
+                                modifier = Modifier.size(14.dp),
+                                tint = when (alertMode) {
+                                    "Silent" -> MaterialTheme.colorScheme.error
+                                    "Vibrate Only" -> MaterialTheme.colorScheme.secondary
+                                    else -> MaterialTheme.colorScheme.primary
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = when (alertMode) {
+                                    "Sound + Vibrate" -> "Sound"
+                                    "Vibrate Only" -> "Vibrate"
+                                    else -> "Mute"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
-                ) {
-                    Text(
-                        text = if (mode == TimerMode.COUNTDOWN) "Countdown ⏳" else "Stopwatch ⏱️",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.clickable {
+                            mode = if (mode == TimerMode.COUNTDOWN) TimerMode.STOPWATCH else TimerMode.COUNTDOWN
+                        }
+                    ) {
+                        Text(
+                            text = if (mode == TimerMode.COUNTDOWN) "⏳" else "⏱️",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
 

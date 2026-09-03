@@ -61,9 +61,8 @@ object ExerciseLibraryRepository {
                 "Rounding the lower back at the bottom of the movement ('butt wink').",
                 "Rising onto toes or lifting heels off the ground."
             ),
-            longevityScienceNote = "Ground reaction force combined with axial barbell load triggers mechanotransduction in bone tissue, signaling osteoblasts to deposit calcium and increase bone mineral density in the femoral neck and lumbar vertebrae."
-,
-            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            longevityScienceNote = "Ground reaction force combined with axial barbell load triggers mechanotransduction in bone tissue, signaling osteoblasts to deposit calcium and increase bone mineral density in the femoral neck and lumbar vertebrae.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-barbell-squat-front.mp4"
         ),
         ExerciseLibraryItem(
             id = "romanian_deadlift",
@@ -91,9 +90,8 @@ object ExerciseLibraryRepository {
                 "Squatting down into the movement instead of pushing hips backward.",
                 "Hyperextending lower back at the top lockout position."
             ),
-            longevityScienceNote = "Hinge mechanics train the posterior kinetic chain to absorb force efficiently during daily activities, drastically reducing lower back strain and improving pelvic bone density."
-,
-            videoUrl = "https://www.youtube.com/embed/JCXUYuzwNrM"
+            longevityScienceNote = "Hinge mechanics train the posterior kinetic chain to absorb force efficiently during daily activities, drastically reducing lower back strain and improving pelvic bone density.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-barbell-romanian-deadlift-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "goblet_squat",
@@ -121,9 +119,8 @@ object ExerciseLibraryRepository {
                 "Collapsing chest forward during deep descent.",
                 "Heels rising off floor."
             ),
-            longevityScienceNote = "Deep full-range knee flexion under moderate front load increases synovial fluid diffusion across articular cartilage, preserving knee joint longevity."
-,
-            videoUrl = "https://www.youtube.com/embed/MeIiIdhgPwg"
+            longevityScienceNote = "Deep full-range knee flexion under moderate front load increases synovial fluid diffusion across articular cartilage, preserving knee joint longevity.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-goblet-squat-front.mp4"
         ),
         ExerciseLibraryItem(
             id = "chest_supported_row",
@@ -151,9 +148,8 @@ object ExerciseLibraryRepository {
                 "Yanking dumbbells with arms rather than leading with shoulder blades.",
                 "Rushing through the eccentric (lowering) portion."
             ),
-            longevityScienceNote = "Strengthening upper back posture muscles reverses kyphotic rounding caused by sitting, protecting thoracic spinal discs and improving breathing kinematics."
-,
-            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            longevityScienceNote = "Strengthening upper back posture muscles reverses kyphotic rounding caused by sitting, protecting thoracic spinal discs and improving breathing kinematics.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-chest-supported-row-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "farmers_walk",
@@ -181,9 +177,8 @@ object ExerciseLibraryRepository {
                 "Holding breath during the walk.",
                 "Leaning laterally when carrying unequal loads."
             ),
-            longevityScienceNote = "Grip strength correlates directly with cognitive reserve, cardiovascular health, and all-cause longevity in epidemiological research. Loaded carries exert compressive density forces on long arm bones and spine."
-,
-            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            longevityScienceNote = "Grip strength correlates directly with cognitive reserve, cardiovascular health, and all-cause longevity in epidemiological research. Loaded carries exert compressive density forces on long arm bones and spine.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-farmers-walk-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "bulgarian_split_squat",
@@ -211,9 +206,8 @@ object ExerciseLibraryRepository {
                 "Knee collapsing inward towards midline.",
                 "Pushing off rear leg on bench instead of driving with front leg."
             ),
-            longevityScienceNote = "Single-leg strength builds gluteus medius reactivity, maintaining lateral pelvic stability required for swift balance recovery during trips or stumbles."
-,
-            videoUrl = "https://www.youtube.com/embed/2C-uNgKwPLE"
+            longevityScienceNote = "Single-leg strength builds gluteus medius reactivity, maintaining lateral pelvic stability required for swift balance recovery during trips or stumbles.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-bulgarian-split-squat-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "pallof_press",
@@ -241,9 +235,8 @@ object ExerciseLibraryRepository {
                 "Rushing reps instead of pausing during full extension.",
                 "Arching lower back."
             ),
-            longevityScienceNote = "Anti-rotation training fortifies the transverse abdominis and deep spinal stabilization muscles, shielding intervertebral discs against twisting forces under load."
-,
-            videoUrl = "https://www.youtube.com/embed/nrsUXN0Ww58"
+            longevityScienceNote = "Anti-rotation training fortifies the transverse abdominis and deep spinal stabilization muscles, shielding intervertebral discs against twisting forces under load.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-cable-pallof-press-front.mp4"
         ),
         ExerciseLibraryItem(
             id = "hip_thrust",
@@ -271,9 +264,8 @@ object ExerciseLibraryRepository {
                 "Pushing through toes rather than heels.",
                 "Placing feet too far out, shifting tension onto hamstrings."
             ),
-            longevityScienceNote = "Strong glutes act as the primary engine for human locomotion, offloading excessive strain from lower back discs and hip joints."
-,
-            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            longevityScienceNote = "Strong glutes act as the primary engine for human locomotion, offloading excessive strain from lower back discs and hip joints.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/female-barbell-hip-thrust-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "neutral_floor_press",
@@ -301,9 +293,8 @@ object ExerciseLibraryRepository {
                 "Flaring elbows wide to 90 degrees.",
                 "Arching lower back off the floor."
             ),
-            longevityScienceNote = "Ideal pressing alternative for individuals with prior shoulder discomfort, strengthening shoulder girdle bone attachments without tendon impingement."
-,
-            videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ"
+            longevityScienceNote = "Ideal pressing alternative for individuals with prior shoulder discomfort, strengthening shoulder girdle bone attachments without tendon impingement.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-neutral-floor-press-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "tibialis_raise",
@@ -331,9 +322,8 @@ object ExerciseLibraryRepository {
                 "Slapping feet down onto floor fast without control.",
                 "Peeling buttocks off wall."
             ),
-            longevityScienceNote = "The tibialis anterior absorbs ground force shock wave with every step during walking and stair climbing, acting as a natural brake for patellofemoral knee forces."
-,
-            videoUrl = "https://www.youtube.com/embed/gWia_82_xGo"
+            longevityScienceNote = "The tibialis anterior absorbs ground force shock wave with every step during walking and stair climbing, acting as a natural brake for patellofemoral knee forces.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-bodyweight-tibialis-raise-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "step_up_knee_drive",
@@ -361,9 +351,8 @@ object ExerciseLibraryRepository {
                 "Letting knee cave inward during drive phase.",
                 "Using box that is dangerously tall."
             ),
-            longevityScienceNote = "Stair navigation and elevation step-ups are crucial functional independence tasks for older adults; step-ups preserve single-leg functional power reserves."
-,
-            videoUrl = "https://www.youtube.com/embed/9w_Y29G9H3Y"
+            longevityScienceNote = "Stair navigation and elevation step-ups are crucial functional independence tasks for older adults; step-ups preserve single-leg functional power reserves.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/female-dumbbell-step-up-knee-drive-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "face_pull",
@@ -391,9 +380,8 @@ object ExerciseLibraryRepository {
                 "Leaning back and using body momentum.",
                 "Internal rotation of shoulders at end range."
             ),
-            longevityScienceNote = "Infraspinatus and teres minor strengthening maintains humerus head centralization in shoulder socket, preventing rotator cuff impingement."
-,
-            videoUrl = "https://www.youtube.com/embed/rep-qVOkqgk"
+            longevityScienceNote = "Infraspinatus and teres minor strengthening maintains humerus head centralization in shoulder socket, preventing rotator cuff impingement.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-cable-face-pull-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "dead_bug_bracing",
@@ -421,9 +409,8 @@ object ExerciseLibraryRepository {
                 "Rushing movement and losing breathing synchronization.",
                 "Moving both legs at once."
             ),
-            longevityScienceNote = "Teaches lumbo-pelvic dissociation, allowing limbs to generate power without transferring harmful spinal flexion or extension stress to lumbar discs."
-,
-            videoUrl = "https://www.youtube.com/embed/4XLEnwUr1d8"
+            longevityScienceNote = "Teaches lumbo-pelvic dissociation, allowing limbs to generate power without transferring harmful spinal flexion or extension stress to lumbar discs.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/female-bodyweight-dead-bug-side.mp4"
         ),
         ExerciseLibraryItem(
             id = "overhead_press",
@@ -451,9 +438,8 @@ object ExerciseLibraryRepository {
                 "Flaring elbow directly to side instead of 30 degrees in scapular plane.",
                 "Shrugging neck excessively."
             ),
-            longevityScienceNote = "Overhead mobility preserves shoulder range required for reaching overhead shelves, loading luggage, and maintaining upper torso flexibility."
-,
-            videoUrl = "https://www.youtube.com/embed/QAQ64hK4Xxs"
+            longevityScienceNote = "Overhead mobility preserves shoulder range required for reaching overhead shelves, loading luggage, and maintaining upper torso flexibility.",
+            videoUrl = "https://media.musclewiki.com/media/uploads/videos/branded/male-dumbbell-single-arm-overhead-press-front.mp4"
         )
     )
 

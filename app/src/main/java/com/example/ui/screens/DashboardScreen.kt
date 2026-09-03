@@ -1,8 +1,12 @@
 package com.example.ui.screens
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.example.ui.theme.BoneDensityGold
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -530,7 +534,10 @@ fun DashboardScreen(
                                 FilterChip(
                                     selected = insightsCategoryFilter == cat,
                                     onClick = { insightsCategoryFilter = cat },
-                                    label = { Text(cat, fontSize = 12.sp, fontWeight = if (insightsCategoryFilter == cat) FontWeight.Bold else FontWeight.Medium) }
+                                    label = { Text(cat, fontSize = 12.sp, fontWeight = if (insightsCategoryFilter == cat) FontWeight.Bold else FontWeight.Medium) },
+                                    modifier = Modifier.semantics {
+                                        stateDescription = if (insightsCategoryFilter == cat) "Selected category" else "Unselected category"
+                                    }
                                 )
                             }
                         }
@@ -1073,36 +1080,138 @@ fun BoneDensityTrendsVicoChartCard(
             Spacer(modifier = Modifier.height(14.dp))
 
             if (boneDensityTrends.isEmpty()) {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(190.dp)
                         .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(14.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AutoGraph,
+                                contentDescription = "Ghost Benchmark",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Prospective Stimulus Projection",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = "Sample Target Preview",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Ghost Benchmark Trajectory Visual (Week 1 -> Week 6)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Baseline (Wk 1)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "1,200 pts",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+
                         Icon(
-                            imageVector = Icons.Default.AutoGraph,
-                            contentDescription = "No Data",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(36.dp)
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Progression arrow",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "No osteogenic logs recorded yet.\nLog axial lifts (Squats, Deadlifts, Presses) to track bone mineral remodeling!",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Active Overload",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "2,400 pts",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Progression arrow",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Remodeling Zone",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "3,200+ pts",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BoneDensityGold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Log axial movements (Barbell Squats, Deadlifts, Overhead Presses) with 70%+ 1RM to trigger osteogenic remodeling and replace this preview with your personal DXA-calibrated data.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
                         TextButton(onClick = onNavigateToGuide) {
-                            Text("Learn Bone Density Science")
+                            Text("Learn Bone Science Guide")
                         }
                     }
                 }
@@ -1424,7 +1533,7 @@ fun DashboardHeaderMetric(
             text = subtext,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

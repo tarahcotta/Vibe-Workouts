@@ -73,9 +73,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.SmartDisplay
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.data.WorkoutExerciseEntity
 import com.example.data.WorkoutRoutineEntity
-import com.example.ui.components.ExerciseFormIllustrationBox
+import com.example.ui.components.ExerciseVideoPlayerBox
 import com.example.ui.components.FloatingRestTimerBar
 import com.example.ui.components.PreWorkoutMobilityCard
 import com.example.ui.components.ProgressiveOverloadTag
@@ -582,13 +585,13 @@ fun RoutineTableScreen(
                                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Default.SlowMotionVideo,
-                                                    contentDescription = "Watch Form Demonstration",
+                                                    imageVector = Icons.Default.SmartDisplay,
+                                                    contentDescription = "Watch Exercise Video",
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
-                                                    text = "Form Demo",
+                                                    text = "Exercise Video",
                                                     style = MaterialTheme.typography.labelMedium,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -813,22 +816,23 @@ fun RoutineTableScreen(
         }
     }
 
-    // Popup Form Illustration Dialog
+    // Exercise Video Player Dialog
     if (activeFormDemoExercise != null) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = { activeFormDemoExercise = null },
-            confirmButton = {
-                TextButton(onClick = { activeFormDemoExercise = null }) {
-                    Text("Close Demonstration", fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                ExerciseFormIllustrationBox(
-                    exerciseName = activeFormDemoExercise ?: "Barbell Compound Lift"
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .padding(vertical = 16.dp)
+            ) {
+                ExerciseVideoPlayerBox(
+                    exerciseName = activeFormDemoExercise ?: "Barbell Compound Lift",
+                    onDismiss = { activeFormDemoExercise = null }
                 )
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
+            }
+        }
     }
 }
 

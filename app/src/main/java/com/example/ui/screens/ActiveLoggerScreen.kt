@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +40,8 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoubleArrow
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Info
@@ -46,10 +49,13 @@ import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SlowMotionVideo
+import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
@@ -58,6 +64,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,6 +79,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -84,7 +95,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,11 +119,12 @@ import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.AnimatedSetCompletionButton
 import com.example.ui.components.BaselineCalibrationDialog
 import com.example.ui.components.BuiltInIntervalTimerCard
-import com.example.ui.components.ExerciseFormIllustrationBox
 import com.example.ui.components.ExerciseSubstitutionDialog
+import com.example.ui.components.ExerciseVideoPlayerBox
 import com.example.ui.components.PersonalBestNotificationBanner
 import com.example.ui.components.PersonalRecordCelebrationDialog
 import com.example.ui.components.PreWorkoutMobilityCard
+import com.example.ui.components.QuickPlateCalculatorDialog
 import com.example.ui.components.ProgressiveOverloadTag
 import com.example.ui.components.RpeEffortCalibrationDialog
 import com.example.ui.components.SmartWarmupDialog
@@ -174,6 +188,8 @@ fun ActiveLoggerScreen(
 
     // Routine Title
     val routineTitle = routine?.dayName ?: "Live Longevity Workout"
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Exercise log states
     val exerciseLogs = remember(exercises) {
@@ -227,27 +243,33 @@ fun ActiveLoggerScreen(
     var showExitConfirmationDialog by remember { mutableStateOf(false) }
     var smartWarmupDialogTarget by remember { mutableStateOf<Pair<String, Float>?>(null) }
     var baselineCalibrationTarget by remember { mutableStateOf<String?>(null) }
+    var quickPlateCalcTarget by remember { mutableStateOf<Pair<String, SetLogInput>?>(null) }
 
     // Rest Timer state
     var targetRestSeconds by remember { mutableIntStateOf(90) }
     var timerRemainingSeconds by remember { mutableIntStateOf(90) }
     var isTimerRunning by remember { mutableStateOf(false) }
     var activeTimerExerciseName by remember { mutableStateOf("") }
+    var timerAlertMode by remember { mutableStateOf("Sound + Vibrate") }
 
-    // Multi-modal Rest Timer Feedback
-    LaunchedEffect(timerRemainingSeconds, isTimerRunning) {
+    // Multi-modal Rest Timer Feedback (Sound + Vibrate, Vibrate Only, Silent)
+    LaunchedEffect(timerRemainingSeconds, isTimerRunning, timerAlertMode) {
         if (isTimerRunning) {
             if (timerRemainingSeconds in 1..3) {
-                // Tactile warning ticks
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                if (timerAlertMode != "Silent") {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
             } else if (timerRemainingSeconds == 0) {
-                // Strong completion pulse and sound alert
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                try {
-                    val toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
-                    toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 350)
-                } catch (e: Exception) {
-                    // Fallback if audio fails
+                if (timerAlertMode != "Silent") {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+                if (timerAlertMode == "Sound + Vibrate") {
+                    try {
+                        val toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+                        toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 350)
+                    } catch (e: Exception) {
+                        // Fallback if audio fails
+                    }
                 }
             }
         }
@@ -331,6 +353,7 @@ fun ActiveLoggerScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize().imePadding(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
@@ -461,6 +484,8 @@ fun ActiveLoggerScreen(
                                 targetRestSeconds = targetRestSeconds,
                                 isRunning = isTimerRunning,
                                 remainingSeconds = timerRemainingSeconds,
+                                alertMode = timerAlertMode,
+                                onAlertModeChange = { timerAlertMode = it },
                                 onTogglePlayPause = { isTimerRunning = !isTimerRunning },
                                 onResetTimer = { newTarget ->
                                     timerRemainingSeconds = newTarget
@@ -490,8 +515,103 @@ fun ActiveLoggerScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
+                    // DOCKED PERSISTENT REST TIMER HUD (Ensures Visibility of System Status during long scrolling)
+                    AnimatedVisibility(visible = isTimerRunning || timerRemainingSeconds > 0) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Timer,
+                                        contentDescription = "Rest Interval Active",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Rest: ${timerRemainingSeconds / 60}:${"%02d".format(timerRemainingSeconds % 60)}",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    if (activeTimerExerciseName.isNotBlank()) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "· $activeTimerExerciseName",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                            modifier = Modifier.widthIn(max = 100.dp)
+                                        )
+                                    }
+                                }
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        modifier = Modifier.clickable {
+                                            timerRemainingSeconds = (timerRemainingSeconds + 30)
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                    ) {
+                                        Text(
+                                            text = "+30s",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            isTimerRunning = !isTimerRunning
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isTimerRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                            contentDescription = if (isTimerRunning) "Pause Rest" else "Resume Rest",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            timerRemainingSeconds = 0
+                                            isTimerRunning = false
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Skip Rest",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (isFinishEnabled) {
                         Button(
                             onClick = {
@@ -704,14 +824,14 @@ fun ActiveLoggerScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.SlowMotionVideo,
-                                        contentDescription = "Form Guide",
+                                        imageVector = Icons.Default.SmartDisplay,
+                                        contentDescription = "Exercise Video",
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Form Guide",
+                                        text = "Exercise Video",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -881,6 +1001,38 @@ fun ActiveLoggerScreen(
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
                                     }
+                                }
+                            }
+
+                            // Quick Plate Calculator Action
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.clickable {
+                                    val firstSet = logState.sets.firstOrNull()
+                                    if (firstSet != null) {
+                                        quickPlateCalcTarget = Pair(logState.exerciseName, firstSet)
+                                    }
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FitnessCenter,
+                                        contentDescription = "Quick Plate Calculator",
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Plate Calc",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             }
                         }
@@ -1124,6 +1276,37 @@ fun ActiveLoggerScreen(
                                             tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
+
+                                    // Quick Set Deletion with Undo Snackbar
+                                    if (logState.sets.size > 1) {
+                                        IconButton(
+                                            onClick = {
+                                                val removedSet = logState.sets.removeAt(setIndex)
+                                                logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                coroutineScope.launch {
+                                                    val result = snackbarHostState.showSnackbar(
+                                                        message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
+                                                        actionLabel = "Undo",
+                                                        duration = androidx.compose.material3.SnackbarDuration.Short
+                                                    )
+                                                    if (result == SnackbarResult.ActionPerformed) {
+                                                        logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
+                                                        logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier.size(36.dp).testTag("delete_set_button_${exIndex}_$setIndex")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete Set ${setIndex + 1}",
+                                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
                                 }
                                 }
 
@@ -1187,7 +1370,7 @@ fun ActiveLoggerScreen(
                             }
                         }
 
-                        // Set Row Actions: Add Set & Apply Set 1 to All
+                        // Set Row Actions: Add Set, Repeat Previous Set & Apply Set 1 to All
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1195,22 +1378,49 @@ fun ActiveLoggerScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextButton(
-                                onClick = {
-                                    logState.sets.add(
-                                        SetLogInput(
-                                            setNumber = logState.sets.size + 1,
-                                            weightText = logState.sets.lastOrNull()?.weightText ?: "25",
-                                            repsText = logState.sets.lastOrNull()?.repsText ?: "8",
-                                            rpe = 8
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                TextButton(
+                                    onClick = {
+                                        logState.sets.add(
+                                            SetLogInput(
+                                                setNumber = logState.sets.size + 1,
+                                                weightText = logState.sets.lastOrNull()?.weightText ?: "25",
+                                                repsText = logState.sets.lastOrNull()?.repsText ?: "8",
+                                                rpe = 8
+                                            )
                                         )
-                                    )
-                                },
-                                modifier = Modifier.testTag("add_set_button_$exIndex")
-                            ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Set", modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Add Set", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    },
+                                    modifier = Modifier.testTag("add_set_button_$exIndex")
+                                ) {
+                                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Set", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Add Set", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                }
+
+                                if (logState.sets.isNotEmpty()) {
+                                    TextButton(
+                                        onClick = {
+                                            val lastSet = logState.sets.last()
+                                            logState.sets.add(
+                                                SetLogInput(
+                                                    setNumber = logState.sets.size + 1,
+                                                    weightText = lastSet.weightText,
+                                                    repsText = lastSet.repsText,
+                                                    rpe = lastSet.rpe,
+                                                    jointFeel = lastSet.jointFeel,
+                                                    isCompleted = false
+                                                )
+                                            )
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        },
+                                        modifier = Modifier.testTag("repeat_last_set_button_$exIndex")
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Replay, contentDescription = "Repeat Previous Set", modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Repeat Set", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
                             }
 
                             if (logState.sets.size > 1) {
@@ -1746,22 +1956,23 @@ fun ActiveLoggerScreen(
         }
     }
 
-    // Popup Form Illustration Dialog
+    // Exercise Video Player Dialog
     if (activeFormDemoExercise != null) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = { activeFormDemoExercise = null },
-            confirmButton = {
-                TextButton(onClick = { activeFormDemoExercise = null }) {
-                    Text("Close Demonstration", fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                ExerciseFormIllustrationBox(
-                    exerciseName = activeFormDemoExercise ?: "Compound Lift"
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .padding(vertical = 16.dp)
+            ) {
+                ExerciseVideoPlayerBox(
+                    exerciseName = activeFormDemoExercise ?: "Compound Lift",
+                    onDismiss = { activeFormDemoExercise = null }
                 )
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
+            }
+        }
     }
 
     // Exercise Substitution / Spine-Sparing Alternatives Dialog
@@ -1784,6 +1995,21 @@ fun ActiveLoggerScreen(
                 }
                 swapExerciseDialogTarget = null
             }
+        )
+    }
+
+    // Quick In-Workout Plate Calculator Dialog
+    if (quickPlateCalcTarget != null) {
+        val (exName, targetSet) = quickPlateCalcTarget!!
+        val initialWeight = targetSet.weightText.toFloatOrNull() ?: 135f
+        QuickPlateCalculatorDialog(
+            initialWeight = initialWeight,
+            exerciseName = exName,
+            onApplyWeight = { newWeight ->
+                targetSet.weightText = if (newWeight % 1f == 0f) "${newWeight.toInt()}" else "$newWeight"
+                quickPlateCalcTarget = null
+            },
+            onDismiss = { quickPlateCalcTarget = null }
         )
     }
 

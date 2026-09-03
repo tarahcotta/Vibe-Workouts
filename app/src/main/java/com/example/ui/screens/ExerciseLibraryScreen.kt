@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import com.example.ui.components.CustomFlowRow
+import com.example.ui.components.ExerciseVideoPlayer
 import com.example.ui.components.YouTubeVideoPlayer
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -674,8 +675,9 @@ fun ExerciseDetailSheetContent(
         }
 
         item {
-            YouTubeVideoPlayer(
+            ExerciseVideoPlayer(
                 videoUrl = exercise.videoUrl,
+                exerciseName = exercise.name,
                 modifier = Modifier.clip(RoundedCornerShape(12.dp))
             )
         }

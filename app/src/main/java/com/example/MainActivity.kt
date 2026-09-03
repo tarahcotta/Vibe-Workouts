@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        com.example.data.musclewiki.MuscleWikiRepository.initialize(applicationContext)
         setContent {
             val themeMode by viewModel.themeMode.collectAsState()
             VitalStrengthTheme(themeMode = themeMode) {
