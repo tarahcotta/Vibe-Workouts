@@ -110,6 +110,15 @@ fun RoutineTableScreen(
         routines[selectedTabIndex]
     } else selectedRoutine
 
+    androidx.compose.runtime.LaunchedEffect(selectedTabIndex, routines) {
+        if (routines.isNotEmpty() && selectedTabIndex < routines.size) {
+            val target = routines[selectedTabIndex]
+            if (target != selectedRoutine) {
+                onSelectRoutine(target)
+            }
+        }
+    }
+
     val verticalScrollState = rememberScrollState()
 
     // Box wrapper to anchor floating rest timer overlay & sticky CTA
@@ -410,48 +419,52 @@ fun RoutineTableScreen(
                                             .fillMaxWidth()
                                             .padding(16.dp)
                                     ) {
-                                        // Header Row: Exercise Name + Goal Badge
+                                        // Header Row: Exercise Name & Index
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.Top
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Surface(
-                                                        shape = CircleShape,
-                                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                                        modifier = Modifier.size(24.dp)
-                                                    ) {
-                                                        Box(contentAlignment = Alignment.Center) {
-                                                            Text(
-                                                                text = "${idx + 1}",
-                                                                style = MaterialTheme.typography.labelSmall,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                            )
-                                                        }
-                                                    }
-                                                    Spacer(modifier = Modifier.width(8.dp))
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                modifier = Modifier.size(24.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
                                                     Text(
-                                                        text = cleanTitle,
-                                                        style = MaterialTheme.typography.titleMedium,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                }
-
-                                                if (altName != null) {
-                                                    Spacer(modifier = Modifier.height(2.dp))
-                                                    Text(
-                                                        text = "Alternative: $altName",
+                                                        text = "${idx + 1}",
                                                         style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                                                        modifier = Modifier.padding(start = 32.dp)
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                                     )
                                                 }
                                             }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = cleanTitle,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
 
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            if (altName != null) {
+                                                Text(
+                                                    text = "Alternative: $altName",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                                                    modifier = Modifier.padding(start = 32.dp)
+                                                )
+                                            } else {
+                                                Spacer(modifier = Modifier.width(1.dp))
+                                            }
                                             GoalBadge(goal = ex.primaryGoal)
                                         }
 

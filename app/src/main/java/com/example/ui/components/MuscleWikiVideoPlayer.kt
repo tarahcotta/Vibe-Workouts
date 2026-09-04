@@ -560,6 +560,14 @@ fun MuscleWikiVideoPlayer(
     DisposableEffect(videoUrl) {
         onDispose {
             try {
+                mediaPlayerRef?.let { mp ->
+                    mp.stop()
+                    mp.release()
+                }
+            } catch (e: Exception) {
+                // Suppress MediaPlayer invalid state error (-38, 0)
+            }
+            try {
                 videoViewRef?.stopPlayback()
             } catch (e: Exception) {
                 // Ignore cleanup errors

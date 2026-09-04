@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -59,6 +60,7 @@ import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
@@ -244,6 +246,7 @@ fun ActiveLoggerScreen(
     var smartWarmupDialogTarget by remember { mutableStateOf<Pair<String, Float>?>(null) }
     var baselineCalibrationTarget by remember { mutableStateOf<String?>(null) }
     var quickPlateCalcTarget by remember { mutableStateOf<Pair<String, SetLogInput>?>(null) }
+    var pendingDeleteSetTarget by remember { mutableStateOf<Triple<Int, Int, SetLogInput>?>(null) }
 
     // Rest Timer state
     var targetRestSeconds by remember { mutableIntStateOf(90) }
@@ -764,45 +767,49 @@ fun ActiveLoggerScreen(
                         // Exercise Header
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Text(
-                                                text = "${exIndex + 1}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        text = cleanTitle,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-
-                                if (altName != null) {
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Alternative: $altName",
+                                        text = "${exIndex + 1}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                                        modifier = Modifier.padding(start = 32.dp)
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
                             }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = cleanTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (altName != null) {
+                                Text(
+                                    text = "Alternative: $altName",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                                    modifier = Modifier.padding(start = 32.dp)
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.width(1.dp))
+                            }
                             GoalBadge(goal = logState.primaryGoal)
                         }
 
@@ -1240,6 +1247,7 @@ fun ActiveLoggerScreen(
                                     // Explicit Completion Button (Affordance Fix)
                                     IconButton(
                                         onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             if (!setInput.isCompleted) {
                                                 setInput.isCompleted = true
                                                 // Trigger the same logic as swipe
@@ -1277,23 +1285,27 @@ fun ActiveLoggerScreen(
                                         )
                                     }
 
-                                    // Quick Set Deletion with Undo Snackbar
+                                    // Quick Set Deletion with Confirmation for Completed Sets
                                     if (logState.sets.size > 1) {
                                         IconButton(
                                             onClick = {
-                                                val removedSet = logState.sets.removeAt(setIndex)
-                                                logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                coroutineScope.launch {
-                                                    val result = snackbarHostState.showSnackbar(
-                                                        message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
-                                                        actionLabel = "Undo",
-                                                        duration = androidx.compose.material3.SnackbarDuration.Short
-                                                    )
-                                                    if (result == SnackbarResult.ActionPerformed) {
-                                                        logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
-                                                        logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                if (setInput.isCompleted) {
+                                                    pendingDeleteSetTarget = Triple(exIndex, setIndex, setInput)
+                                                } else {
+                                                    val removedSet = logState.sets.removeAt(setIndex)
+                                                    logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    coroutineScope.launch {
+                                                        val result = snackbarHostState.showSnackbar(
+                                                            message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
+                                                            actionLabel = "Undo",
+                                                            duration = androidx.compose.material3.SnackbarDuration.Short
+                                                        )
+                                                        if (result == SnackbarResult.ActionPerformed) {
+                                                            logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
+                                                            logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        }
                                                     }
                                                 }
                                             },
@@ -1322,7 +1334,7 @@ fun ActiveLoggerScreen(
                                 ) {
                                     // Tactile Micro-Loading Chips
                                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        listOf(-5f, 2.5f, 5f).forEach { delta ->
+                                        listOf(-5f, -2.5f, 2.5f, 5f, 10f).forEach { delta ->
                                             Surface(
                                                 modifier = Modifier.clickable {
                                                     val current = setInput.weightText.toFloatOrNull() ?: 0f
@@ -1943,8 +1955,40 @@ fun ActiveLoggerScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(32.dp))
-                
+                Spacer(modifier = Modifier.height(24.dp))
+
+                val context = LocalContext.current
+                OutlinedButton(
+                    onClick = {
+                        val summaryText = buildString {
+                            appendLine("🏋️ Workout Summary: $routineTitle")
+                            appendLine("Total Completed Sets: $totalCompletedSets")
+                            appendLine("-------------------")
+                            exerciseLogs.forEach { log ->
+                                appendLine("• ${log.exerciseName}:")
+                                log.sets.forEach { set ->
+                                    appendLine("  Set ${set.setNumber}: ${set.weightText} lbs × ${set.repsText} reps (RPE ${set.rpe})")
+                                }
+                            }
+                        }
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, summaryText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, "Export Workout Summary")
+                        context.startActivity(shareIntent)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Export Workout Summary", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Button(
                     onClick = onCancel,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -2122,6 +2166,67 @@ fun ActiveLoggerScreen(
                     }
                 }
                 baselineCalibrationTarget = null
+            }
+        )
+    }
+
+    // Completed Set Deletion Confirmation Dialog
+    if (pendingDeleteSetTarget != null) {
+        val (exIdx, setIdx, targetSet) = pendingDeleteSetTarget!!
+        val exerciseName = exerciseLogs.getOrNull(exIdx)?.exerciseName ?: "Exercise"
+        AlertDialog(
+            onDismissRequest = { pendingDeleteSetTarget = null },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(
+                    text = "Delete Completed Set?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "You are about to delete $exerciseName Set ${setIdx + 1} (${targetSet.weightText} lbs × ${targetSet.repsText} reps), which is marked as completed. This action will remove recorded training data.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val logState = exerciseLogs.getOrNull(exIdx)
+                        if (logState != null && logState.sets.size > 1) {
+                            val removedSet = logState.sets.removeAt(setIdx)
+                            logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            coroutineScope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "$exerciseName Set ${setIdx + 1} deleted",
+                                    actionLabel = "Undo",
+                                    duration = androidx.compose.material3.SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    logState.sets.add(setIdx.coerceAtMost(logState.sets.size), removedSet)
+                                    logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
+                            }
+                        }
+                        pendingDeleteSetTarget = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete Set")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteSetTarget = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }

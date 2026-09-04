@@ -68,6 +68,8 @@ fun AssessmentScreen(
     currentProfile: UserProfileEntity?,
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     onThemeModeChange: (ThemeMode) -> Unit = {},
+    weightUnit: String = "lbs",
+    onWeightUnitChange: (String) -> Unit = {},
     onSaveProfile: (UserProfileEntity) -> Unit,
     onNavigateToRoutines: () -> Unit,
     modifier: Modifier = Modifier
@@ -201,6 +203,52 @@ fun AssessmentScreen(
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         ),
                         modifier = Modifier.weight(1f).testTag("theme_chip_system")
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Weight Unit Settings Card (lbs vs kg)
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("weight_unit_selection_card"),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                AssessmentSectionHeader(
+                    title = "Weight Unit",
+                    subtitle = "Choose your preferred measurement unit for tracking lifts and plate calculator"
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    FilterChip(
+                        selected = weightUnit == "lbs",
+                        onClick = { onWeightUnitChange("lbs") },
+                        label = { Text("Pounds (lbs)") },
+                        leadingIcon = { Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.weight(1f).testTag("weight_unit_chip_lbs")
+                    )
+
+                    FilterChip(
+                        selected = weightUnit == "kg",
+                        onClick = { onWeightUnitChange("kg") },
+                        label = { Text("Kilograms (kg)") },
+                        leadingIcon = { Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.weight(1f).testTag("weight_unit_chip_kg")
                     )
                 }
             }

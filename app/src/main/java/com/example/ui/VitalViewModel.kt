@@ -46,13 +46,16 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     private val sharedPrefs = application.getSharedPreferences("vital_strength_prefs", Context.MODE_PRIVATE)
 
     private val _themeMode = MutableStateFlow(
-        when (sharedPrefs.getString("theme_mode", "SYSTEM")) {
+        when (sharedPrefs.getString("theme_mode", "LIGHT")) {
             "LIGHT" -> ThemeMode.LIGHT
             "DARK" -> ThemeMode.DARK
-            else -> ThemeMode.SYSTEM
+            else -> ThemeMode.LIGHT
         }
     )
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    private val _weightUnit = MutableStateFlow(sharedPrefs.getString("weight_unit", "lbs") ?: "lbs")
+    val weightUnit: StateFlow<String> = _weightUnit.asStateFlow()
 
     private val _hasCompletedOnboarding = MutableStateFlow(sharedPrefs.getBoolean("has_completed_onboarding", false))
     val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding.asStateFlow()
@@ -216,6 +219,14 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             repository.ensureInitialDataLoaded()
+        }
+
+        viewModelScope.launch {
+            repository.activeRoutines.collect { routines ->
+                if (_selectedRoutine.value == null && routines.isNotEmpty()) {
+                    _selectedRoutine.value = routines.first()
+                }
+            }
         }
     }
 
@@ -421,6 +432,11 @@ class VitalViewModel(application: Application) : AndroidViewModel(application) {
     fun setThemeMode(mode: ThemeMode) {
         _themeMode.value = mode
         sharedPrefs.edit().putString("theme_mode", mode.name).apply()
+    }
+
+    fun setWeightUnit(unit: String) {
+        _weightUnit.value = unit
+        sharedPrefs.edit().putString("weight_unit", unit).apply()
     }
 
     fun toggleThemeMode() {

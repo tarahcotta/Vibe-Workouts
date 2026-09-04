@@ -112,6 +112,7 @@ fun MainContainer(
     var showAuthDialog by remember { mutableStateOf(false) }
 
     val themeMode by viewModel.themeMode.collectAsState()
+    val weightUnit by viewModel.weightUnit.collectAsState()
     val hasCompletedOnboarding by viewModel.hasCompletedOnboarding.collectAsState()
     val profile by viewModel.userProfile.collectAsState()
     val routines by viewModel.activeRoutines.collectAsState()
@@ -460,6 +461,8 @@ fun MainContainer(
                         currentProfile = profile,
                         themeMode = themeMode,
                         onThemeModeChange = { viewModel.setThemeMode(it) },
+                        weightUnit = weightUnit,
+                        onWeightUnitChange = { viewModel.setWeightUnit(it) },
                         onSaveProfile = { newProfile ->
                             viewModel.saveUserProfile(newProfile)
                         },

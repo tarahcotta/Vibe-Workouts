@@ -351,9 +351,10 @@ fun DashboardScreen(
                     Icon(imageVector = if (isSessionActive) Icons.Default.Refresh else Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(28.dp))
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = if (isSessionActive) "RESUME SESSION" else "START WORKOUT NOW",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black
+                        text = if (isSessionActive) "RESUME SESSION" else "START WORKOUT",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1
                     )
                 }
 
@@ -1366,7 +1367,8 @@ fun BoneDensityGoalProgressCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
@@ -1457,8 +1459,10 @@ fun BmdGoalProgressItem(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = statusText,
                 style = MaterialTheme.typography.labelSmall,
@@ -1902,7 +1906,12 @@ fun DashboardEmptyState(onStartWorkoutClick: () -> Unit) {
             ) {
                 Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("START RECOMMENDED ROUTINE", fontWeight = FontWeight.Black)
+                Text(
+                    text = "START ROUTINE",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1
+                )
             }
         }
     }

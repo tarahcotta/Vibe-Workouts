@@ -71,6 +71,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.example.ui.theme.BoneDensityGold
 import com.example.ui.theme.PostureTeal
 import kotlinx.coroutines.delay
@@ -99,6 +101,13 @@ fun BuiltInIntervalTimerCard(
     } else 0f
 
     val isFinished = remainingSeconds == 0 && targetRestSeconds > 0
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(isFinished) {
+        if (isFinished) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
 
     Card(
         modifier = modifier
