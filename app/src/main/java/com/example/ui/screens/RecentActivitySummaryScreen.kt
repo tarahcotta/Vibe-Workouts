@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import com.example.ui.components.CustomFlowRow
 import com.example.ui.components.IllustrativeEmptyState
+import com.example.ui.components.WorkoutHistoryEmptyCard
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -591,23 +592,21 @@ fun RecentActivitySummaryScreen(
 
         // Sessions List or Empty State
         if (filteredSessions.isEmpty()) {
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                IllustrativeEmptyState(
-                    icon = Icons.Default.History,
-                    title = if (searchQuery.isNotBlank()) "No Matches Found" else "Ready to Get Started?",
-                    description = if (searchQuery.isNotBlank()) "We couldn't find any workouts matching '${searchQuery}'." else "Your workout history is empty for this time range. Start logging your sessions to see your progress here!",
-                    actionButton = {
-                        Button(
-                            onClick = onStartNewWorkout,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Text("Start Your First Workout", fontWeight = FontWeight.Bold)
-                        }
-                    }
+            if (searchQuery.isNotBlank()) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    IllustrativeEmptyState(
+                        icon = Icons.Default.History,
+                        title = "No Matches Found",
+                        description = "We couldn't find any workouts matching '${searchQuery}'.",
+                        actionButton = null
+                    )
+                }
+            } else {
+                WorkoutHistoryEmptyCard(
+                    onStartWorkout = onStartNewWorkout
                 )
             }
         } else {

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speed
@@ -451,6 +452,180 @@ private fun OnboardingStepRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+fun HistoryCanvasIllustration(
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.tertiary
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(160.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val cx = w / 2f
+            val cy = h / 2f
+
+            // Soft Background Glow
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        primaryColor.copy(alpha = 0.15f),
+                        secondaryColor.copy(alpha = 0.05f),
+                        Color.Transparent
+                    ),
+                    center = Offset(cx, cy),
+                    radius = w * 0.4f
+                ),
+                center = Offset(cx, cy),
+                radius = w * 0.4f
+            )
+
+            val barWidth = 24.dp.toPx()
+            val spacing = 16.dp.toPx()
+            val totalBars = 5
+            val totalWidth = (totalBars * barWidth) + ((totalBars - 1) * spacing)
+            val startX = (w - totalWidth) / 2f
+
+            val heights = listOf(0.4f, 0.7f, 0.5f, 0.85f, 0.6f)
+            for (i in 0 until totalBars) {
+                val x = startX + i * (barWidth + spacing)
+                val barH = h * 0.55f * heights[i]
+                val topY = cy + 20.dp.toPx() - barH
+
+                // Background track
+                drawRoundRect(
+                    color = primaryColor.copy(alpha = 0.1f),
+                    topLeft = Offset(x, cy - 30.dp.toPx()),
+                    size = Size(barWidth, 60.dp.toPx()),
+                    cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
+                )
+
+                // Filled activity bar
+                drawRoundRect(
+                    color = if (i % 2 == 0) primaryColor else secondaryColor,
+                    topLeft = Offset(x, topY),
+                    size = Size(barWidth, cy + 20.dp.toPx() - topY),
+                    cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
+                )
+            }
+
+            // Connecting trend curve
+            val path = Path().apply {
+                moveTo(startX + barWidth / 2f, cy - 10.dp.toPx())
+                cubicTo(
+                    startX + barWidth + spacing + barWidth / 2f, cy - 35.dp.toPx(),
+                    startX + 2 * (barWidth + spacing) + barWidth / 2f, cy - 5.dp.toPx(),
+                    startX + 3 * (barWidth + spacing) + barWidth / 2f, cy - 45.dp.toPx()
+                )
+                lineTo(startX + 4 * (barWidth + spacing) + barWidth / 2f, cy - 25.dp.toPx())
+            }
+            drawPath(
+                path = path,
+                color = Color(0xFF00E676),
+                style = Stroke(width = 2.5.dp.toPx())
+            )
+        }
+    }
+}
+
+@Composable
+fun WorkoutHistoryEmptyCard(
+    onStartWorkout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "WORKOUT ARCHIVE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "No Workout History Yet",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "Your completed sets, volume PRs, and consistency logs will appear here automatically after your first session.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HistoryCanvasIllustration(modifier = Modifier.fillMaxWidth())
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = onStartWorkout,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Start First Session",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

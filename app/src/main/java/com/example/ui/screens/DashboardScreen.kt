@@ -95,6 +95,7 @@ import com.example.data.UserProfileEntity
 import com.example.data.WorkoutRoutineEntity
 import com.example.ui.VitalViewModel
 import com.example.ui.components.AIRecommendationsCard
+import com.example.ui.components.CustomFlowRow
 import com.example.ui.components.AuthSyncCard
 import com.example.ui.components.BoneDensityDxaSimulatorCard
 import com.example.ui.components.FirstWorkoutOnboardingCard
@@ -524,12 +525,13 @@ fun DashboardScreen(
                         var insightsCategoryFilter by remember { mutableStateOf("All") }
                         val categories = listOf("All", "Load & Volume", "Bone Density", "History & Readiness")
 
-                        // Segmented Filter Chips Row
-                        Row(
+                        // Segmented Filter Chips Row (Responsive FlowRow)
+                        CustomFlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalSpacing = 8.dp,
+                            verticalSpacing = 8.dp
                         ) {
                             categories.forEach { cat ->
                                 FilterChip(

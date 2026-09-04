@@ -1098,284 +1098,243 @@ fun ActiveLoggerScreen(
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                        // Set Rows
+                        // Set Rows (Clean, Uncluttered Cards)
                         logState.sets.forEachIndexed { setIndex, setInput ->
-                            Column(
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
+                                    .padding(vertical = 6.dp)
+                                    .testTag("set_card_${exIndex}_$setIndex"),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (setInput.isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                                border = BorderStroke(1.dp, if (setInput.isCompleted) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             ) {
-                                com.example.ui.components.SwipeToCompleteWrapper(
-                                    isCompleted = setInput.isCompleted,
-                                    onComplete = {
-                                        if (!setInput.isCompleted) {
-                                            setInput.isCompleted = true
-                                            // Auto-populate subsequent sets if they have default values
-                                            logState.sets.forEachIndexed { i, s ->
-                                                if (i > setIndex && !s.isCompleted) {
-                                                    s.weightText = setInput.weightText
-                                                    s.repsText = setInput.repsText
-                                                }
-                                            }
-                                            val calculatedRest = when {
-                                                setInput.rpe >= 9 -> 120
-                                                setInput.rpe == 8 -> 90
-                                                else -> 60
-                                            }
-                                            startRestTimer(calculatedRest, logState.exerciseName)
-                                            val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
-                                            val previousMax = personalBests[logState.exerciseName] ?: 0f
-                                            if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
-                                                prNotificationExercise = logState.exerciseName
-                                                prNotificationNewWeight = currentWeight
-                                                prNotificationOldMax = previousMax
-                                                showPrBanner = true
-                                                showPrCelebrationDialog = true
-                                            }
-                                        }
-                                    }
-                                ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Set Number Indicator
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (setInput.isCompleted) MaterialTheme.colorScheme.primaryContainer
-                                                else MaterialTheme.colorScheme.surfaceVariant
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "${setInput.setNumber}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // Weight Input Field (Gym Stepper)
-                                    CompactGymStepper(
-                                        valueText = setInput.weightText,
-                                        onValueChange = { setInput.weightText = it },
-                                        label = "Weight",
-                                        step = 5f,
-                                        modifier = Modifier.width(115.dp).testTag("weight_input_${exIndex}_$setIndex")
-                                    )
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // Reps Input Field (Gym Stepper)
-                                    CompactGymStepper(
-                                        valueText = setInput.repsText,
-                                        onValueChange = { setInput.repsText = it },
-                                        label = "Reps",
-                                        step = 1f,
-                                        modifier = Modifier.width(100.dp).testTag("reps_input_${exIndex}_$setIndex")
-                                    )
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // Accessible Interactive Joint Feel Selector Pill (WCAG Compliant) with Semantic Iconography
-                                    val jointBg = when (setInput.jointFeel) {
-                                        "Comfortable" -> MaterialTheme.colorScheme.tertiaryContainer
-                                        "Mild Tension" -> MaterialTheme.colorScheme.secondaryContainer
-                                        else -> MaterialTheme.colorScheme.errorContainer
-                                    }
-                                    val jointFg = when (setInput.jointFeel) {
-                                        "Comfortable" -> MaterialTheme.colorScheme.onTertiaryContainer
-                                        "Mild Tension" -> MaterialTheme.colorScheme.onSecondaryContainer
-                                        else -> MaterialTheme.colorScheme.onErrorContainer
-                                    }
-                                    val jointIcon = when (setInput.jointFeel) {
-                                        "Comfortable" -> Icons.Default.Shield
-                                        "Mild Tension" -> Icons.Default.Warning
-                                        else -> Icons.Default.Warning
-                                    }
-                                    val jointLabel = when (setInput.jointFeel) {
-                                        "Comfortable" -> "Normal"
-                                        "Mild Tension" -> "Tension"
-                                        else -> "Strain"
-                                    }
-
-                                    Surface(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
-                                            .clickable {
-                                                setInput.jointFeel = when (setInput.jointFeel) {
-                                                    "Comfortable" -> "Mild Tension"
-                                                    "Mild Tension" -> "Joint Strain"
-                                                    else -> "Comfortable"
-                                                }
-                                            },
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = jointBg,
-                                        border = BorderStroke(1.dp, jointFg.copy(alpha = 0.3f))
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center,
-                                            modifier = Modifier.padding(horizontal = 4.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = jointIcon,
-                                                contentDescription = null,
-                                                tint = jointFg,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                text = "$jointLabel ▾",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = jointFg,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // Explicit Completion Button (Affordance Fix)
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (!setInput.isCompleted) {
-                                                setInput.isCompleted = true
-                                                // Trigger the same logic as swipe
-                                                logState.sets.forEachIndexed { i, s ->
-                                                    if (i > setIndex && !s.isCompleted) {
-                                                        s.weightText = setInput.weightText
-                                                        s.repsText = setInput.repsText
-                                                    }
-                                                }
-                                                val calculatedRest = when {
-                                                    setInput.rpe >= 9 -> 120
-                                                    setInput.rpe == 8 -> 90
-                                                    else -> 60
-                                                }
-                                                startRestTimer(calculatedRest, logState.exerciseName)
-                                                val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
-                                                val previousMax = personalBests[logState.exerciseName] ?: 0f
-                                                if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
-                                                    prNotificationExercise = logState.exerciseName
-                                                    prNotificationNewWeight = currentWeight
-                                                    prNotificationOldMax = previousMax
-                                                    showPrBanner = true
-                                                    showPrCelebrationDialog = true
-                                                }
-                                            } else {
-                                                setInput.isCompleted = false
-                                            }
-                                        },
-                                        modifier = Modifier.size(48.dp).testTag("set_complete_button_${exIndex}_$setIndex")
-                                    ) {
-                                        Icon(
-                                            imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                            contentDescription = if (setInput.isCompleted) "Set Completed" else "Mark Set Complete",
-                                            tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    // Quick Set Deletion with Confirmation for Completed Sets
-                                    if (logState.sets.size > 1) {
-                                        IconButton(
-                                            onClick = {
-                                                if (setInput.isCompleted) {
-                                                    pendingDeleteSetTarget = Triple(exIndex, setIndex, setInput)
-                                                } else {
-                                                    val removedSet = logState.sets.removeAt(setIndex)
-                                                    logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    coroutineScope.launch {
-                                                        val result = snackbarHostState.showSnackbar(
-                                                            message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
-                                                            actionLabel = "Undo",
-                                                            duration = androidx.compose.material3.SnackbarDuration.Short
-                                                        )
-                                                        if (result == SnackbarResult.ActionPerformed) {
-                                                            logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
-                                                            logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            modifier = Modifier.size(36.dp).testTag("delete_set_button_${exIndex}_$setIndex")
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Delete Set ${setIndex + 1}",
-                                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                                }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                // Micro-Loading Steppers & Target RPE / RIR Selector Row
-                                Row(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(start = 42.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                        .padding(12.dp)
                                 ) {
-                                    // Tactile Micro-Loading Chips
-                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        listOf(-5f, -2.5f, 2.5f, 5f, 10f).forEach { delta ->
-                                            Surface(
-                                                modifier = Modifier.clickable {
-                                                    val current = setInput.weightText.toFloatOrNull() ?: 0f
-                                                    val newWeight = (current + delta).coerceAtLeast(0f)
-                                                    setInput.weightText = if (newWeight % 1f == 0f) "${newWeight.toInt()}" else "$newWeight"
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        // Set Number Indicator
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (setInput.isCompleted) MaterialTheme.colorScheme.primaryContainer
+                                                    else MaterialTheme.colorScheme.surfaceVariant
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "${setInput.setNumber}",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Weight Input Field (Gym Stepper)
+                                        CompactGymStepper(
+                                            valueText = setInput.weightText,
+                                            onValueChange = { setInput.weightText = it },
+                                            label = "Weight",
+                                            step = 5f,
+                                            modifier = Modifier.width(120.dp).testTag("weight_input_${exIndex}_$setIndex")
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Reps Input Field (Gym Stepper)
+                                        CompactGymStepper(
+                                            valueText = setInput.repsText,
+                                            onValueChange = { setInput.repsText = it },
+                                            label = "Reps",
+                                            step = 1f,
+                                            modifier = Modifier.width(105.dp).testTag("reps_input_${exIndex}_$setIndex")
+                                        )
+
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        // Complete Set Button
+                                        IconButton(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                if (!setInput.isCompleted) {
+                                                    setInput.isCompleted = true
+                                                    logState.sets.forEachIndexed { i, s ->
+                                                        if (i > setIndex && !s.isCompleted) {
+                                                            s.weightText = setInput.weightText
+                                                            s.repsText = setInput.repsText
+                                                        }
+                                                    }
+                                                    val calculatedRest = when {
+                                                        setInput.rpe >= 9 -> 120
+                                                        setInput.rpe == 8 -> 90
+                                                        else -> 60
+                                                    }
+                                                    startRestTimer(calculatedRest, logState.exerciseName)
+                                                    val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                                                    val previousMax = personalBests[logState.exerciseName] ?: 0f
+                                                    if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
+                                                        prNotificationExercise = logState.exerciseName
+                                                        prNotificationNewWeight = currentWeight
+                                                        prNotificationOldMax = previousMax
+                                                        showPrBanner = true
+                                                        showPrCelebrationDialog = true
+                                                    }
+                                                } else {
+                                                    setInput.isCompleted = false
+                                                }
+                                            },
+                                            modifier = Modifier.size(44.dp).testTag("set_complete_button_${exIndex}_$setIndex")
+                                        ) {
+                                            Icon(
+                                                imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                                contentDescription = if (setInput.isCompleted) "Set Completed" else "Mark Set Complete",
+                                                tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        // Delete Set Button
+                                        if (logState.sets.size > 1) {
+                                            IconButton(
+                                                onClick = {
+                                                    if (setInput.isCompleted) {
+                                                        pendingDeleteSetTarget = Triple(exIndex, setIndex, setInput)
+                                                    } else {
+                                                        val removedSet = logState.sets.removeAt(setIndex)
+                                                        logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        coroutineScope.launch {
+                                                            val result = snackbarHostState.showSnackbar(
+                                                                message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
+                                                                actionLabel = "Undo",
+                                                                duration = androidx.compose.material3.SnackbarDuration.Short
+                                                            )
+                                                            if (result == SnackbarResult.ActionPerformed) {
+                                                                logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
+                                                                logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            }
+                                                        }
+                                                    }
                                                 },
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                                modifier = Modifier.size(36.dp).testTag("delete_set_button_${exIndex}_$setIndex")
                                             ) {
-                                                Text(
-                                                    text = if (delta > 0f) "+$delta" else "$delta",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Delete Set ${setIndex + 1}",
+                                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                                                    modifier = Modifier.size(18.dp)
                                                 )
                                             }
                                         }
                                     }
 
-                                    // Contextual RPE & RIR Decoder Pill with direct info helper
-                                    val rirCount = (10 - setInput.rpe).coerceAtLeast(0)
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                                        modifier = Modifier.clickable {
-                                            rpePickerSet = Pair(setInput, logState.exerciseName)
-                                        }
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Compact Secondary Metadata Row (Joint Feel & RPE / RIR)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                        // Joint Feel Selector
+                                        val jointBg = when (setInput.jointFeel) {
+                                            "Comfortable" -> MaterialTheme.colorScheme.tertiaryContainer
+                                            "Mild Tension" -> MaterialTheme.colorScheme.secondaryContainer
+                                            else -> MaterialTheme.colorScheme.errorContainer
+                                        }
+                                        val jointFg = when (setInput.jointFeel) {
+                                            "Comfortable" -> MaterialTheme.colorScheme.onTertiaryContainer
+                                            "Mild Tension" -> MaterialTheme.colorScheme.onSecondaryContainer
+                                            else -> MaterialTheme.colorScheme.onErrorContainer
+                                        }
+                                        val jointIcon = when (setInput.jointFeel) {
+                                            "Comfortable" -> Icons.Default.Shield
+                                            else -> Icons.Default.Warning
+                                        }
+                                        val jointLabel = when (setInput.jointFeel) {
+                                            "Comfortable" -> "Joints: Normal"
+                                            "Mild Tension" -> "Joints: Tension"
+                                            else -> "Joints: Strain"
+                                        }
+
+                                        Surface(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(36.dp)
+                                                .clickable {
+                                                    setInput.jointFeel = when (setInput.jointFeel) {
+                                                        "Comfortable" -> "Mild Tension"
+                                                        "Mild Tension" -> "Joint Strain"
+                                                        else -> "Comfortable"
+                                                    }
+                                                },
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = jointBg,
+                                            border = BorderStroke(1.dp, jointFg.copy(alpha = 0.3f))
                                         ) {
-                                            Text(
-                                                text = "RPE ${setInput.rpe} (${rirCount} RIR) ▾",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center,
+                                                modifier = Modifier.padding(horizontal = 6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = jointIcon,
+                                                    contentDescription = null,
+                                                    tint = jointFg,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = "$jointLabel ▾",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = jointFg,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+
+                                        // RPE / RIR Selector Pill
+                                        val rirCount = (10 - setInput.rpe).coerceAtLeast(0)
+                                        Surface(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(36.dp)
+                                                .clickable {
+                                                    rpePickerSet = Pair(setInput, logState.exerciseName)
+                                                },
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = "RPE ${setInput.rpe} (${rirCount} RIR) ▾",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (setInput.rpe in 7..8) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
                                         }
                                     }
                                 }

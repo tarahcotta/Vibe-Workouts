@@ -868,30 +868,41 @@ private fun parseExerciseTitle(rawName: String): Pair<String, String?> {
 
 @Composable
 fun GoalBadge(goal: String) {
-    val (bgColor, textColor) = when {
+    val (bgColor, textColor, icon) = when {
         goal.contains("Bone", ignoreCase = true) || goal.contains("Spine", ignoreCase = true) || goal.contains("Axial", ignoreCase = true) ->
-            Pair(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+            Triple(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer, Icons.Default.Shield)
         goal.contains("Posture", ignoreCase = true) || goal.contains("Scapular", ignoreCase = true) ->
-            Pair(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+            Triple(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer, Icons.Default.AccessibilityNew)
         goal.contains("Glute", ignoreCase = true) || goal.contains("Sacral", ignoreCase = true) ->
-            Pair(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
+            Triple(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer, Icons.Default.FitnessCenter)
         goal.contains("Grip", ignoreCase = true) || goal.contains("Core", ignoreCase = true) ->
-            Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
-        else -> Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
+            Triple(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant, Icons.Default.DirectionsRun)
+        else -> Triple(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant, Icons.Default.FitnessCenter)
     }
 
     Surface(
         shape = RoundedCornerShape(8.dp),
         color = bgColor
     ) {
-        Text(
-            text = goal,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = textColor,
+        Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = textColor
+            )
+            Text(
+                text = goal,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
