@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import android.os.CountDownTimer
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -222,19 +223,20 @@ fun PreWorkoutMobilityCard(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 5.dp)
+                                .padding(vertical = 6.dp)
                                 .clickable {
                                     if (isDone) completedDrills.remove(index) else completedDrills.add(
                                         index
                                     )
                                     if (completedDrills.size == drills.size) onWarmupCompleted()
                                 },
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isDone) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                                containerColor = if (isDone) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                             )
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                // Top Row: Checkbox, Title, and Timer Button
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -246,7 +248,7 @@ fun PreWorkoutMobilityCard(
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .size(26.dp)
+                                                .size(28.dp)
                                                 .clip(CircleShape)
                                                 .background(
                                                     if (isDone) MaterialTheme.colorScheme.primary else Color.Transparent
@@ -268,27 +270,44 @@ fun PreWorkoutMobilityCard(
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
 
-                                        Column {
-                                            Text(
-                                                text = drill.title,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = "${drill.targetArea} • ${drill.durationOrReps}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.secondary
-                                            )
-                                        }
+                                        Text(
+                                            text = drill.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Second Row: Target Area / Duration & Quick Timer Button
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+                                    ) {
+                                        Text(
+                                            text = "${drill.targetArea} • ${drill.durationOrReps}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
                                     }
 
                                     // Quick 60s drill timer button
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
                                         color = if (isCurrentTimer && isTimerRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
                                         modifier = Modifier.clickable {
                                             if (isCurrentTimer && isTimerRunning) {
                                                 isTimerRunning = false
@@ -301,8 +320,8 @@ fun PreWorkoutMobilityCard(
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(
-                                                horizontal = 8.dp,
-                                                vertical = 4.dp
+                                                horizontal = 10.dp,
+                                                vertical = 6.dp
                                             ),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
@@ -323,7 +342,7 @@ fun PreWorkoutMobilityCard(
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
                                 Text(
                                     text = drill.instructionCue,
@@ -331,15 +350,30 @@ fun PreWorkoutMobilityCard(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = "💡 Longevity Benefit: ${drill.primaryBenefit}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "💡",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(end = 6.dp)
+                                        )
+                                        Text(
+                                            text = "Longevity Benefit: ${drill.primaryBenefit}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

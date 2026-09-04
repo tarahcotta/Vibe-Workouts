@@ -41,6 +41,8 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Timer10
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -98,6 +100,7 @@ fun BuiltInIntervalTimerCard(
     modifier: Modifier = Modifier
 ) {
     var mode by remember { mutableStateOf(TimerMode.COUNTDOWN) }
+    var showPresets by remember { mutableStateOf(false) }
     val progress = if (targetRestSeconds > 0) {
         ((targetRestSeconds - remainingSeconds).toFloat() / targetRestSeconds.toFloat()).coerceIn(0f, 1f)
     } else 0f
@@ -294,88 +297,134 @@ fun BuiltInIntervalTimerCard(
                         )
                     }
                 }
+            }
 
-                // Quick Adjustment Buttons (+15s / -15s)
-                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                            modifier = Modifier
-                                .clickable { onAdjustSeconds(-15) }
-                                .testTag("interval_timer_minus_15")
-                        ) {
-                            Text(
-                                text = "-15s",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
+            Spacer(modifier = Modifier.height(12.dp))
 
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier
-                                .clickable { onAdjustSeconds(15) }
-                                .testTag("interval_timer_plus_15")
-                        ) {
-                            Text(
-                                text = "+15s",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
+            // Progressive Disclosure Toggle Button
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showPresets = !showPresets }
+                    .testTag("toggle_presets_button"),
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (showPresets) "Hide Presets & Adjustments" else "Configure Rest Time (${targetRestSeconds}s) & Presets",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Icon(
+                        imageVector = if (showPresets) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 4. Streamlined Rest Presets Row
-            Text(
-                text = "REST DURATION PRESETS",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 0.5.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            CustomFlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalSpacing = 6.dp,
-                verticalSpacing = 6.dp
-            ) {
-                val presets = listOf(
-                    45 to "45s Hypertrophy",
-                    60 to "60s Endurance",
-                    90 to "90s Bone Density",
-                    120 to "120s Strength",
-                    180 to "180s Heavy"
-                )
-                presets.forEach { (seconds, label) ->
-                    val isSelected = targetRestSeconds == seconds
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
-                        modifier = Modifier
-                            .clickable { onPresetSelected(seconds) }
-                            .testTag("interval_preset_$seconds")
+            AnimatedVisibility(visible = showPresets) {
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = label,
+                            text = "QUICK ADJUST",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 0.5.sp
                         )
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surface,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                modifier = Modifier
+                                    .clickable { onAdjustSeconds(-15) }
+                                    .testTag("interval_timer_minus_15")
+                            ) {
+                                Text(
+                                    text = "-15s",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier
+                                    .clickable { onAdjustSeconds(15) }
+                                    .testTag("interval_timer_plus_15")
+                            ) {
+                                Text(
+                                    text = "+15s",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "REST DURATION PRESETS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 0.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    CustomFlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalSpacing = 6.dp,
+                        verticalSpacing = 6.dp
+                    ) {
+                        val presets = listOf(
+                            45 to "45s Hypertrophy",
+                            60 to "60s Endurance",
+                            90 to "90s Bone Density",
+                            120 to "120s Strength",
+                            180 to "180s Heavy"
+                        )
+                        presets.forEach { (seconds, label) ->
+                            val isSelected = targetRestSeconds == seconds
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
+                                modifier = Modifier
+                                    .clickable { onPresetSelected(seconds) }
+                                    .testTag("interval_preset_$seconds")
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

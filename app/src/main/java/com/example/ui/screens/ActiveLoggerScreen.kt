@@ -419,63 +419,68 @@ fun ActiveLoggerScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // View Mode Switch: Focus HUD vs Detailed List
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    // View Mode Switch: Focus HUD vs Detailed List (High Contrast Visual Hierarchy)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ) {
-                        Surface(
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(34.dp)
-                                .clickable { isFocusHudMode = false },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (!isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
+                                .fillMaxWidth()
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clickable { isFocusHudMode = false },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (!isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
                             ) {
-                                Text(
-                                    text = "Full List View",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (!isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Full List View",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (!isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
-                        }
 
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(34.dp)
-                                .clickable { isFocusHudMode = true },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clickable { isFocusHudMode = true },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isFocusHudMode) MaterialTheme.colorScheme.primary else Color.Transparent
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.FitnessCenter,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Focus HUD (In-Workout)",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FitnessCenter,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Focus HUD",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isFocusHudMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -1145,35 +1150,113 @@ fun ActiveLoggerScreen(
                                         .fillMaxWidth()
                                         .padding(12.dp)
                                 ) {
-                                    // Row 1: Set Number, Weight Input, Reps Input, Done / Delete
+                                    // Tier 1: Set Number Badge & Actions
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        // Set Number Indicator
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    if (setInput.isCompleted) MaterialTheme.colorScheme.primaryContainer
-                                                    else MaterialTheme.colorScheme.surfaceVariant
-                                                ),
-                                            contentAlignment = Alignment.Center
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (setInput.isCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                                         ) {
                                             Text(
-                                                text = "${setInput.setNumber}",
+                                                text = "SET ${setInput.setNumber}",
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold,
-                                                color = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = if (setInput.isCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            // Complete Set Button
+                                            IconButton(
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    if (!setInput.isCompleted) {
+                                                        setInput.isCompleted = true
+                                                        logState.sets.forEachIndexed { i, s ->
+                                                            if (i > setIndex && !s.isCompleted) {
+                                                                s.weightText = setInput.weightText
+                                                                s.repsText = setInput.repsText
+                                                            }
+                                                        }
+                                                        val calculatedRest = when {
+                                                            setInput.rpe >= 9 -> 120
+                                                            setInput.rpe == 8 -> 90
+                                                            else -> 60
+                                                        }
+                                                        startRestTimer(calculatedRest, logState.exerciseName)
+                                                        val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                                                        val previousMax = personalBests[logState.exerciseName] ?: 0f
+                                                        if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
+                                                            prNotificationExercise = logState.exerciseName
+                                                            prNotificationNewWeight = currentWeight
+                                                            prNotificationOldMax = previousMax
+                                                            showPrBanner = true
+                                                            showPrCelebrationDialog = true
+                                                        }
+                                                    } else {
+                                                        setInput.isCompleted = false
+                                                    }
+                                                },
+                                                modifier = Modifier.size(40.dp).testTag("set_complete_button_${exIndex}_$setIndex")
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                                    contentDescription = if (setInput.isCompleted) "Set Completed" else "Mark Set Complete",
+                                                    tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
 
-                                        // Weight Input Field with explicit label
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            // Delete Set Button
+                                            if (logState.sets.size > 1) {
+                                                IconButton(
+                                                    onClick = {
+                                                        if (setInput.isCompleted) {
+                                                            pendingDeleteSetTarget = Triple(exIndex, setIndex, setInput)
+                                                        } else {
+                                                            val removedSet = logState.sets.removeAt(setIndex)
+                                                            logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            coroutineScope.launch {
+                                                                val result = snackbarHostState.showSnackbar(
+                                                                    message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
+                                                                    actionLabel = "Undo",
+                                                                    duration = androidx.compose.material3.SnackbarDuration.Short
+                                                                )
+                                                                if (result == SnackbarResult.ActionPerformed) {
+                                                                    logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
+                                                                    logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
+                                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    modifier = Modifier.size(36.dp).testTag("delete_set_button_${exIndex}_$setIndex")
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Delete Set ${setIndex + 1}",
+                                                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Tier 2: Weight & Reps Steppers in Equal Weight Columns
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Weight Input Field
+                                        Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = "Weight (lbs)",
                                                 style = MaterialTheme.typography.labelSmall,
@@ -1186,14 +1269,12 @@ fun ActiveLoggerScreen(
                                                 onValueChange = { setInput.weightText = it },
                                                 label = "Weight",
                                                 step = 5f,
-                                                modifier = Modifier.width(115.dp).testTag("weight_input_${exIndex}_$setIndex")
+                                                modifier = Modifier.fillMaxWidth().testTag("weight_input_${exIndex}_$setIndex")
                                             )
                                         }
 
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // Reps Input Field with explicit label
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        // Reps Input Field
+                                        Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = "Reps",
                                                 style = MaterialTheme.typography.labelSmall,
@@ -1206,87 +1287,12 @@ fun ActiveLoggerScreen(
                                                 onValueChange = { setInput.repsText = it },
                                                 label = "Reps",
                                                 step = 1f,
-                                                modifier = Modifier.width(105.dp).testTag("reps_input_${exIndex}_$setIndex")
+                                                modifier = Modifier.fillMaxWidth().testTag("reps_input_${exIndex}_$setIndex")
                                             )
-                                        }
-
-                                        Spacer(modifier = Modifier.weight(1f))
-
-                                        // Complete Set Button
-                                        IconButton(
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                if (!setInput.isCompleted) {
-                                                    setInput.isCompleted = true
-                                                    logState.sets.forEachIndexed { i, s ->
-                                                        if (i > setIndex && !s.isCompleted) {
-                                                            s.weightText = setInput.weightText
-                                                            s.repsText = setInput.repsText
-                                                        }
-                                                    }
-                                                    val calculatedRest = when {
-                                                        setInput.rpe >= 9 -> 120
-                                                        setInput.rpe == 8 -> 90
-                                                        else -> 60
-                                                    }
-                                                    startRestTimer(calculatedRest, logState.exerciseName)
-                                                    val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
-                                                    val previousMax = personalBests[logState.exerciseName] ?: 0f
-                                                    if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
-                                                        prNotificationExercise = logState.exerciseName
-                                                        prNotificationNewWeight = currentWeight
-                                                        prNotificationOldMax = previousMax
-                                                        showPrBanner = true
-                                                        showPrCelebrationDialog = true
-                                                    }
-                                                } else {
-                                                    setInput.isCompleted = false
-                                                }
-                                            },
-                                            modifier = Modifier.size(44.dp).testTag("set_complete_button_${exIndex}_$setIndex")
-                                        ) {
-                                            Icon(
-                                                imageVector = if (setInput.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                                contentDescription = if (setInput.isCompleted) "Set Completed" else "Mark Set Complete",
-                                                tint = if (setInput.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-
-                                        // Delete Set Button
-                                        if (logState.sets.size > 1) {
-                                            IconButton(
-                                                onClick = {
-                                                    if (setInput.isCompleted) {
-                                                        pendingDeleteSetTarget = Triple(exIndex, setIndex, setInput)
-                                                    } else {
-                                                        val removedSet = logState.sets.removeAt(setIndex)
-                                                        logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                        coroutineScope.launch {
-                                                            val result = snackbarHostState.showSnackbar(
-                                                                message = "${logState.exerciseName} Set ${setIndex + 1} deleted",
-                                                                actionLabel = "Undo",
-                                                                duration = androidx.compose.material3.SnackbarDuration.Short
-                                                            )
-                                                            if (result == SnackbarResult.ActionPerformed) {
-                                                                logState.sets.add(setIndex.coerceAtMost(logState.sets.size), removedSet)
-                                                                logState.sets.forEachIndexed { idx, s -> s.setNumber = idx + 1 }
-                                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                modifier = Modifier.size(36.dp).testTag("delete_set_button_${exIndex}_$setIndex")
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete Set ${setIndex + 1}",
-                                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
                                         }
                                     }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
 
                                     Spacer(modifier = Modifier.height(8.dp))
 
