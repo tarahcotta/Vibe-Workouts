@@ -75,9 +75,9 @@ fun BoneDensityDxaSimulatorCard(
     }
 
     val statusColor = when {
-        simulatedTScore >= -1.0f -> Color(0xFF00E676)
-        simulatedTScore >= -2.5f -> Color(0xFFFFB74D)
-        else -> Color(0xFFE57373)
+        simulatedTScore >= -1.0f -> Color(0xFF00C853)
+        simulatedTScore >= -2.5f -> Color(0xFFF57C00)
+        else -> Color(0xFFD32F2F)
     }
 
     val dxaAccessibleSummary = remember(simulatedTScore, initialTScore, interventionGainPercent, weeks, trainingFrequencyPerWeek, isSedentaryComparison) {
@@ -95,40 +95,45 @@ fun BoneDensityDxaSimulatorCard(
                 heading()
                 contentDescription = dxaAccessibleSummary
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header with Science Badge
+            // ==========================================
+            // 1. HEADER & SCIENCE CONTEXT
+            // ==========================================
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Science,
                                 contentDescription = "Clinical Science Icon",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
                             text = "DXA Bone Density Simulator",
@@ -137,7 +142,7 @@ fun BoneDensityDxaSimulatorCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "LIFTMOR Clinical Remodeling Model",
+                            text = "LIFTMOR Clinical Trial Remodeling Model",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -148,7 +153,7 @@ fun BoneDensityDxaSimulatorCard(
                 IconButton(
                     onClick = { showClinicalDetails = !showClinicalDetails },
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(36.dp)
                         .semantics {
                             contentDescription = if (showClinicalDetails) "Hide clinical trial details" else "Show clinical trial details"
                         }
@@ -157,59 +162,28 @@ fun BoneDensityDxaSimulatorCard(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Prominent Non-Diagnostic Research Badge
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Science,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "RESEARCH SIMULATION — NOT A MEDICAL DIAGNOSIS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontSize = 10.sp,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-            }
-
+            // Expandable Clinical Details Box
             AnimatedVisibility(visible = showClinicalDetails) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = "Clinical Foundation:",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Based on the landmark LIFTMOR trial (Watson et al., JBMR 2018), high-intensity resistance training at RPE 8+ reversed bone mineral density decline in postmenopausal women with osteopenia/osteoporosis, improving femoral neck & lumbar spine T-scores while reducing kyphosis.",
+                            text = "Based on the landmark LIFTMOR trial (Watson et al., JBMR 2018), high-intensity resistance training at RPE 8+ reversed bone mineral density decline in postmenopausal women with osteopenia/osteoporosis, improving femoral neck & lumbar spine T-scores.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -217,183 +191,235 @@ fun BoneDensityDxaSimulatorCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Main Metric Comparison Display
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                    .padding(14.dp)
-                    .semantics(mergeDescendants = true) {
-                        contentDescription = "Projected T-Score: ${String.format("%.2f", simulatedTScore)}, baseline ${String.format("%.2f", initialTScore)}. Status: $statusLabel. Estimated Bone Mineral Density Net Change: ${if (interventionGainPercent >= 0) "+" else ""}${String.format("%.1f", interventionGainPercent)}%."
-                    },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // ==========================================
+            // 2. HERO METRIC DISPLAY (Projected T-Score & Net Change)
+            // ==========================================
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             ) {
-                Column {
-                    Text(
-                        text = "Projected T-Score",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = String.format("%.2f", simulatedTScore),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = statusColor
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "(Base: ${String.format("%.2f", initialTScore)})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                    Text(
-                        text = statusLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = statusColor
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (interventionGainPercent >= 0) Color(0xFF00E676).copy(alpha = 0.15f) else Color(0xFFE57373).copy(alpha = 0.15f)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = "Projected T-Score: ${String.format("%.2f", simulatedTScore)}, baseline ${String.format("%.2f", initialTScore)}. Status: $statusLabel. Estimated Bone Mineral Density Net Change: ${if (interventionGainPercent >= 0) "+" else ""}${String.format("%.1f", interventionGainPercent)}%."
+                        },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (interventionGainPercent >= 0) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                                contentDescription = null,
-                                tint = if (interventionGainPercent >= 0) Color(0xFF00E676) else Color(0xFFE57373),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "PROJECTED T-SCORE",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 0.5.sp
+                        )
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(
-                                text = "${if (interventionGainPercent >= 0) "+" else ""}${String.format("%.1f", interventionGainPercent)}%",
-                                style = MaterialTheme.typography.titleMedium,
+                                text = String.format("%.2f", simulatedTScore),
+                                style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = if (interventionGainPercent >= 0) Color(0xFF00E676) else Color(0xFFE57373)
+                                color = statusColor
+                            )
+                            Text(
+                                text = "Base: ${String.format("%.2f", initialTScore)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 6.dp)
                             )
                         }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = statusColor.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = statusLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    // Net Change Badge
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (interventionGainPercent >= 0) Color(0xFF00C853).copy(alpha = 0.15f) else Color(0xFFD32F2F).copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, if (interventionGainPercent >= 0) Color(0xFF00C853).copy(alpha = 0.3f) else Color(0xFFD32F2F).copy(alpha = 0.3f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (interventionGainPercent >= 0) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                                    contentDescription = null,
+                                    tint = if (interventionGainPercent >= 0) Color(0xFF00C853) else Color(0xFFD32F2F),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "${if (interventionGainPercent >= 0) "+" else ""}${String.format("%.1f", interventionGainPercent)}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (interventionGainPercent >= 0) Color(0xFF00C853) else Color(0xFFD32F2F)
+                                )
+                            }
+                            Text(
+                                text = "Est. BMD Net Change",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ==========================================
+            // 3. INTERACTIVE SIMULATION PARAMETERS
+            // ==========================================
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Text(
+                        text = "Simulation Parameters",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    // Timeline Slider Section
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Training Duration",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = "$weeks Weeks (${String.format("%.1f", weeks / 4.33f)} Mos)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        Slider(
+                            value = weeksOfTraining,
+                            onValueChange = { weeksOfTraining = it },
+                            valueRange = 4f..104f,
+                            steps = 24,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.semantics {
+                                contentDescription = "Simulated training duration slider"
+                                stateDescription = "$weeks weeks"
+                            }
+                        )
+                    }
+
+                    // Frequency & Comparison Selectors
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Estimated BMD Net Change",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 10.sp,
+                            text = "Weekly Protocol Frequency",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Timeline Slider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Training Duration:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "$weeks Weeks (${String.format("%.1f", weeks / 4.33f)} Months)",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Slider(
-                value = weeksOfTraining,
-                onValueChange = { weeksOfTraining = it },
-                valueRange = 4f..104f,
-                steps = 24,
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.semantics {
-                    contentDescription = "Simulated training duration slider"
-                    stateDescription = "$weeks weeks"
-                }
-            )
-
-            // Frequency & Comparison Selectors
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Frequency:",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(1, 2, 3).forEach { freq ->
-                        val isSel = !isSedentaryComparison && trainingFrequencyPerWeek == freq
-                        FilterChip(
-                            selected = isSel,
-                            onClick = {
-                                isSedentaryComparison = false
-                                trainingFrequencyPerWeek = freq
-                            },
-                            label = { Text("${freq}x/wk", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            modifier = Modifier
-                                .height(28.dp)
-                                .semantics {
-                                    stateDescription = if (isSel) "$freq sessions per week selected" else "Select $freq sessions per week"
-                                }
-                        )
-                    }
-
-                    FilterChip(
-                        selected = isSedentaryComparison,
-                        onClick = { isSedentaryComparison = !isSedentaryComparison },
-                        label = { Text("Sedentary", fontSize = 11.sp) },
-                        modifier = Modifier
-                            .height(28.dp)
-                            .semantics {
-                                stateDescription = if (isSedentaryComparison) "Sedentary comparison mode active" else "Switch to sedentary comparison mode"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(1, 2, 3).forEach { freq ->
+                                val isSel = !isSedentaryComparison && trainingFrequencyPerWeek == freq
+                                FilterChip(
+                                    selected = isSel,
+                                    onClick = {
+                                        isSedentaryComparison = false
+                                        trainingFrequencyPerWeek = freq
+                                    },
+                                    label = { Text("${freq}x / wk", fontWeight = FontWeight.Bold) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(36.dp)
+                                        .semantics {
+                                            stateDescription = if (isSel) "$freq sessions per week selected" else "Select $freq sessions per week"
+                                        }
+                                )
                             }
-                    )
+
+                            FilterChip(
+                                selected = isSedentaryComparison,
+                                onClick = { isSedentaryComparison = !isSedentaryComparison },
+                                label = { Text("Sedentary") },
+                                modifier = Modifier
+                                    .weight(1.2f)
+                                    .height(36.dp)
+                                    .semantics {
+                                        stateDescription = if (isSedentaryComparison) "Sedentary comparison mode active" else "Switch to sedentary comparison mode"
+                                    }
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Clinical Takeaway Callout
+            // ==========================================
+            // 4. CLINICAL TAKEAWAY SUMMARY
+            // ==========================================
             Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (isSedentaryComparison) {
                             "Without axial loading stimulus, age-related bone resorption outpaces formation by ~1-2% annually."
@@ -401,10 +427,12 @@ fun BoneDensityDxaSimulatorCard(
                             "Consistent ${trainingFrequencyPerWeek}x/week training signals bone osteoblasts to mineralize bone matrix, offsetting age-related loss."
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
         }
     }
 }
+

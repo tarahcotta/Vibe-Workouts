@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsRun
@@ -101,6 +102,9 @@ fun PreWorkoutMobilityCard(
         }
     }
 
+    val progressPercent = if (drills.isNotEmpty()) completedDrills.size.toFloat() / drills.size else 0f
+    val isAllCompleted = drills.isNotEmpty() && completedDrills.size == drills.size
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -109,10 +113,15 @@ fun PreWorkoutMobilityCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        border = BorderStroke(
+            1.dp,
+            if (isAllCompleted) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            // Card Title Row
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Card Title Row (Single cohesive clickable header)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,14 +136,18 @@ fun PreWorkoutMobilityCard(
                     Box(
                         modifier = Modifier
                             .size(42.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isAllCompleted) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.DirectionsRun,
+                            imageVector = if (isAllCompleted) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.DirectionsRun,
                             contentDescription = "Dynamic Movement Mobility",
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
@@ -148,71 +161,130 @@ fun PreWorkoutMobilityCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${completedDrills.size}/${drills.size} drills completed • Tailored to today's lifts",
+                            text = if (isAllCompleted) {
+                                "All drills complete • Primed for heavy loading"
+                            } else {
+                                "${completedDrills.size}/${drills.size} drills completed • Tailored to today's lifts"
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isAllCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Toggle Warmup",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            // Quick Status Pill & Action Button (High Contrast WCAG AA)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // Sleek Pill Toggle Button
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (completedDrills.size == drills.size) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (expanded) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier
+                        .clickable { expanded = !expanded }
+                        .testTag("toggle_mobility_details_btn")
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (completedDrills.size == drills.size) Icons.Default.CheckCircle else Icons.Default.Shield,
-                            contentDescription = "Icon",
-                            tint = if (completedDrills.size == drills.size) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (completedDrills.size == drills.size) "Joints Primed & Ready!" else "Joint Lubrication & Warmup",
+                            text = if (expanded) "Hide" else "Drills",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (completedDrills.size == drills.size) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = "Toggle Warmup",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            // Visual Segmented Progress Bar (Shows immediate tangible progress)
+            if (drills.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    drills.indices.forEach { idx ->
+                        val isDone = completedDrills.contains(idx)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(
+                                    if (isDone) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                )
+                        )
+                    }
+                }
+            }
+
+            // Quick Status Metadata Chips
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isAllCompleted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isAllCompleted) Icons.Default.CheckCircle else Icons.Default.Shield,
+                            contentDescription = "Status",
+                            tint = if (isAllCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = if (isAllCompleted) "Joints Primed & Ready!" else "Joint Lubrication & Warmup",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isAllCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                TextButton(
-                    onClick = { expanded = !expanded },
-                    modifier = Modifier.testTag("toggle_mobility_details_btn")
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                 ) {
-                    Text(
-                        text = if (expanded) "Hide Drills" else "View Drills",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "Duration",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "5 Min Prep",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             // Expanded Mobility Drills Section
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     Spacer(modifier = Modifier.height(14.dp))
 

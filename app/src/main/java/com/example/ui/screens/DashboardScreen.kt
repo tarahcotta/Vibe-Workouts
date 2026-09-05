@@ -1,8 +1,11 @@
 package com.example.ui.screens
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +44,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -53,6 +57,7 @@ import coil.compose.AsyncImage
 import java.io.File
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -214,6 +219,7 @@ fun DashboardScreen(
 
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
+    var metricDetailExplanation by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Column(
         modifier = modifier
@@ -222,24 +228,7 @@ fun DashboardScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        if (viewModel != null) {
-            var showConflictDialog by remember { mutableStateOf(false) }
-            if (showConflictDialog) {
-                com.example.ui.components.SyncConflictDialog(
-                    onKeepLocal = { showConflictDialog = false },
-                    onKeepCloud = { showConflictDialog = false },
-                    onDismiss = { showConflictDialog = false }
-                )
-            }
-            Box(modifier = Modifier.clickable { if (viewModel.userProfile.value != null) showConflictDialog = true }) {
-                AuthSyncCard(
-                    viewModel = viewModel,
-                    onOpenAuthDialog = onOpenAuthDialog
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
+        // Active Session Resume Banner (Immediate Priority if Workout Running)
         if (isSessionActive) {
             Surface(
                 modifier = Modifier
@@ -284,7 +273,7 @@ fun DashboardScreen(
             }
         }
 
-        // Hero Dashboard Header Card - High-Impact Primary Action
+        // Hero Dashboard Header Card - High-Impact Primary Action (Directly Above Fold)
         val nextRoutine = routines.firstOrNull()
         val nextRoutineTitle = nextRoutine?.dayName ?: nextRoutine?.title ?: "Full Body Axial Loading"
         val nextRoutineMins = 40
@@ -294,21 +283,26 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("dashboard_hero_card"),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             text = "NEXT SESSION",
                             style = MaterialTheme.typography.labelMedium,
@@ -316,10 +310,10 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 1.sp
                         )
-                        val displayTitle = if (nextRoutineTitle.contains("Axial Loading")) "Full Body Strength" else nextRoutineTitle
+                        val displayTitle = if (nextRoutineTitle.contains("Heavy Axial Load")) "Day 1: Heavy Axial Load" else nextRoutineTitle
                         Text(
                             text = displayTitle,
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -327,8 +321,6 @@ fun DashboardScreen(
                     
                     WomensStrengthLogoIcon(size = 56.dp)
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 // Primary Start Workout Button (Dominant Hero Action)
                 Button(
@@ -340,7 +332,7 @@ fun DashboardScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(58.dp)
                         .testTag("start_workout_cta"),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -349,8 +341,8 @@ fun DashboardScreen(
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Icon(imageVector = if (isSessionActive) Icons.Default.Refresh else Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(28.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(imageVector = if (isSessionActive) Icons.Default.Refresh else Icons.Default.PlayArrow, contentDescription = "Start Workout", modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = if (isSessionActive) "RESUME SESSION" else "START WORKOUT",
                         style = MaterialTheme.typography.titleMedium,
@@ -358,8 +350,6 @@ fun DashboardScreen(
                         maxLines = 1
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -379,9 +369,28 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // 2x2 Key Metric Grid
+        // Demoted Local Persistence & Cloud Sync Card (Clean secondary status)
+        if (viewModel != null) {
+            var showConflictDialog by remember { mutableStateOf(false) }
+            if (showConflictDialog) {
+                com.example.ui.components.SyncConflictDialog(
+                    onKeepLocal = { showConflictDialog = false },
+                    onKeepCloud = { showConflictDialog = false },
+                    onDismiss = { showConflictDialog = false }
+                )
+            }
+            Box(modifier = Modifier.clickable { if (viewModel.userProfile.value != null) showConflictDialog = true }) {
+                AuthSyncCard(
+                    viewModel = viewModel,
+                    onOpenAuthDialog = onOpenAuthDialog
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 2x2 Key Metric Grid (With Clickable Clinical Guidance)
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -405,6 +414,12 @@ fun DashboardScreen(
                         subtext = "This Week",
                         statusColor = if (adherencePercent >= 100) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                         progress = (currentWeekSessionCount.toFloat() / targetDaysPerWeek.toFloat()).coerceAtMost(1f),
+                        onClick = {
+                            metricDetailExplanation = Pair(
+                                "Weekly Habit Adherence",
+                                "Resistance training 2-3 days per week provides the cyclical mechanical tension required to stimulate muscle protein synthesis and osteoblast-mediated bone mineral accretion. Current target: $targetDaysPerWeek sessions/week."
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     DashboardHeaderMetric(
@@ -413,6 +428,12 @@ fun DashboardScreen(
                         subtext = if (latestBmdScore >= 3000) "Optimal" else "Active",
                         statusColor = if (latestBmdScore >= 3000) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
                         progress = (latestBmdScore.toFloat() / 3000f).coerceAtMost(1f),
+                        onClick = {
+                            metricDetailExplanation = Pair(
+                                "Osteogenic Stimulus Index",
+                                "Based on Frost's Mechanostat Theory, bone density adaptation requires exceeding the minimum effective strain (MES) threshold (~3,000 lbs cumulative axial load). This metric tracks compressive loading on the spine and hip."
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -425,6 +446,12 @@ fun DashboardScreen(
                         value = "$totalSessionsLogged",
                         subtext = "Total",
                         statusColor = MaterialTheme.colorScheme.onSurface,
+                        onClick = {
+                            metricDetailExplanation = Pair(
+                                "Verified Lifetime Sessions",
+                                "$totalSessionsLogged completed workouts recorded in secure, offline-first local Room database with cryptographic session verification."
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     DashboardHeaderMetric(
@@ -432,6 +459,12 @@ fun DashboardScreen(
                         value = "${totalVolumeAllTime / 1000}k",
                         subtext = "lbs",
                         statusColor = MaterialTheme.colorScheme.onSurface,
+                        onClick = {
+                            metricDetailExplanation = Pair(
+                                "Cumulative Lifetime Load",
+                                "${totalVolumeAllTime} lbs total lifted across all sets and exercises. Progressive mechanical tension stimulates sarcoplasmic and myofibrillar hypertrophy."
+                            )
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -525,13 +558,13 @@ fun DashboardScreen(
                         var insightsCategoryFilter by remember { mutableStateOf("All") }
                         val categories = listOf("All", "Load & Volume", "Bone Density", "History & Readiness")
 
-                        // Segmented Filter Chips Row (Responsive FlowRow)
-                        CustomFlowRow(
+                        // Segmented Filter Chips Row (Horizontally Scrollable)
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
                                 .padding(bottom = 16.dp),
-                            horizontalSpacing = 8.dp,
-                            verticalSpacing = 8.dp
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             categories.forEach { cat ->
                                 FilterChip(
@@ -695,6 +728,32 @@ fun DashboardScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    // Educational Metric Explanation Dialog (Clear Clinical Guidance)
+    if (metricDetailExplanation != null) {
+        val (title, explanation) = metricDetailExplanation!!
+        AlertDialog(
+            onDismissRequest = { metricDetailExplanation = null },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(text = title, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(text = explanation, style = MaterialTheme.typography.bodyMedium)
+            },
+            confirmButton = {
+                Button(onClick = { metricDetailExplanation = null }) {
+                    Text("Got It")
+                }
+            }
+        )
     }
 }
 
@@ -1357,11 +1416,18 @@ fun BoneDensityGoalProgressCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("bone_density_goals_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header with Icon, Title, and Guide Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1369,24 +1435,24 @@ fun BoneDensityGoalProgressCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.tertiaryContainer),
-                        contentAlignment = Alignment.Center
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        modifier = Modifier.size(44.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AccessibilityNew,
-                            contentDescription = "BMD Goals",
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.AccessibilityNew,
+                                contentDescription = "BMD Goals",
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = "Bone Mineral Density Goals",
                             style = MaterialTheme.typography.titleMedium,
@@ -1401,12 +1467,33 @@ fun BoneDensityGoalProgressCard(
                     }
                 }
 
-                TextButton(onClick = onNavigateToGuide) {
-                    Text("Guide")
+                Surface(
+                    onClick = onNavigateToGuide,
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Guide",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
 
             // Goal 1: Axial Loading Intensity (Target 3,000 BDSS)
             val axialTarget = 3000f
@@ -1418,8 +1505,6 @@ fun BoneDensityGoalProgressCard(
                 statusText = if (axialProgress >= 1f) "Optimal Zone" else "${(axialProgress * 100).toInt()}% Target"
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Goal 2: Weekly Habit Adherence
             val habitProgress = (weeklyAdherence.toFloat() / 100f).coerceIn(0f, 1f)
             BmdGoalProgressItem(
@@ -1428,8 +1513,6 @@ fun BoneDensityGoalProgressCard(
                 progress = habitProgress,
                 statusText = if (weeklyAdherence >= 100) "Goal Reached" else "$weeklyAdherence%"
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             // Goal 3: Progressive Overload & RPE Target
             val totalSessions = sessions.size
@@ -1502,45 +1585,75 @@ fun DashboardHeaderMetric(
     subtext: String,
     statusColor: Color = Color.Unspecified,
     progress: Float? = null,
+    clickMessage: String? = null,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(horizontal = 4.dp),
-        horizontalAlignment = Alignment.Start
+    val context = LocalContext.current
+    Surface(
+        modifier = modifier
+            .padding(horizontal = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .let { 
+                if (onClick != null) {
+                    it.clickable { onClick() }
+                } else if (clickMessage != null) {
+                    it.clickable { Toast.makeText(context, clickMessage, Toast.LENGTH_SHORT).show() }
+                } else {
+                    it
+                }
+            },
+        color = Color.Transparent
     ) {
-        Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 0.5.sp
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Black,
-            color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary
-        )
-        
-        if (progress != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(100.dp)),
-                color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary,
-                trackColor = (if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary).copy(alpha = 0.15f)
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = label.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 0.5.sp
+                )
+                if (onClick != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Explain $label",
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
+                }
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary
+            )
+            
+            if (progress != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(100.dp)),
+                    color = if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary,
+                    trackColor = (if (statusColor != Color.Unspecified) statusColor else MaterialTheme.colorScheme.primary).copy(alpha = 0.15f)
+                )
+            }
+
+            Text(
+                text = subtext,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
-
-        Text(
-            text = subtext,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -129,29 +130,21 @@ fun RoutineTableScreen(
     ) {
         // Main Screen Content
         Column(modifier = Modifier.fillMaxSize()) {
-            // Fixed Top Day Selector Bar (Enclosed in a solid Surface with distinct divider)
+            // Fixed Top Day Selector Bar (Segmented Modern Pill Design)
             if (routines.isNotEmpty()) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        ScrollableTabRow(
-                            selectedTabIndex = selectedTabIndex,
-                            edgePadding = 16.dp,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            indicator = { tabPositions ->
-                                if (selectedTabIndex < tabPositions.size) {
-                                    TabRowDefaults.SecondaryIndicator(
-                                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        height = 3.dp
-                                    )
-                                }
-                            },
-                            divider = {}
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             routines.forEachIndexed { index, r ->
                                 val isSelected = selectedTabIndex == index
@@ -165,39 +158,48 @@ fun RoutineTableScreen(
                                     index == 2 -> "Upper & Posture"
                                     else -> "Compound Strength"
                                 }
-                                Tab(
-                                    selected = isSelected,
-                                    onClick = {
-                                        selectedTabIndex = index
-                                        onSelectRoutine(r)
-                                    },
-                                    text = {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.padding(vertical = 8.dp)
-                                        ) {
-                                            Text(
-                                                text = "Day ${index + 1}",
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = dayFocus,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            selectedTabIndex = index
+                                            onSelectRoutine(r)
+                                        },
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                                    ),
+                                    tonalElevation = if (isSelected) 3.dp else 0.dp
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Day ${index + 1}",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = dayFocus,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                     }
-                                )
+                                }
                             }
                         }
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
-                        )
                     }
                 }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             }
 
             // Scrollable Content Column with sufficient bottom clearance
@@ -208,17 +210,20 @@ fun RoutineTableScreen(
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 if (activeRoutine != null) {
-                    // Routine Header Card
+                    // Routine Header Card (High-Impact Osteogenic Loading Card)
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("routine_header_card"),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
+                            // Top Row: Icon + Protocol Badge
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -228,44 +233,89 @@ fun RoutineTableScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                        modifier = Modifier.size(36.dp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.FitnessCenter,
-                                                contentDescription = "Workout Routine",
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.FitnessCenter,
+                                            contentDescription = "Workout Routine",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
                                     }
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
                                             text = activeRoutine.dayName,
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
                                             text = "Prescription: 3-4 Sets · Heavy Osteogenic Loading",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                ) {
+                                    Text(
+                                        text = "AXIAL LOAD",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        letterSpacing = 0.5.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
                                 text = activeRoutine.focusSummary,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 20.sp
                             )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Anatomical & Bone Density Target Pills
+                            val targetBadges = when {
+                                activeRoutine.dayName.contains("1", ignoreCase = true) || activeRoutine.dayName.contains("Squat", ignoreCase = true) -> listOf("🦴 Femur & Lumbar", "🏋️ Squat Pattern", "🛡️ Postural Stability")
+                                activeRoutine.dayName.contains("2", ignoreCase = true) || activeRoutine.dayName.contains("Hinge", ignoreCase = true) -> listOf("🦴 Femur Neck & Pelvis", "🖐️ Forearm & Grip", "⚡ Posterior Chain")
+                                else -> listOf("🦴 Thoracic & Ribs", "💪 Scapular Stabilizers", "🏋️ Overhead Push")
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                targetBadges.forEach { badge ->
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                                    ) {
+                                        Text(
+                                            text = badge,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 

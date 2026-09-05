@@ -58,6 +58,8 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Tune
 import com.example.ui.components.CustomFlowRow
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
@@ -122,6 +124,7 @@ import com.example.data.WorkoutRoutineEntity
 import com.example.ui.components.AnimatedSetCompletionButton
 import com.example.ui.components.BaselineCalibrationDialog
 import com.example.ui.components.BuiltInIntervalTimerCard
+import com.example.ui.components.RestIntervalTimerModalSheetContent
 import com.example.ui.components.ExerciseSubstitutionDialog
 import com.example.ui.components.ExerciseVideoPlayerBox
 import com.example.ui.components.PersonalBestNotificationBanner
@@ -255,6 +258,7 @@ fun ActiveLoggerScreen(
     var isTimerRunning by remember { mutableStateOf(false) }
     var activeTimerExerciseName by remember { mutableStateOf("") }
     var timerAlertMode by remember { mutableStateOf("Sound + Vibrate") }
+    var showTimerSettingsSheet by remember { mutableStateOf(false) }
 
     // Multi-modal Rest Timer Feedback (Sound + Vibrate, Vibrate Only, Silent)
     LaunchedEffect(timerRemainingSeconds, isTimerRunning, timerAlertMode) {
@@ -362,41 +366,44 @@ fun ActiveLoggerScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 3.dp,
-                tonalElevation = 2.dp
+                shadowElevation = 4.dp,
+                tonalElevation = 3.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text(
                                     text = routineTitle,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 if (totalCompletedSets > 0) {
                                     Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer
                                     ) {
                                         Text(
                                             text = "Vault Saved ✓",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                         )
                                     }
                                 }
                             }
                             Text(
                                 text = "$totalCompletedSets of $totalPrescribedSets sets logged · Target RPE 7–8",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = if (totalCompletedSets > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -485,30 +492,80 @@ fun ActiveLoggerScreen(
                         }
                     }
                     
-                    // STICKY REST TIMER HUD
+                    // COMPACT REST TIMER CHIP (Non-intrusive, taps to open detailed presets)
                     AnimatedVisibility(visible = isTimerRunning || timerRemainingSeconds > 0) {
-                        Column(modifier = Modifier.padding(top = 12.dp)) {
-                            BuiltInIntervalTimerCard(
-                                activeExerciseName = activeTimerExerciseName,
-                                targetRestSeconds = targetRestSeconds,
-                                isRunning = isTimerRunning,
-                                remainingSeconds = timerRemainingSeconds,
-                                alertMode = timerAlertMode,
-                                onAlertModeChange = { timerAlertMode = it },
-                                onTogglePlayPause = { isTimerRunning = !isTimerRunning },
-                                onResetTimer = { newTarget ->
-                                    timerRemainingSeconds = newTarget
-                                    isTimerRunning = true
-                                },
-                                onAdjustSeconds = { delta ->
-                                    timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
-                                },
-                                onPresetSelected = { seconds ->
-                                    targetRestSeconds = seconds
-                                    timerRemainingSeconds = seconds
-                                    isTimerRunning = true
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .clickable { showTimerSettingsSheet = true },
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Timer,
+                                        contentDescription = "Rest Active",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Rest: ${timerRemainingSeconds / 60}:${"%02d".format(timerRemainingSeconds % 60)}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    if (activeTimerExerciseName.isNotBlank()) {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "· $activeTimerExerciseName",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                            modifier = Modifier.widthIn(max = 90.dp)
+                                        )
+                                    }
                                 }
-                            )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Surface(
+                                        modifier = Modifier.clickable { showTimerSettingsSheet = true },
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+                                    ) {
+                                        Text(
+                                            text = "Presets",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = { isTimerRunning = !isTimerRunning },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isTimerRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                            contentDescription = if (isTimerRunning) "Pause" else "Play",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -543,7 +600,12 @@ fun ActiveLoggerScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { showTimerSettingsSheet = true },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.Timer,
                                         contentDescription = "Rest Interval Active",
@@ -565,11 +627,22 @@ fun ActiveLoggerScreen(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                            modifier = Modifier.widthIn(max = 100.dp)
+                                            modifier = Modifier.widthIn(max = 90.dp)
                                         )
                                     }
                                 }
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { showTimerSettingsSheet = true },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Tune,
+                                            contentDescription = "Configure Rest Presets",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                     Surface(
                                         modifier = Modifier.clickable {
                                             timerRemainingSeconds = (timerRemainingSeconds + 30)
@@ -1189,6 +1262,7 @@ fun ActiveLoggerScreen(
                                                         }
                                                         startRestTimer(calculatedRest, logState.exerciseName)
                                                         val currentWeight = setInput.weightText.toFloatOrNull() ?: 0f
+                                                        val currentReps = setInput.repsText.toIntOrNull() ?: 0
                                                         val previousMax = personalBests[logState.exerciseName] ?: 0f
                                                         if (currentWeight > 0f && (previousMax == 0f || currentWeight > previousMax)) {
                                                             prNotificationExercise = logState.exerciseName
@@ -1196,6 +1270,16 @@ fun ActiveLoggerScreen(
                                                             prNotificationOldMax = previousMax
                                                             showPrBanner = true
                                                             showPrCelebrationDialog = true
+                                                        } else {
+                                                            val setVolume = (currentWeight * currentReps).toInt()
+                                                            if (setVolume > 0) {
+                                                                coroutineScope.launch {
+                                                                    snackbarHostState.showSnackbar(
+                                                                        message = "Set ${setInput.setNumber} complete! +$setVolume lbs stimulus logged",
+                                                                        duration = androidx.compose.material3.SnackbarDuration.Short
+                                                                    )
+                                                                }
+                                                            }
                                                         }
                                                     } else {
                                                         setInput.isCompleted = false
@@ -1604,6 +1688,50 @@ fun ActiveLoggerScreen(
         }
     }
 }
+
+    // Modal Rest Interval Timer Configuration & Presets Sheet
+    if (showTimerSettingsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showTimerSettingsSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                RestIntervalTimerModalSheetContent(
+                    activeExerciseName = activeTimerExerciseName,
+                    targetRestSeconds = targetRestSeconds,
+                    isRunning = isTimerRunning,
+                    remainingSeconds = timerRemainingSeconds,
+                    alertMode = timerAlertMode,
+                    onAlertModeChange = { timerAlertMode = it },
+                    onTogglePlayPause = { isTimerRunning = !isTimerRunning },
+                    onResetTimer = { newTarget ->
+                        timerRemainingSeconds = newTarget
+                        isTimerRunning = true
+                    },
+                    onAdjustSeconds = { delta ->
+                        timerRemainingSeconds = (timerRemainingSeconds + delta).coerceAtLeast(0)
+                    },
+                    onPresetSelected = { seconds ->
+                        targetRestSeconds = seconds
+                        timerRemainingSeconds = seconds
+                        isTimerRunning = true
+                    },
+                    onClose = { showTimerSettingsSheet = false },
+                    showCloseButton = true,
+                    showDoneButton = true
+                )
+            }
+        }
+    }
 
     // Modal RPE Selector (Improved UX with Bottom Sheet)
     if (rpePickerSet != null) {
@@ -2269,29 +2397,112 @@ fun CompactGymStepper(
     step: Float = 1f,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
+    var showDirectInputDialog by remember { mutableStateOf(false) }
+    var tempInputText by remember { mutableStateOf(valueText) }
+
     Row(
         modifier = modifier
             .height(56.dp)
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = {
-            val current = valueText.toFloatOrNull() ?: 0f
-            val next = (current - step).coerceAtLeast(0f)
-            onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
-        }, modifier = Modifier.size(48.dp)) {
-            Icon(androidx.compose.material.icons.Icons.Default.KeyboardArrowDown, "Decrease $label", modifier = Modifier.size(24.dp))
+        IconButton(
+            onClick = {
+                val current = valueText.toFloatOrNull() ?: 0f
+                val next = (current - step).coerceAtLeast(0f)
+                onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Remove,
+                contentDescription = "Decrease $label",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
         }
         
-        Text(text = valueText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        
-        IconButton(onClick = {
-            val current = valueText.toFloatOrNull() ?: 0f
-            val next = current + step
-            onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
-        }, modifier = Modifier.size(48.dp)) {
-            Icon(androidx.compose.material.icons.Icons.Default.KeyboardArrowUp, "Increase $label", modifier = Modifier.size(24.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clickable {
+                    tempInputText = valueText
+                    showDirectInputDialog = true
+                }
+                .padding(vertical = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = valueText.ifEmpty { "0" },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = label.lowercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
         }
+        
+        IconButton(
+            onClick = {
+                val current = valueText.toFloatOrNull() ?: 0f
+                val next = current + step
+                onValueChange(if (next % 1f == 0f) next.toInt().toString() else next.toString())
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Increase $label",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+
+    if (showDirectInputDialog) {
+        AlertDialog(
+            onDismissRequest = { showDirectInputDialog = false },
+            title = { Text("Set $label", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Enter custom $label directly:", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = tempInputText,
+                        onValueChange = { tempInputText = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val sanitized = tempInputText.trim()
+                    if (sanitized.isNotEmpty()) {
+                        onValueChange(sanitized)
+                    }
+                    showDirectInputDialog = false
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDirectInputDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

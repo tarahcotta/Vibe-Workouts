@@ -51,26 +51,29 @@ fun AuthSyncCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("auth_sync_card"),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = if (currentUser != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.outlineVariant,
-                    modifier = Modifier.size(38.dp)
+                    color = if (currentUser != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (currentUser != null) {
@@ -82,26 +85,26 @@ fun AuthSyncCard(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.Default.Person,
+                                imageVector = Icons.Default.CloudUpload,
                                 contentDescription = "Icon",
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
                 }
 
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     if (currentUser != null) {
                         Text(
                             text = currentUser?.email ?: (if (currentUser?.isAnonymous == true) "Guest Trainee" else "Cloud Account"),
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             when (syncStatus) {
                                 is SyncStatus.Syncing -> {
@@ -112,7 +115,7 @@ fun AuthSyncCard(
                                     )
                                     Text(
                                         text = "Syncing workouts...",
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
@@ -120,19 +123,19 @@ fun AuthSyncCard(
                                     Icon(
                                         imageVector = Icons.Default.CloudDone,
                                         contentDescription = "Cloud Synced",
-                                        modifier = Modifier.size(12.dp),
+                                        modifier = Modifier.size(14.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
                                         text = "Cloud Backup Synced",
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 is SyncStatus.Error -> {
                                     Text(
                                         text = "Offline Mode (Local Storage Active)",
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -140,12 +143,12 @@ fun AuthSyncCard(
                                     Icon(
                                         imageVector = Icons.Default.CloudUpload,
                                         contentDescription = "Cloud Active",
-                                        modifier = Modifier.size(12.dp),
+                                        modifier = Modifier.size(14.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
                                         text = "Cloud Backup Active",
-                                        fontSize = 11.sp,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -155,11 +158,11 @@ fun AuthSyncCard(
                         Text(
                             text = "On-Device Storage Active",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "All logs safely stored on device · Enable cloud sync",
+                            text = "Secure storage • Tap to enable sync",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

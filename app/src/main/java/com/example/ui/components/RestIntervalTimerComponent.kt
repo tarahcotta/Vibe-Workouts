@@ -27,6 +27,10 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeOff
@@ -82,6 +86,527 @@ import com.example.ui.theme.PostureTeal
 import kotlinx.coroutines.delay
 
 /**
+ * Modern, High-Impact Rest Interval Timer Modal Sheet Content.
+ * Formatted cleanly for BottomSheet presentation with large tabular countdown digits,
+ * ergonomic oversized touch controls, immediately accessible rest presets, and alert audio toggles.
+ */
+@Composable
+fun RestIntervalTimerModalSheetContent(
+    activeExerciseName: String = "",
+    targetRestSeconds: Int = 90,
+    isRunning: Boolean = false,
+    remainingSeconds: Int = 90,
+    alertMode: String = "Sound + Vibrate",
+    onAlertModeChange: (String) -> Unit = {},
+    onTogglePlayPause: () -> Unit = {},
+    onResetTimer: (Int) -> Unit = {},
+    onAdjustSeconds: (Int) -> Unit = {},
+    onPresetSelected: (Int) -> Unit = {},
+    onClose: () -> Unit = {},
+    showCloseButton: Boolean = true,
+    showDoneButton: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    val isFinished = remainingSeconds == 0 && targetRestSeconds > 0
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(isFinished) {
+        if (isFinished) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
+    val progress = if (targetRestSeconds > 0) {
+        ((targetRestSeconds - remainingSeconds).toFloat() / targetRestSeconds.toFloat()).coerceIn(0f, 1f)
+    } else 0f
+
+    val m = remainingSeconds / 60
+    val s = remainingSeconds % 60
+    val displayTime = String.format("%02d:%02d", m, s)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("built_in_interval_timer_card"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 1. Top Header Row: Icon + Title + Exercise Context + Close Button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isFinished) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isFinished) Icons.Default.CheckCircle else Icons.Default.Timer,
+                        contentDescription = "Timer",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = if (isFinished) "Rest Complete!" else "Rest Interval Timer",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (activeExerciseName.isNotBlank()) "Target: $activeExerciseName • Recovery"
+                        else "Target Recovery: ${targetRestSeconds}s • Bone Remodeling",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            if (showCloseButton) {
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        // 2. Central Hero Timer Display Container
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            color = if (isFinished) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+            border = BorderStroke(
+                1.dp,
+                if (isFinished) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 18.dp, horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Status Pill
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = when {
+                        isFinished -> MaterialTheme.colorScheme.primaryContainer
+                        isRunning -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+                    border = BorderStroke(
+                        1.dp,
+                        when {
+                            isFinished -> MaterialTheme.colorScheme.primary
+                            isRunning -> MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        }
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = when {
+                                isFinished -> Icons.Default.CheckCircle
+                                isRunning -> Icons.Default.Timer
+                                else -> Icons.Default.Pause
+                            },
+                            contentDescription = null,
+                            tint = if (isFinished || isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = when {
+                                isFinished -> "REST COMPLETE • READY TO LIFT"
+                                isRunning -> "RECOVERY ACTIVE"
+                                else -> "TIMER PAUSED"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp,
+                            color = if (isFinished || isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Hero Digits Display (Big, high-contrast, gym-legible)
+                Text(
+                    text = displayTime,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 54.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp
+                    ),
+                    color = if (isFinished) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Linear Progress Bar
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (isFinished) MaterialTheme.colorScheme.primary else BoneDensityGold,
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Ergonomic Gym Control Buttons Row: [-15s] [Play/Pause FAB] [+15s] [Reset]
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Quick Minus 15s
+                    Surface(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onAdjustSeconds(-15)
+                            }
+                            .testTag("interval_timer_minus_15"),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
+                        tonalElevation = 1.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "-15",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    // Main Action Play/Pause Hero Button
+                    Surface(
+                        modifier = Modifier
+                            .size(66.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onTogglePlayPause()
+                            }
+                            .testTag("interval_timer_play_pause_button"),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "Play/Pause Timer",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(34.dp)
+                            )
+                        }
+                    }
+
+                    // Quick Plus 15s
+                    Surface(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onAdjustSeconds(15)
+                            }
+                            .testTag("interval_timer_plus_15"),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        tonalElevation = 1.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "+15",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
+                    // Reset Button
+                    Surface(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onResetTimer(targetRestSeconds)
+                            }
+                            .testTag("interval_timer_reset_button"),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Replay,
+                                contentDescription = "Reset Timer",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 3. Quick Presets Section (Always visible, clean, 2-row grid)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("toggle_presets_button"),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "REST DURATION PRESETS",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.6.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            ) {
+                Text(
+                    text = "Target: ${targetRestSeconds}s",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        val presetListRow1 = listOf(
+            Triple(45, "45s", "Hypertrophy"),
+            Triple(60, "60s", "Endurance"),
+            Triple(90, "90s", "Bone Density ⭐")
+        )
+        val presetListRow2 = listOf(
+            Triple(120, "2 min", "Strength"),
+            Triple(180, "3 min", "Heavy Axial"),
+            Triple(240, "4 min", "Max Effort")
+        )
+
+        listOf(presetListRow1, presetListRow2).forEach { rowPresets ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowPresets.forEach { (seconds, timeLabel, purposeLabel) ->
+                    val isSelected = targetRestSeconds == seconds
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onPresetSelected(seconds)
+                            }
+                            .testTag("interval_preset_$seconds"),
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                        ),
+                        tonalElevation = if (isSelected) 3.dp else 0.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = timeLabel,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = purposeLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 4. Alert Notifications Mode (Sound, Vibrate, Silent Segmented Selector)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "ALERT NOTIFICATIONS",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.6.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val alertModes = listOf(
+                Pair("Sound + Vibrate", Icons.Default.VolumeUp),
+                Pair("Vibrate Only", Icons.Default.Vibration),
+                Pair("Silent", Icons.Default.VolumeOff)
+            )
+
+            alertModes.forEach { (modeName, icon) ->
+                val isSelected = alertMode == modeName
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onAlertModeChange(modeName)
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = modeName,
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = when (modeName) {
+                                "Sound + Vibrate" -> "Sound"
+                                "Vibrate Only" -> "Vibrate"
+                                else -> "Silent"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        // 5. Done / Resume Workout CTA Button
+        if (showDoneButton) {
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(
+                onClick = onClose,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (isFinished) "Start Next Set"
+                        else if (isRunning) "Resume Workout (Timer Running)"
+                        else "Done",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = if (isFinished) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * Built-In Interval Timer UI Card Component for tracking rest periods between sets.
  * Placed directly inside the workout screen or floating container.
  */
@@ -99,336 +624,33 @@ fun BuiltInIntervalTimerCard(
     onPresetSelected: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var mode by remember { mutableStateOf(TimerMode.COUNTDOWN) }
-    var showPresets by remember { mutableStateOf(false) }
-    val progress = if (targetRestSeconds > 0) {
-        ((targetRestSeconds - remainingSeconds).toFloat() / targetRestSeconds.toFloat()).coerceIn(0f, 1f)
-    } else 0f
-
-    val isFinished = remainingSeconds == 0 && targetRestSeconds > 0
-    val haptic = LocalHapticFeedback.current
-
-    LaunchedEffect(isFinished) {
-        if (isFinished) {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        }
-    }
-
     Card(
         modifier = modifier
             .fillMaxWidth()
             .testTag("built_in_interval_timer_card"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isFinished) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // 1. Clean Top Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Surface(
-                        shape = CircleShape,
-                        color = if (isFinished) MaterialTheme.colorScheme.primary else PostureTeal,
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = if (isFinished) Icons.Default.NotificationsActive else Icons.Default.Timer,
-                                contentDescription = "Timer Icon",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column {
-                        Text(
-                            text = if (isFinished) "Rest Complete!" else "Rest Interval Timer",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = if (activeExerciseName.isNotBlank()) "Target: $activeExerciseName (${targetRestSeconds}s)" else "Target Recovery: ${targetRestSeconds}s",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                // Mode & Sound Toggles grouped cleanly
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha =.5f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // Sound Mode Toggle
-                        IconButton(
-                            onClick = {
-                                val nextMode = when (alertMode) {
-                                    "Sound + Vibrate" -> "Vibrate Only"
-                                    "Vibrate Only" -> "Silent"
-                                    else -> "Sound + Vibrate"
-                                }
-                                onAlertModeChange(nextMode)
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = when (alertMode) {
-                                    "Sound + Vibrate" -> Icons.Default.VolumeUp
-                                    "Vibrate Only" -> Icons.Default.Vibration
-                                    else -> Icons.Default.VolumeOff
-                                },
-                                contentDescription = "Alert Mode: $alertMode",
-                                modifier = Modifier.size(16.dp),
-                                tint = when (alertMode) {
-                                    "Silent" -> MaterialTheme.colorScheme.error
-                                    "Vibrate Only" -> MaterialTheme.colorScheme.secondary
-                                    else -> MaterialTheme.colorScheme.primary
-                                }
-                            )
-                        }
-
-                        // Timer Mode (Countdown / Stopwatch) Toggle
-                        IconButton(
-                            onClick = {
-                                mode = if (mode == TimerMode.COUNTDOWN) TimerMode.STOPWATCH else TimerMode.COUNTDOWN
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text(
-                                text = if (mode == TimerMode.COUNTDOWN) "⏳" else "⏱️",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 2. Linear Progress Bar (Countdown mode only)
-            if (mode == TimerMode.COUNTDOWN) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = if (isFinished) MaterialTheme.colorScheme.primary else BoneDensityGold,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-            }
-
-            // 3. Central Timer Display & Play/Reset Controls
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val m = remainingSeconds / 60
-                val s = remainingSeconds % 60
-                val displayTime = String.format("%02d:%02d", m, s)
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = displayTime,
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isFinished) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 1.sp
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    // Play/Pause Button (Primary Action)
-                    IconButton(
-                        onClick = onTogglePlayPause,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .background(
-                                color = if (isRunning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                shape = CircleShape
-                            )
-                            .testTag("interval_timer_play_pause_button")
-                    ) {
-                        Icon(
-                            imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = "Play/Pause Timer",
-                            tint = Color.White,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    // Reset Button
-                    IconButton(
-                        onClick = { onResetTimer(targetRestSeconds) },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .testTag("interval_timer_reset_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Replay,
-                            contentDescription = "Reset Timer",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Progressive Disclosure Toggle Button
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showPresets = !showPresets }
-                    .testTag("toggle_presets_button"),
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (showPresets) "Hide Presets & Adjustments" else "Configure Rest Time (${targetRestSeconds}s) & Presets",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Icon(
-                        imageVector = if (showPresets) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            AnimatedVisibility(visible = showPresets) {
-                Column(modifier = Modifier.padding(top = 12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "QUICK ADJUST",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            letterSpacing = 0.5.sp
-                        )
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                                modifier = Modifier
-                                    .clickable { onAdjustSeconds(-15) }
-                                    .testTag("interval_timer_minus_15")
-                            ) {
-                                Text(
-                                    text = "-15s",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                )
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier
-                                    .clickable { onAdjustSeconds(15) }
-                                    .testTag("interval_timer_plus_15")
-                            ) {
-                                Text(
-                                    text = "+15s",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "REST DURATION PRESETS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        letterSpacing = 0.5.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    CustomFlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalSpacing = 6.dp,
-                        verticalSpacing = 6.dp
-                    ) {
-                        val presets = listOf(
-                            45 to "45s Hypertrophy",
-                            60 to "60s Endurance",
-                            90 to "90s Bone Density",
-                            120 to "120s Strength",
-                            180 to "180s Heavy"
-                        )
-                        presets.forEach { (seconds, label) ->
-                            val isSelected = targetRestSeconds == seconds
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                                border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
-                                modifier = Modifier
-                                    .clickable { onPresetSelected(seconds) }
-                                    .testTag("interval_preset_$seconds")
-                            ) {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        RestIntervalTimerModalSheetContent(
+            activeExerciseName = activeExerciseName,
+            targetRestSeconds = targetRestSeconds,
+            isRunning = isRunning,
+            remainingSeconds = remainingSeconds,
+            alertMode = alertMode,
+            onAlertModeChange = onAlertModeChange,
+            onTogglePlayPause = onTogglePlayPause,
+            onResetTimer = onResetTimer,
+            onAdjustSeconds = onAdjustSeconds,
+            onPresetSelected = onPresetSelected,
+            onClose = {},
+            showCloseButton = false,
+            showDoneButton = false,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
